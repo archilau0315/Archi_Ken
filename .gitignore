@@ -13,4 +13,5 @@ venv/
 .DS_Store
 deploy/_stage/
 deploy/_build.log
+deploy/_upload_web/
 deploy/archiken-deploy.zip
