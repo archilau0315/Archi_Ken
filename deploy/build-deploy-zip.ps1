@@ -47,8 +47,12 @@ Write-Host "     前端 hash: $frontendHash" -ForegroundColor Green
 Write-Host "[2/4] 组装打包目录..." -ForegroundColor Yellow
 $stage = Join-Path $deploy '_stage'
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
-$svc = Join-Path $stage 'archiken'          # 后端 + 编排文件
-$web = Join-Path $stage 'archiken-web'      # 前端静态资源
+# 服务器上统一收进 /www/wwwroot/archi_ken/ 父目录，便于管理：
+#   archi_ken/archiken/     后端容器编排 + 源码
+#   archi_ken/archiken-web/ 前端静态资源
+$base = Join-Path $stage 'archi_ken'
+$svc = Join-Path $base 'archiken'
+$web = Join-Path $base 'archiken-web'
 New-Item -ItemType Directory -Path $svc, $web -Force | Out-Null
 
 # 编排与构建文件
@@ -57,7 +61,7 @@ Copy-Item (Join-Path $deploy 'Dockerfile.kernel')    $svc
 Copy-Item (Join-Path $deploy 'Dockerfile.server')    $svc
 Copy-Item (Join-Path $deploy 'dockerignore')         (Join-Path $svc '.dockerignore')
 Copy-Item (Join-Path $deploy '.env')                 $svc
-Copy-Item (Join-Path $deploy 'DEPLOY_ON_BT_PANEL.md') (Join-Path $stage '部署指南-宝塔面板.md')
+Copy-Item (Join-Path $deploy 'DEPLOY_ON_BT_PANEL.md') (Join-Path $base '部署指南-宝塔面板.md')
 
 # 把 .env 里的构建标识改写成本次构建 ID。
 # 不改写的话，容器 /health 只会返回 dev-local，三端版本锚点校验就失效了。
@@ -104,11 +108,11 @@ time=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 # ---------- 3. 校验 ----------
 Write-Host "[3/4] 校验产物完整性..." -ForegroundColor Yellow
 $need = @(
-    'archiken/docker-compose.yml','archiken/Dockerfile.kernel','archiken/Dockerfile.server',
-    'archiken/.dockerignore','archiken/.env','archiken/package.json','archiken/package-lock.json',
-    'archiken/tsconfig.server.json','archiken/tsconfig.server.build.json','archiken/BUILD_INFO.txt',
-    'archiken/kernel/main.py','archiken/kernel/requirements.txt','archiken/server/index.ts',
-    'archiken-web/index.html'
+    'archi_ken/archiken/docker-compose.yml','archi_ken/archiken/Dockerfile.kernel','archi_ken/archiken/Dockerfile.server',
+    'archi_ken/archiken/.dockerignore','archi_ken/archiken/.env','archi_ken/archiken/package.json','archi_ken/archiken/package-lock.json',
+    'archi_ken/archiken/tsconfig.server.json','archi_ken/archiken/tsconfig.server.build.json','archi_ken/archiken/BUILD_INFO.txt',
+    'archi_ken/archiken/kernel/main.py','archi_ken/archiken/kernel/requirements.txt','archi_ken/archiken/server/index.ts',
+    'archi_ken/archiken-web/index.html'
 )
 $missing = @()
 foreach ($n in $need) { if (-not (Test-Path (Join-Path $stage $n))) { $missing += $n } }
