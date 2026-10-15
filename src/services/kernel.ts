@@ -1,7 +1,7 @@
 // 内核客户端（L4 → L2）：对 Python 计算内核端点的类型化封装。
 // 仅做「传输 + 类型」，不含业务判定逻辑。
 
-import { apiRequest } from './transport'
+import { apiRequest, apiUrl } from './transport'
 
 export interface ElementRef {
   guid: string
@@ -722,7 +722,7 @@ export async function uploadModelFile(file: File, lang?: 'zh' | 'en'): Promise<{
   const buf = await file.arrayBuffer()
   const params = new URLSearchParams({ name: file.name })
   if (lang) params.set('lang', lang)
-  const res = await fetch(`/api/server/upload?${params.toString()}`, {
+  const res = await fetch(`${apiUrl('server', '/upload')}?${params.toString()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/octet-stream' },
     body: buf

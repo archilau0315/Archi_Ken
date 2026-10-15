@@ -36,6 +36,11 @@ const PROXY_PREFIX: Record<ServiceTarget, string> = {
   server: `${API_PREFIX}/api/server`
 }
 
+/** 拼出某后端的完整请求 URL 前缀（云端含子路径前缀），供绕过 apiRequest 的裸 fetch（如文件上传）使用。 */
+export function apiUrl(target: ServiceTarget, path: string): string {
+  return `${PROXY_PREFIX[target]}${path}`
+}
+
 function buildQuery(query: ServiceRequest['query']): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query ?? {})) {
