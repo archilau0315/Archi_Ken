@@ -1,4 +1,4 @@
-"""净高规则模板（GB 50352-2019 / GB 50096-2011 / JGJ 100-2015）。
+"""净高规则模板（GB 55031-2022 / GB 55038-2025 / JGJ 100-2015）。
 
 每条规则挂 reference 字段注明规范出处。
 """
@@ -27,8 +27,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "房间 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Room {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019《民用建筑设计统一标准》",
-        "reference_en": "GB 50352-2019 Unified Standard for Civil Building Design",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019《民用建筑设计统一标准》）",
+        "reference_en": "GB 55031-2022 General Code for Civil Buildings (formerly GB 50352-2019)",
     },
     {
         "id": "headroom-corridor",
@@ -49,8 +49,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "走道 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Corridor {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 人员活动空间净高要求",
-        "reference_en": "GB 50352-2019 occupied space headroom",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：人员活动空间净高要求）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: occupied space headroom)",
     },
     {
         "id": "headroom-beam-clearance",
@@ -63,10 +63,10 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "headroom", "other": {"ifc_type": ["IfcBeam"]}, "value": 2000, "unit": "mm"},
         "message": "空间 {name} 梁下净高 {actual} 低于要求 {expected}",
         "message_en": "Space {name} beam clearance {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 局部净高不应低于 2.00m",
-        "reference_en": "GB 50352-2019 local headroom >= 2.00m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：局部净高不应低于 2.00m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: local headroom >= 2.00m)",
     },
-    # ---------- 扩充（GB 50352-2019 / GB 50096-2011 / JGJ 100-2015） ----------
+    # ---------- 扩充（GB 55031-2022 / GB 55038-2025 / JGJ 100-2015） ----------
     {
         "id": "headroom-driveway",
         "name": "车库车道净高",
@@ -130,8 +130,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "楼梯间 {name} 梯段净高 {actual} 低于要求 {expected}",
         "message_en": "Stairwell {name} flight headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 梯段净高不应小于 2.20m",
-        "reference_en": "GB 50352-2019 stair flight headroom >= 2.20m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：梯段净高不应小于 2.20m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: stair flight headroom >= 2.20m)",
     },
     {
         "id": "headroom-stair-platform",
@@ -152,8 +152,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "楼梯平台 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Stair platform {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 楼梯平台净高不应小于 2.00m",
-        "reference_en": "GB 50352-2019 stair platform headroom >= 2.00m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：楼梯平台净高不应小于 2.00m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: stair platform headroom >= 2.00m)",
     },
     {
         "id": "headroom-bathroom",
@@ -174,8 +174,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "卫生间 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Bathroom {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50096-2011《住宅设计规范》卫生间局部净高不应低于 2.20m",
-        "reference_en": "GB 50096-2011 Residential Design Code bathroom headroom >= 2.20m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011《住宅设计规范》：卫生间局部净高不应低于 2.20m）",
+        "reference_en": "GB 55038-2025 Residential Project Code (formerly GB 50096-2011: bathroom headroom >= 2.20m)",
     },
     {
         "id": "headroom-kitchen",
@@ -196,8 +196,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "厨房 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Kitchen {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 厨房净高不应低于 2.20m",
-        "reference_en": "GB 50096-2011 kitchen headroom >= 2.20m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：厨房净高不应低于 2.20m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: kitchen headroom >= 2.20m)",
     },
     {
         "id": "headroom-bedroom",
@@ -218,8 +218,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "卧室 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Bedroom {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 卧室、起居室净高不应低于 2.40m",
-        "reference_en": "GB 50096-2011 bedroom/living headroom >= 2.40m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：卧室、起居室净高不应低于 2.40m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: bedroom/living headroom >= 2.40m)",
     },
     {
         "id": "headroom-living-room",
@@ -240,8 +240,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "起居室 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Living room {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 卧室、起居室净高不应低于 2.40m",
-        "reference_en": "GB 50096-2011 bedroom/living headroom >= 2.40m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：卧室、起居室净高不应低于 2.40m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: bedroom/living headroom >= 2.40m)",
     },
     {
         "id": "headroom-basement-passage",
@@ -265,8 +265,8 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "地下室走道 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Basement corridor {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 地下室局部净高不应低于 2.00m",
-        "reference_en": "GB 50352-2019 basement local headroom >= 2.00m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：地下室局部净高不应低于 2.00m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: basement local headroom >= 2.00m)",
     },
     {
         "id": "headroom-mechanical-room",
@@ -287,7 +287,7 @@ HEADROOM_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "机房 {name} 净高 {actual} 低于建议值 {expected}（设备检修空间）",
         "message_en": "Mechanical room {name} headroom {actual} below recommended {expected} (maintenance access)",
-        "reference": "GB 50352-2019 设备用房净高宜满足设备安装检修要求",
-        "reference_en": "GB 50352-2019 equipment room headroom per maintenance needs",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：设备用房净高宜满足设备安装检修要求）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: equipment room headroom per maintenance needs)",
     },
 ]

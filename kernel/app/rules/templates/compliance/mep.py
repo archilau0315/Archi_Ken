@@ -1,4 +1,4 @@
-"""机电（MEP）规则模板（GB 50242 / GB 50243 / GB 50303 / GB 50084）。
+"""机电（MEP）规则模板（GB 55020 / GB 55024 / GB 55036 / GB 50243）。
 
 每条规则挂 reference 字段注明规范出处。
 """
@@ -19,8 +19,8 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "intersection", "other": {"ifc_type": ["IfcBeam"]}},
         "message": "水管 {name} 与梁 {related.name} 相交，穿梁应预留套管并经结构确认",
         "message_en": "Pipe {name} intersects beam {related.name}; sleeve + structural confirmation required",
-        "reference": "GB 50242-2002《建筑给水排水及采暖工程施工质量验收规范》",
-        "reference_en": "GB 50242-2002 Plumbing Acceptance Code",
+        "reference": "GB 55020-2021《建筑给水排水与节水通用规范》（原 GB 50242-2002《建筑给水排水及采暖工程施工质量验收规范》）",
+        "reference_en": "GB 55020-2021 General Code for Building Water Supply & Drainage (formerly GB 50242-2002)",
     },
     {
         "id": "mep-duct-beam-crossing",
@@ -47,8 +47,8 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "intersection", "other": {"ifc_type": ["IfcCableCarrierSegment"]}},
         "message": "水管 {name} 与桥架 {related.name} 相交，桥架不宜布置在水管下方",
         "message_en": "Pipe {name} intersects cable tray {related.name}; trays should not sit below water pipes",
-        "reference": "GB 50303-2015《建筑电气工程施工质量验收规范》",
-        "reference_en": "GB 50303-2015 Building Electrical Acceptance Code",
+        "reference": "GB 55024-2022《建筑电气与智能化通用规范》（原 GB 50303-2015《建筑电气工程施工质量验收规范》）",
+        "reference_en": "GB 55024-2022 General Code for Building Electrical & Intelligent Systems (formerly GB 50303-2015)",
     },
     {
         "id": "mep-duct-cable-clearance",
@@ -87,8 +87,8 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "喷头 {name} 与梁 {related.name} 净距 {actual} 小于要求 {expected}",
         "message_en": "Sprinkler {name} to beam {related.name} clearance {actual} below required {expected}",
-        "reference": "GB 50084-2017《自动喷水灭火系统设计规范》喷头与障碍物距离要求",
-        "reference_en": "GB 50084-2017 sprinkler obstruction clearance",
+        "reference": "GB 55036-2022《消防设施通用规范》（原 GB 50084-2017《自动喷水灭火系统设计规范》：喷头与障碍物距离要求）",
+        "reference_en": "GB 55036-2022 (formerly GB 50084-2017: sprinkler obstruction clearance)",
     },
     {
         "id": "mep-pipe-shaft-min-dim",
@@ -104,8 +104,8 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 600, "unit": "mm"},
         "message": "管井 {name} 短边 {actual} 小于检修要求 {expected}",
         "message_en": "Pipe shaft {name} short side {actual} below maintenance requirement {expected}",
-        "reference": "GB 50352-2019 管道井检修空间要求",
-        "reference_en": "GB 50352-2019 pipe shaft access space",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：管道井检修空间要求）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: pipe shaft access space)",
     },
     {
         "id": "mep-air-shaft-min-dim",
@@ -160,8 +160,8 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "机房门 {name} 净宽 {actual} 小于设备搬运要求 {expected}",
         "message_en": "Mechanical room door {name} width {actual} below equipment access requirement {expected}",
-        "reference": "GB 50352-2019 设备用房门应满足最大设备搬运",
-        "reference_en": "GB 50352-2019 equipment room door sized for largest equipment",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：设备用房门应满足最大设备搬运）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: equipment room door sized for largest equipment)",
     },
     {
         "id": "mep-element-tag",

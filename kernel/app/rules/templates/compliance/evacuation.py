@@ -1,4 +1,4 @@
-"""疏散规则模板（GB 50016-2014(2018年版) 疏散章节 + GB 50352-2019）。
+"""疏散规则模板（GB 55037-2022《建筑防火通用规范》+ GB 55031-2022《民用建筑通用规范》）。
 
 每条规则挂 reference 字段注明规范出处。
 """
@@ -30,8 +30,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "疏散门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Egress door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50016-2014(2018年版) 第 5.5.18 条：疏散门净宽不应小于 0.90m",
-        "reference_en": "GB 50016-2014 Clause 5.5.18: egress door width >= 0.90m",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版) 第 5.5.18 条：疏散门净宽不应小于 0.90m）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014 Clause 5.5.18: egress door width >= 0.90m)",
     },
     {
         "id": "egress-exit-door-width",
@@ -55,8 +55,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "安全出口门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Exit door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50016-2014(2018年版) 首层疏散外门/安全出口净宽要求",
-        "reference_en": "GB 50016-2014 exit door width requirement",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：首层疏散外门/安全出口净宽要求）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: exit door width requirement)",
     },
     {
         "id": "egress-stair-width",
@@ -69,8 +69,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 1100, "unit": "mm"},
         "message": "疏散楼梯 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Egress stair {name} width {actual} below requirement {expected}",
-        "reference": "GB 50016-2014(2018年版) 第 5.5.18 条：疏散楼梯净宽不应小于 1.10m",
-        "reference_en": "GB 50016-2014 Clause 5.5.18: egress stair width >= 1.10m",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版) 第 5.5.18 条：疏散楼梯净宽不应小于 1.10m）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014 Clause 5.5.18: egress stair width >= 1.10m)",
     },
     {
         "id": "egress-stairwell-headroom",
@@ -91,8 +91,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "疏散楼梯间 {name} 净高 {actual} 低于要求 {expected}",
         "message_en": "Egress stairwell {name} headroom {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 楼梯平台净高不应小于 2.00m",
-        "reference_en": "GB 50352-2019 stair platform headroom >= 2.00m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：楼梯平台净高不应小于 2.00m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: stair platform headroom >= 2.00m)",
     },
     {
         "id": "egress-stair-platform-width",
@@ -108,8 +108,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 1200, "unit": "mm"},
         "message": "楼梯平台 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Stair platform {name} width {actual} below requirement {expected}",
-        "reference": "GB 50352-2019 楼梯平台净宽不应小于梯段净宽且不小于 1.20m",
-        "reference_en": "GB 50352-2019 platform width >= flight width and >= 1.20m",
+        "reference": "GB 55031-2022《民用建筑通用规范》（原 GB 50352-2019：楼梯平台净宽不应小于梯段净宽且不小于 1.20m）",
+        "reference_en": "GB 55031-2022 (formerly GB 50352-2019: platform width >= flight width and >= 1.20m)",
     },
     {
         "id": "egress-refuge-room-min",
@@ -125,8 +125,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 2000, "unit": "mm"},
         "message": "避难空间 {name} 短边 {actual} 小于要求 {expected}",
         "message_en": "Refuge space {name} short side {actual} below requirement {expected}",
-        "reference": "GB 50016-2014(2018年版) 避难间（层）设置要求",
-        "reference_en": "GB 50016-2014 refuge room/floor requirements",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：避难间（层）设置要求）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: refuge room/floor requirements)",
     },
     {
         "id": "egress-fire-door-rating",
@@ -142,8 +142,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "property", "pset": "Pset_DoorCommon", "prop": "FireRating", "op": "exists"},
         "message": "防火门 {name} 未定义防火等级（疏散路径关键构件）",
         "message_en": "Fire door {name} missing fire rating (critical on egress route)",
-        "reference": "GB 50016-2014(2018年版) 防火门设置要求",
-        "reference_en": "GB 50016-2014 fire door requirements",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：防火门设置要求）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: fire door requirements)",
     },
     {
         "id": "egress-door-operation-defined",
@@ -164,8 +164,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "疏散门 {name} 未定义开启方式（应能判定是否向疏散方向开启）",
         "message_en": "Egress door {name} missing operation type (needed to verify swing direction)",
-        "reference": "GB 50016-2014(2018年版) 疏散门应向疏散方向开启（数据前提）",
-        "reference_en": "GB 50016-2014 egress doors shall open in exit direction (data prerequisite)",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：疏散门应向疏散方向开启；数据前提）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: egress doors shall open in exit direction; data prerequisite)",
     },
     {
         "id": "egress-corridor-no-pipe",
@@ -181,8 +181,8 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "intersection", "other": {"ifc_type": ["IfcPipeSegment"]}},
         "message": "疏散走道 {name} 与管线 {related.name} 相交，存在管线穿越",
         "message_en": "Egress corridor {name} intersects pipe {related.name}",
-        "reference": "GB 50016-2014(2018年版) 疏散走道内不应设置影响疏散的管线",
-        "reference_en": "GB 50016-2014 no obstructing pipes in egress corridors",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：疏散走道内不应设置影响疏散的管线）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: no obstructing pipes in egress corridors)",
     },
     {
         "id": "egress-wall-fire-rating",
@@ -198,7 +198,7 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "property", "pset": "Pset_WallCommon", "prop": "FireRating", "op": "exists"},
         "message": "疏散路径隔墙 {name} 未定义防火等级",
         "message_en": "Egress partition {name} missing fire rating",
-        "reference": "GB 50016-2014(2018年版) 疏散走道隔墙耐火极限要求",
-        "reference_en": "GB 50016-2014 egress corridor wall fire resistance",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：疏散走道隔墙耐火极限要求）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: egress corridor wall fire resistance)",
     },
 ]

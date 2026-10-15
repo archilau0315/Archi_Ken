@@ -1,4 +1,4 @@
-"""门窗规则模板（GB 50096-2011《住宅设计规范》/ GB 50016-2014）。
+"""门窗规则模板（GB 55038-2025《住宅项目规范》/ GB 55037-2022《建筑防火通用规范》）。
 
 每条规则挂 reference 字段注明规范出处。
 """
@@ -30,8 +30,8 @@ OPENINGS_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "户门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Entry door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50096-2011《住宅设计规范》户门洞口宽度不应小于 1.00m",
-        "reference_en": "GB 50096-2011 entry door opening >= 1.00m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011《住宅设计规范》：户门洞口宽度不应小于 1.00m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: entry door opening >= 1.00m)",
     },
     {
         "id": "opening-bedroom-door-width",
@@ -55,8 +55,8 @@ OPENINGS_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "卧室门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Bedroom door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 卧室门洞口宽度不应小于 0.90m",
-        "reference_en": "GB 50096-2011 bedroom door opening >= 0.90m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：卧室门洞口宽度不应小于 0.90m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: bedroom door opening >= 0.90m)",
     },
     {
         "id": "opening-kitchen-door-width",
@@ -80,8 +80,8 @@ OPENINGS_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "厨房门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Kitchen door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 厨房门洞口宽度不应小于 0.80m",
-        "reference_en": "GB 50096-2011 kitchen door opening >= 0.80m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：厨房门洞口宽度不应小于 0.80m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: kitchen door opening >= 0.80m)",
     },
     {
         "id": "opening-bathroom-door-width",
@@ -105,8 +105,8 @@ OPENINGS_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "卫生间门 {name} 净宽 {actual} 小于要求 {expected}",
         "message_en": "Bathroom door {name} width {actual} below requirement {expected}",
-        "reference": "GB 50096-2011 卫生间门洞口宽度不应小于 0.70m",
-        "reference_en": "GB 50096-2011 bathroom door opening >= 0.70m",
+        "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011：卫生间门洞口宽度不应小于 0.70m）",
+        "reference_en": "GB 55038-2025 (formerly GB 50096-2011: bathroom door opening >= 0.70m)",
     },
     {
         "id": "opening-fire-window-rating",
@@ -122,8 +122,8 @@ OPENINGS_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "property", "pset": "Pset_WindowCommon", "prop": "FireRating", "op": "exists"},
         "message": "防火窗 {name} 未定义防火等级",
         "message_en": "Fire window {name} missing fire rating",
-        "reference": "GB 50016-2014(2018年版) 防火窗设置要求",
-        "reference_en": "GB 50016-2014 fire window requirements",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：防火窗设置要求）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: fire window requirements)",
     },
     {
         "id": "opening-external-window-flag",

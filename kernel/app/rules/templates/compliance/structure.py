@@ -1,4 +1,4 @@
-"""结构规则模板（GB 50010 / GB 50011）。
+"""结构规则模板（GB 55001-2021《工程结构通用规范》/ GB 55002-2021《建筑与市政工程抗震通用规范》）。
 
 每条规则挂 reference 字段注明规范出处。
 """
@@ -19,8 +19,8 @@ STRUCTURE_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 300, "unit": "mm"},
         "message": "柱 {name} 截面短边 {actual} 小于要求 {expected}",
         "message_en": "Column {name} section short side {actual} below requirement {expected}",
-        "reference": "GB 50011-2010《建筑抗震设计规范》框架柱截面尺寸要求",
-        "reference_en": "GB 50011-2010 Seismic Design Code column section",
+        "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010《建筑抗震设计规范》：框架柱截面尺寸要求）",
+        "reference_en": "GB 55002-2021 General Seismic Code (formerly GB 50011-2010: column section)",
     },
     {
         "id": "struct-shearwall-thickness",
@@ -36,8 +36,8 @@ STRUCTURE_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 160, "unit": "mm"},
         "message": "剪力墙 {name} 厚度 {actual} 小于要求 {expected}",
         "message_en": "Shear wall {name} thickness {actual} below requirement {expected}",
-        "reference": "GB 50011-2010 剪力墙厚度不应小于 160mm",
-        "reference_en": "GB 50011-2010 shear wall thickness >= 160mm",
+        "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010：剪力墙厚度不应小于 160mm）",
+        "reference_en": "GB 55002-2021 (formerly GB 50011-2010: shear wall thickness >= 160mm)",
     },
     {
         "id": "struct-beam-min-depth",
@@ -50,8 +50,8 @@ STRUCTURE_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "z", "value": 300, "unit": "mm"},
         "message": "梁 {name} 截面高度 {actual} 小于建议值 {expected}",
         "message_en": "Beam {name} depth {actual} below recommended {expected}",
-        "reference": "GB 50010-2010《混凝土结构设计规范》梁截面尺寸要求",
-        "reference_en": "GB 50010-2010 Concrete Design Code beam section",
+        "reference": "GB 55001-2021《工程结构通用规范》（原 GB 50010-2010《混凝土结构设计规范》：梁截面尺寸要求）",
+        "reference_en": "GB 55001-2021 General Structural Code (formerly GB 50010-2010: beam section)",
     },
     {
         "id": "struct-beam-min-width",
@@ -64,8 +64,8 @@ STRUCTURE_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "min", "value": 200, "unit": "mm"},
         "message": "梁 {name} 截面宽度 {actual} 小于要求 {expected}",
         "message_en": "Beam {name} width {actual} below requirement {expected}",
-        "reference": "GB 50011-2010 框架梁截面宽度不宜小于 200mm",
-        "reference_en": "GB 50011-2010 frame beam width >= 200mm",
+        "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010：框架梁截面宽度不宜小于 200mm）",
+        "reference_en": "GB 55002-2021 (formerly GB 50011-2010: frame beam width >= 200mm)",
     },
     {
         "id": "struct-slab-min-thickness",
@@ -78,8 +78,8 @@ STRUCTURE_TEMPLATES: list[dict[str, Any]] = [
         "check": {"type": "dimension", "axis": "z", "value": 80, "unit": "mm"},
         "message": "楼板 {name} 厚度 {actual} 小于最小构造厚度 {expected}",
         "message_en": "Slab {name} thickness {actual} below minimum structural thickness {expected}",
-        "reference": "GB 50010-2010 现浇板最小厚度要求",
-        "reference_en": "GB 50010-2010 cast-in-place slab minimum thickness",
+        "reference": "GB 55001-2021《工程结构通用规范》（原 GB 50010-2010：现浇板最小厚度要求）",
+        "reference_en": "GB 55001-2021 (formerly GB 50010-2010: cast-in-place slab minimum thickness)",
     },
     {
         "id": "struct-beam-door-intersection",
