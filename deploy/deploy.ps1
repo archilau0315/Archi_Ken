@@ -1,4 +1,4 @@
-﻿# ArchiKen 云端部署脚本（PowerShell 5+ / 宝塔面板版）
+﻿﻿﻿﻿# ArchiKen 云端部署脚本（PowerShell 5+ / 宝塔面板版）
 # 用法：
 #   1. 先填 deploy/.env 里的 API Key 和服务器信息
 #   2. 修改本文件顶部的 $REMOTE_HOST / $REMOTE_USER / $REMOTE_WEB_ROOT
