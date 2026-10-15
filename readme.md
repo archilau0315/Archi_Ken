@@ -53,9 +53,9 @@
 | Capability | Description |
 |---|---|
 | IFC parsing | Summary / spatial hierarchy / element properties; multi-model federation with automatic discipline mapping |
-| Rule-based checking | Rule DSL v1 + 54 built-in templates; ruleset editor (save / reuse / validate / run) |
+| Rule-based checking | Rule DSL v1 + 80 built-in templates; ruleset editor (save / reuse / validate / run) |
 | Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks) |
-| Compliance checking | Accessibility / headroom / fire-safety / evacuation rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
+| Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
 | Takeoff | ITO / QTO: quantity derivation, custom columns via controlled expressions, Excel export |
 | Communication | Issue lifecycle / comments / view snapshots; BCF 2.1 export (importable into Solibri / Navisworks) |
@@ -152,7 +152,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | Run Check | Runs rules + clash on the first model source, producing a unified issue list |
 | Report | Summary statistics + issue preview (click an element to highlight in 3D), regenerate / HTML preview in a new window / one-click PDF / Excel export to `.data/exports/` |
 | Views | A compact toolbar docked above the 3D view (occupies layout height, never covers the canvas) plus an accordion floating card (collapsed by default, draggable by its header). The toolbar carries high-frequency actions: one-click perspective / plan (orthographic 2D) toggle and seven standard views (instant, no navigation); X / Y / Z sections enabled by a single axis click (no confirm or save step), live slider, pick "Drag" to move a section plane directly inside the 3D view (mapped along the axis' screen projection, updating while you drag), flip direction and clear all. The floating card keeps only low-frequency items: severity-colored 3D markers from check results, click a pin to fly to it; named presentation viewpoints (localStorage) with auto-play. A one-click "X-Ray Shell" fades architecture / structure / site to translucent with depth writes disabled; its opacity is adjustable live via the adjacent slider (5% – 90%, default 12%), so the MEP pipes, ducts and cables inside become visible (works in both federated bbox mode and true-mesh mode) |
-| Rulesets | Ruleset editor: create / edit / save / reuse, quick-add from built-in templates, one-click compliance presets (accessibility / headroom / fire safety / evacuation), validate & run |
+| Rulesets | Ruleset editor: create / edit / save / reuse, quick-add from built-in templates, one-click compliance presets (accessibility / headroom / fire safety / evacuation / MEP / structure / openings), validate & run |
 | Clash Matrix | Enable hard / gap / clearance with tolerances, optionally ignore same discipline; run to see the discipline matrix and issue list, click an issue to select in 3D |
 | IDS Check | IDS editor: load example or paste IDS XML, parse & preview structure, export XML, validate against the model and review per-specification / per-requirement results with failing elements (click to select in 3D) |
 | Takeoff | ITO / QTO panel: fixed fields and suggested columns, custom computed columns (`qty('volume')`, `attr('Name')`, `prop(pset, property)` and more), per-element results with totals, one-click Excel export |
@@ -222,7 +222,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L4 UI | `src/` | Three-pane workspace (multi-source federated tree / 3D view / properties & issues), service clients, ruleset editor, clash matrix panel, IDS editor, takeoff panel, communication & BCF panel, report panel, view system (2D / clipping / markers / presentation), bilingual framework (`src/i18n/`) | Implemented (v1) |
 | L4 bridge | `electron/` | Main window, kernel process spawn, IPC forwarding (kernel / business service) | Implemented (v1) |
 | L3 business | `server/` | Health check + results & reports (unified issue list / reason chains / HTML report / PDF & Excel export) + ruleset management + communication & BCF (lifecycle / comments / snapshots / import / BCF 2.1 export) + Autorun batch checking | Implemented (v1) |
-| L2 kernel | `kernel/` | IFC parsing + geometry kernel (`.kengeo` cache) + clash engine (hard clash + matrix) + rule engine (DSL v1 + 54 templates + validation) + compliance (accessibility / headroom / fire / evacuation, GB code references) + federation & discipline classification + IDS validation + ITO / QTO takeoff + report rendering (PDF / Excel) + health check | Implemented, E2E smoke passed |
+| L2 kernel | `kernel/` | IFC parsing + geometry kernel (`.kengeo` cache) + clash engine (hard clash + matrix) + rule engine (DSL v1 + 80 templates + validation) + compliance (accessibility / headroom / fire / evacuation / MEP / structure / openings, GB code references) + federation & discipline classification + IDS validation + ITO / QTO takeoff + report rendering (PDF / Excel) + health check | Implemented, E2E smoke passed |
 | L1 data | `corpus/` | Regression corpus (4 versions × 4 exporters × 4 size tiers), probe models | Manifest & validators ready, samples pending |
 | Cross-cutting | `tools/` | Corpus coverage validation, smoke model generation, kernel / server smoke tests, golden-master pipeline, performance baseline | All ready |
 
@@ -249,8 +249,8 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | GET | `/geometry/meshes?path=&ifc_type=&offset=&limit=` | 批量构件三角网格：一次返回多个构件的顶点与索引（含专业 key、IFC 原生色 `ifc_color`、材质名 `material`），供 3D 视图真实化显示、按专业分组淡化、玻璃识别与显色书签 |
 | GET | `/clash/run?path=&ifc_type_a=&ifc_type_b=&max_clashes=` | 硬碰撞检测：返回碰撞构件对、接触点、相交三角形数与整体统计 |
 | POST | `/clash/matrix` | 冲突矩阵：按专业两两对检，分类硬碰撞 / 间隙 / 净空，支持忽略规则与单元格启停。请求体 `{path, hard?, gap_mm?, clearance_mm?, ignore_same_discipline?, ignore?, cells?, max_clashes?}` |
-| GET | `/rules/templates` | 内置规则模板列表（54 个：12 条通用 + 42 条合规专用，含 GB 出处字段） |
-| GET | `/rules/presets` | 合规预设规则集（无障碍 / 净高 / 消防 / 疏散 / 全套），含展开后的规则，供一键套用 |
+| GET | `/rules/templates` | 内置规则模板列表（80 个：12 条通用 + 68 条合规专用，含 GB 出处字段） |
+| GET | `/rules/presets` | 合规预设规则集（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 全套），含展开后的规则，供一键套用 |
 | GET | `/rules/run?path=&rule_ids=&max_violations=` | 对模型运行内置规则，`rule_ids` 逗号分隔取子集（默认全部） |
 | POST | `/rules/run` | 运行自定义规则；请求体 `{path, rules?, rule_ids?, max_violations?}`，`rules` 优先 |
 | POST | `/rules/validate` | 校验规则定义（不需要模型）；请求体 `{rules}`，合法返回规范化规则，非法返回 400 + 原因 |
@@ -281,8 +281,8 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | GET | `/geometry/meshes?path=&ifc_type=&offset=&limit=` | Batch element meshes: vertices & indices for many elements at once (incl. discipline key, native `ifc_color` and `material` names) for 3D real-mesh display, per-discipline fading, glass detection and color bookmarks |
 | GET | `/clash/run?path=&ifc_type_a=&ifc_type_b=&max_clashes=` | Hard clash detection: clashing pairs, contact points, intersecting triangle counts, overall stats |
 | POST | `/clash/matrix` | Clash matrix: discipline pairwise checks, hard / gap / clearance classification, ignore rules & per-cell toggles. Body `{path, hard?, gap_mm?, clearance_mm?, ignore_same_discipline?, ignore?, cells?, max_clashes?}` |
-| GET | `/rules/templates` | Built-in rule templates (54: 12 generic + 42 compliance, with GB code references) |
-| GET | `/rules/presets` | Compliance preset rulesets (accessibility / headroom / fire safety / evacuation / full set), expanded rules included |
+| GET | `/rules/templates` | Built-in rule templates (80: 12 generic + 68 compliance, with GB code references) |
+| GET | `/rules/presets` | Compliance preset rulesets (accessibility / headroom / fire safety / evacuation / MEP / structure / openings / full set), expanded rules included |
 | GET | `/rules/run?path=&rule_ids=&max_violations=` | Run built-in rules; comma-separated `rule_ids` selects a subset (default all) |
 | POST | `/rules/run` | Run custom rules; body `{path, rules?, rule_ids?, max_violations?}`, `rules` wins |
 | POST | `/rules/validate` | Validate rule definitions (no model needed); body `{rules}`; 400 + reason when invalid |
@@ -446,7 +446,7 @@ A rule has `id / name / severity / target / check`; `target` selects elements vi
 - `dimension`: clear dimension — bbox size on the given axis, `axis: min` takes the smaller horizontal axis
 - `duplicate`: duplicate elements
 
-Results include per-rule violations with reason chains (`steps`). Built-in templates split into "generic" (general / clash / model quality) and "compliance" (accessibility / headroom / fire safety / evacuation, via the `category` field); `/rules/presets` packages them into five one-click presets for the ruleset editor.
+Results include per-rule violations with reason chains (`steps`). Built-in templates split into "generic" (general / clash / model quality) and "compliance" (accessibility / headroom / fire safety / evacuation / MEP / structure / doors & windows, via the `category` field); `/rules/presets` packages them into eight one-click presets for the ruleset editor.
 
 ### 信息提取（M6）/ Takeoff (M6)
 
