@@ -15,7 +15,6 @@ import {
 import type { BboxItem, ElementDetail, ElementMesh, FederationResponse } from './services/kernel'
 import { reportRun } from './services/report'
 import type { Report } from './services/report'
-import { APP_MODE } from './services/transport'
 import ReportPanel from './report/ReportPanel'
 import RulesetEditor from './ruleset-editor/RulesetEditor'
 import TakeoffPanel from './takeoff/TakeoffPanel'
@@ -37,12 +36,6 @@ import './views/view.css'
 // M8：沟通与 BCF（问题清单、生命周期、评论、视图快照、BCF 2.1 导出）。
 // M9：报告生成（摘要统计 + 问题清单 + HTML / PDF / Excel 导出）。
 // M10：视图系统（透视/平面切换、标准视角、剖切、3D 标记、演示视角播放）。
-
-const DEFAULT_MODEL = `${__PROJECT_ROOT__}/corpus/samples/_smoke/smoke-ifc4.ifc`
-const STRUCT_MODEL = `${__PROJECT_ROOT__}/corpus/samples/_smoke/smoke-structural-ifc4.ifc`
-
-// 默认模型源：本地/桌面版预载两个冒烟示例便于开箱即用；云端发布版为空（服务器上没有这些路径），由用户自行上传。
-const DEFAULT_SOURCES: string[] = APP_MODE === 'cloud' ? [] : [DEFAULT_MODEL, STRUCT_MODEL]
 
 function makeError(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -69,7 +62,7 @@ function Logo() {
 
 export default function App() {
   const { t, lang, setLang } = useT()
-  const [sources, setSources] = useState<string[]>(DEFAULT_SOURCES)
+  const [sources, setSources] = useState<string[]>([])
   const [fed, setFed] = useState<FederationResponse | null>(null)
   const [items, setItems] = useState<BboxItem[] | ElementMesh[]>([])
   const [useMesh, setUseMesh] = useState(false)
