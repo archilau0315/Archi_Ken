@@ -280,7 +280,7 @@ export default function App() {
           <ModelSourcePanel
             sources={sources}
             busy={busy !== ''}
-            suggestions={[{ label: t('app.suggestion.struct'), path: STRUCT_MODEL }]}
+            suggestions={[]}
             onChange={setSources}
             hidden={hidden}
             onToggleVisible={toggleSourceVisible}
