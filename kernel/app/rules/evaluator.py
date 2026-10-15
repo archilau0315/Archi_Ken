@@ -8,7 +8,7 @@ import ifcopenshell
 
 from app.geometry import extract
 from app.ifc import summary
-from app.rules import checks, selector
+from app.rules import checks, checks_group, selector
 
 RULE_LIMIT_HINT = "max_violations"
 
@@ -94,6 +94,14 @@ def run(
         elif check_type == "dimension":
             items, truncated = checks.dimension_check(
                 entries(), set_a, check, refs, model_unit_to_meter, max_violations, lang
+            )
+        elif check_type == "count":
+            items, truncated = checks_group.count_check(targets, check, max_violations, lang)
+        elif check_type == "containment":
+            others = selector.select(model, check.get("other", {}))
+            refs.update(_refs_for(model, others))
+            items, truncated = checks_group.containment_check(
+                entries(), set_a, {other["guid"] for other in others}, check, refs, max_violations, lang
             )
         else:  # duplicate
             items, truncated = checks.duplicate_check(entries(), set_a, check, refs, max_violations, lang)

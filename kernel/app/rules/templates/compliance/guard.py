@@ -1,6 +1,6 @@
 """防护规则模板（GB 55031-2022《民用建筑通用规范》/ GB 55038-2025《住宅项目规范》）。
 
-栏杆/扶手高度按包围盒 Z 向尺寸判定；名称关键词定位（where 仅支持 AND，分关键词各写一条）。
+栏杆/扶手高度按包围盒 Z 向尺寸判定；名称关键词定位（any_of 组内 OR，组间 AND）。
 高度阈值一律 warning 级并标注「阈值待按现行规范原文复核」。
 """
 
@@ -18,7 +18,16 @@ GUARD_TEMPLATES: list[dict[str, Any]] = [
         "severity": "warning",
         "target": {
             "ifc_type": ["IfcRailing"],
-            "where": [{"attr": "Name", "op": "contains", "value": "阳台"}],
+            "where": [
+                {
+                    "any_of": [
+                        {"attr": "Name", "op": "contains", "value": "阳台"},
+                        {"attr": "Name", "op": "contains", "value": "露台"},
+                        {"attr": "Name", "op": "contains", "value": "天台"},
+                        {"attr": "Name", "op": "contains", "value": "屋面"},
+                    ]
+                }
+            ],
         },
         "check": {"type": "dimension", "axis": "z", "value": 1050, "unit": "mm"},
         "message": "阳台栏杆 {name} 净高 {actual} 小于最小要求 {expected}（高层建筑应 1.10m，阈值待按现行规范原文复核）",

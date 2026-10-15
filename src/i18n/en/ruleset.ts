@@ -41,6 +41,8 @@ export default {
   'ruleset.kind.headroom': 'Headroom',
   'ruleset.kind.dimension': 'Minimum dimension',
   'ruleset.kind.duplicate': 'Duplicates',
+  'ruleset.kind.count': 'Element count',
+  'ruleset.kind.containment': 'Space containment',
   'ruleset.severity.error': 'Error',
   'ruleset.severity.warning': 'Warning',
   'ruleset.severity.info': 'Info',
@@ -69,5 +71,9 @@ export default {
   'ruleset.dimension.min': 'Minimum dimension',
   'ruleset.duplicate.sizeTol': 'Size tolerance (ratio)',
   'ruleset.duplicate.centerTol': 'Center tolerance (ratio)',
+  'ruleset.count.op': 'Comparison operator',
+  'ruleset.count.value': 'Count threshold',
+  'ruleset.count.groupBy': 'Group by (storey = per storey)',
+  'ruleset.containment.otherTypes': 'Target space IFC types',
   'ruleset.rule.messageTemplate': 'Result message template (optional, supports {name} / {actual} / {expected} / {related_name})',
 } as Record<string, string>

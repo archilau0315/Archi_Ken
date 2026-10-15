@@ -194,4 +194,32 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         "reference": "GB 55024-2022《建筑电气与智能化通用规范》（原 GB 50303-2015：电气竖井检修空间要求）",
         "reference_en": "GB 55024-2022 (formerly GB 50303-2015: electrical shaft access space)",
     },
+    {
+        "id": "mep-switchgear-in-room",
+        "name": "配电柜布置位置",
+        "name_en": "Switchgear in Electrical Room",
+        "category": "机电",
+        "category_en": "MEP",
+        "severity": "info",
+        "target": {"ifc_type": ["IfcElectricDistributionBoard"]},
+        "check": {
+            "type": "containment",
+            "other": {
+                "ifc_type": ["IfcSpace"],
+                "where": [
+                    {
+                        "any_of": [
+                            {"attr": "Name", "op": "contains", "value": "配电"},
+                            {"attr": "Name", "op": "contains", "value": "机房"},
+                            {"attr": "Name", "op": "contains", "value": "电井"},
+                        ]
+                    }
+                ],
+            },
+        },
+        "message": "配电装置 {name} 未布置在配电间/机房/电井内（按名称关键词判定）",
+        "message_en": "Distribution board {name} not placed in electrical room/shaft (keyword-based)",
+        "reference": "GB 55024-2022《建筑电气与智能化通用规范》（配电装置应设置在专用房间或电气竖井内）",
+        "reference_en": "GB 55024-2022 (distribution equipment in dedicated rooms or electrical shafts)",
+    },
 ]

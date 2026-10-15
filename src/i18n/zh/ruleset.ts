@@ -41,6 +41,8 @@ export default {
   'ruleset.kind.headroom': '净高',
   'ruleset.kind.dimension': '净尺寸',
   'ruleset.kind.duplicate': '重复构件',
+  'ruleset.kind.count': '构件计数',
+  'ruleset.kind.containment': '空间包含',
   'ruleset.severity.error': '错误',
   'ruleset.severity.warning': '警告',
   'ruleset.severity.info': '提示',
@@ -69,5 +71,9 @@ export default {
   'ruleset.dimension.min': '最小净尺寸',
   'ruleset.duplicate.sizeTol': '尺寸容差（比例）',
   'ruleset.duplicate.centerTol': '中心容差（比例）',
+  'ruleset.count.op': '比较算子',
+  'ruleset.count.value': '数量阈值',
+  'ruleset.count.groupBy': '分组方式（storey=按楼层）',
+  'ruleset.containment.otherTypes': '目标空间 IFC 类型',
   'ruleset.rule.messageTemplate': '结果说明模板（可选，支持 {name} / {actual} / {expected} / {related_name}）',
 } as Record<string, string>

@@ -38,7 +38,7 @@
 | 能力 | 说明 |
 |---|---|
 | IFC 模型解析 | 摘要 / 空间层级 / 构件属性，多专业模型融合与专业自动映射 |
-| 规则化检查 | 规则 DSL v1 + 105 个内置模板，规则集编辑器（保存 / 复用 / 校验 / 运行） |
+| 规则化检查 | 规则 DSL v1 + 109 个内置模板，规则集编辑器（保存 / 复用 / 校验 / 运行） |
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检） |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
@@ -53,7 +53,7 @@
 | Capability | Description |
 |---|---|
 | IFC parsing | Summary / spatial hierarchy / element properties; multi-model federation with automatic discipline mapping |
-| Rule-based checking | Rule DSL v1 + 105 built-in templates; ruleset editor (save / reuse / validate / run) |
+| Rule-based checking | Rule DSL v1 + 109 built-in templates; ruleset editor (save / reuse / validate / run) |
 | Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks) |
 | Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
@@ -213,7 +213,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L4 UI 交互层 | `src/` | 三栏工作台（多模型源与融合树 / 3D 视图 / 属性与问题）、服务客户端、规则集编辑器、冲突矩阵面板、IDS 编辑器、信息提取面板、沟通与 BCF 面板、报告面板、视图系统（非模态浮窗 / 一键视角 / 三向剖切 + 3D 拖拽 / 标记 / 演示视角）、中英双语框架（`src/i18n/`） | 已实现（v1） |
 | L4 桥接 | `electron/` | 主窗口、内核进程拉起、IPC 请求转发（内核 / 业务服务） | 已实现（v1） |
 | L3 业务逻辑层 | `server/` | 健康检查 + 结果与报告服务（统一问题清单 / 原因链 / HTML 报告 / PDF 与 Excel 导出）+ 规则集管理 + 沟通与 BCF（问题生命周期 / 评论 / 视图快照 / 检查结果导入 / BCF 2.1 导出）+ Autorun 批量检查 | 已实现（v1） |
-| L2 核心计算层 | `kernel/` | IFC 解析 + 几何内核（`.kengeo` 缓存）+ 碰撞引擎（硬碰撞 + 冲突矩阵）+ 简化规则引擎（DSL v1 + 105 模板 + 校验）+ 合规性检查（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护）+ 模型融合与专业分类 + IDS 校验 + ITO / QTO 信息提取 + 报告渲染（PDF / Excel）+ 健康检查 | 已实现，端到端冒烟通过 |
+| L2 核心计算层 | `kernel/` | IFC 解析 + 几何内核（`.kengeo` 缓存）+ 碰撞引擎（硬碰撞 + 冲突矩阵）+ 简化规则引擎（DSL v1 + 109 模板 + 校验）+ 合规性检查（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护）+ 模型融合与专业分类 + IDS 校验 + ITO / QTO 信息提取 + 报告渲染（PDF / Excel）+ 健康检查 | 已实现，端到端冒烟通过 |
 | L1 数据层 | `corpus/` | 回归语料库（4 版本 × 4 导出方 × 4 规模档）、探针模型 | 清单与校验工具已就绪，样本待采集 |
 | 横切工具 | `tools/` | 语料覆盖率校验、冒烟模型生成、内核 / 业务服务冒烟测试、黄金基准比对流水线、性能基线脚本 | 均已就绪 |
 
@@ -222,7 +222,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L4 UI | `src/` | Three-pane workspace (multi-source federated tree / 3D view / properties & issues), service clients, ruleset editor, clash matrix panel, IDS editor, takeoff panel, communication & BCF panel, report panel, view system (2D / clipping / markers / presentation), bilingual framework (`src/i18n/`) | Implemented (v1) |
 | L4 bridge | `electron/` | Main window, kernel process spawn, IPC forwarding (kernel / business service) | Implemented (v1) |
 | L3 business | `server/` | Health check + results & reports (unified issue list / reason chains / HTML report / PDF & Excel export) + ruleset management + communication & BCF (lifecycle / comments / snapshots / import / BCF 2.1 export) + Autorun batch checking | Implemented (v1) |
-| L2 kernel | `kernel/` | IFC parsing + geometry kernel (`.kengeo` cache) + clash engine (hard clash + matrix) + rule engine (DSL v1 + 105 templates + validation) + compliance (accessibility / headroom / fire / evacuation / MEP / structure / openings / space / guarding, GB code references) + federation & discipline classification + IDS validation + ITO / QTO takeoff + report rendering (PDF / Excel) + health check | Implemented, E2E smoke passed |
+| L2 kernel | `kernel/` | IFC parsing + geometry kernel (`.kengeo` cache) + clash engine (hard clash + matrix) + rule engine (DSL v1 + 109 templates + validation) + compliance (accessibility / headroom / fire / evacuation / MEP / structure / openings / space / guarding, GB code references) + federation & discipline classification + IDS validation + ITO / QTO takeoff + report rendering (PDF / Excel) + health check | Implemented, E2E smoke passed |
 | L1 data | `corpus/` | Regression corpus (4 versions × 4 exporters × 4 size tiers), probe models | Manifest & validators ready, samples pending |
 | Cross-cutting | `tools/` | Corpus coverage validation, smoke model generation, kernel / server smoke tests, golden-master pipeline, performance baseline | All ready |
 
@@ -249,7 +249,7 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | GET | `/geometry/meshes?path=&ifc_type=&offset=&limit=` | 批量构件三角网格：一次返回多个构件的顶点与索引（含专业 key、IFC 原生色 `ifc_color`、材质名 `material`），供 3D 视图真实化显示、按专业分组淡化、玻璃识别与显色书签 |
 | GET | `/clash/run?path=&ifc_type_a=&ifc_type_b=&max_clashes=` | 硬碰撞检测：返回碰撞构件对、接触点、相交三角形数与整体统计 |
 | POST | `/clash/matrix` | 冲突矩阵：按专业两两对检，分类硬碰撞 / 间隙 / 净空，支持忽略规则与单元格启停。请求体 `{path, hard?, gap_mm?, clearance_mm?, ignore_same_discipline?, ignore?, cells?, max_clashes?}` |
-| GET | `/rules/templates` | 内置规则模板列表（105 个：14 条通用 + 91 条合规专用，含 GB 出处字段） |
+| GET | `/rules/templates` | 内置规则模板列表（109 个：15 条通用 + 94 条合规专用，含 GB 出处字段） |
 | GET | `/rules/presets` | 合规预设规则集（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护 / 全套），含展开后的规则，供一键套用 |
 | GET | `/rules/run?path=&rule_ids=&max_violations=` | 对模型运行内置规则，`rule_ids` 逗号分隔取子集（默认全部） |
 | POST | `/rules/run` | 运行自定义规则；请求体 `{path, rules?, rule_ids?, max_violations?}`，`rules` 优先 |
@@ -281,7 +281,7 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | GET | `/geometry/meshes?path=&ifc_type=&offset=&limit=` | Batch element meshes: vertices & indices for many elements at once (incl. discipline key, native `ifc_color` and `material` names) for 3D real-mesh display, per-discipline fading, glass detection and color bookmarks |
 | GET | `/clash/run?path=&ifc_type_a=&ifc_type_b=&max_clashes=` | Hard clash detection: clashing pairs, contact points, intersecting triangle counts, overall stats |
 | POST | `/clash/matrix` | Clash matrix: discipline pairwise checks, hard / gap / clearance classification, ignore rules & per-cell toggles. Body `{path, hard?, gap_mm?, clearance_mm?, ignore_same_discipline?, ignore?, cells?, max_clashes?}` |
-| GET | `/rules/templates` | Built-in rule templates (105: 14 generic + 91 compliance, with GB code references) |
+| GET | `/rules/templates` | Built-in rule templates (109: 15 generic + 94 compliance, with GB code references) |
 | GET | `/rules/presets` | Compliance preset rulesets (accessibility / headroom / fire / evacuation / MEP / structure / openings / space / guarding / full set), expanded rules included |
 | GET | `/rules/run?path=&rule_ids=&max_violations=` | Run built-in rules; comma-separated `rule_ids` selects a subset (default all) |
 | POST | `/rules/run` | Run custom rules; body `{path, rules?, rule_ids?, max_violations?}`, `rules` wins |
@@ -426,18 +426,20 @@ python tools/kernel/smoke_test.py       # 另开终端：解析 + 几何端点�
 
 ### 规则 DSL v1 / Rule DSL v1
 
-一条规则含 `id / name / severity / target / check`，`target` 用 `ifc_type` 与 `where` 条件（Pset 属性或构件属性）选定构件；`check.type` 支持：
+一条规则含 `id / name / severity / target / check`，`target` 用 `ifc_type` 与 `where` 条件（Pset 属性或构件属性）选定构件，单条条件可套 `any_of` 组（组内 OR、组间 AND）；`check.type` 支持：
 
-- `property`：属性比较，支持 `unit: model/m/cm/mm`（单位换算仅对数值算子生效）
+- `property`：属性比较，支持 `unit: model/m/cm/mm/m2/cm2/mm2`（单位换算仅对数值算子生效）
 - `intersection`：跨专业相交（复用碰撞引擎）
 - `clearance`：包围盒净距，支持 `axis`
 - `headroom`：空间净高——目标底面到投影范围内最低遮挡构件底面的垂直净空
 - `dimension`：净尺寸——包围盒指定轴向尺寸，`axis: min` 取水平两轴较小值
 - `duplicate`：重复构件
+- `count`：构件计数——`op`+`value` 阈值比较，`group_by: storey` 按楼层分组统计（如每层安全出口 ≥2）
+- `containment`：空间包含——目标包围盒中心须落在 `other` 集合任一空间包围盒内（如消火栓须设在走道/前室）
 
 结果返回逐规则违规清单与原因链 `steps`。内置模板分「通用」（通用/碰撞/模型质量）与「合规专用」（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护，分类字段 `category`）两类；`/rules/presets` 按分类打包为十个预设，供规则集编辑器一键套用。
 
-A rule has `id / name / severity / target / check`; `target` selects elements via `ifc_type` and `where` conditions (Pset or element attributes); `check.type` supports:
+A rule has `id / name / severity / target / check`; `target` selects elements via `ifc_type` and `where` conditions (Pset or element attributes), and a single condition may wrap an `any_of` group (OR within, AND across); `check.type` supports:
 
 - `property`: property comparison, supports `unit: model/m/cm/mm/m2/cm2/mm2` (unit conversion applies to numeric operators only)
 - `intersection`: cross-discipline intersection (reuses the clash engine)
@@ -445,8 +447,10 @@ A rule has `id / name / severity / target / check`; `target` selects elements vi
 - `headroom`: spatial headroom — vertical clearance from the target's base to the lowest obstructing element base within the projection
 - `dimension`: clear dimension — bbox size on the given axis, `axis: min` takes the smaller horizontal axis
 - `duplicate`: duplicate elements
+- `count`: element counting — `op`+`value` threshold, `group_by: storey` for per-storey stats (e.g. ≥2 exits per storey)
+- `containment`: space containment — target bbox center must lie inside any space bbox of the `other` set (e.g. hydrant inside corridor/lobby)
 
-Results include per-rule violations with reason chains (`steps`). Built-in templates split into "generic" (general / clash / model quality) and "compliance" (accessibility / headroom / fire safety / evacuation / MEP / structure / doors & windows, via the `category` field); `/rules/presets` packages them into eight one-click presets for the ruleset editor.
+Results include per-rule violations with reason chains (`steps`). Built-in templates split into "generic" (general / clash / model quality) and "compliance" (accessibility / headroom / fire safety / evacuation / MEP / structure / doors & windows / space / guarding, via the `category` field); `/rules/presets` packages them into ten one-click presets for the ruleset editor.
 
 ### 信息提取（M6）/ Takeoff (M6)
 
@@ -527,7 +531,7 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/model-tree/ModelSourcePanel.tsx` | 模型源面板 | 多模型源列表（增删）、路径输入、快捷候选 |
 | `src/model-tree/FederationTree.tsx` | 融合模型树 | 融合根 → 模型节点 → 空间层级，显示专业徽章与构件级专业分布 |
 | `src/ruleset-editor/RulesetEditor.tsx` | 规则集编辑器 | 悬浮层：规则集列表、新建/选择/保存/删除、合规预设一键添加、模板快速添加、校验与运行 |
-| `src/ruleset-editor/RuleEditor.tsx` | 单条规则编辑表单 | 按 `check.type` 分派字段（property / intersection / clearance / headroom / dimension / duplicate） |
+| `src/ruleset-editor/RuleEditor.tsx` | 单条规则编辑表单 | 按 `check.type` 分派字段（property / intersection / clearance / headroom / dimension / duplicate / count / containment） |
 | `src/clash/ClashMatrix.tsx` | 冲突矩阵面板 | 悬浮层：硬碰撞 / 间隙 / 净空分类与容差、忽略同专业、运行矩阵、专业矩阵表与问题清单 |
 | `src/ids/IdsEditor.tsx` | IDS 编辑器 | 悬浮层：IDS XML 编辑 / 载入示例 / 解析预览 / 导出 XML / 对模型校验并查看逐规范报告 |
 | `src/takeoff/TakeoffPanel.tsx` | 信息提取面板 | 悬浮层：固定字段与建议列说明、自定义计算列编辑（受控表达式）、运行提取、逐构件结果与合计、导出 Excel |
@@ -554,7 +558,7 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/model-tree/ModelSourcePanel.tsx` | Model source panel | Multi-source list (add/remove), path input, quick suggestions |
 | `src/model-tree/FederationTree.tsx` | Federated tree | Federation root → model nodes → spatial hierarchy, discipline badges & per-element distribution |
 | `src/ruleset-editor/RulesetEditor.tsx` | Ruleset editor | Overlay: ruleset list, create/select/save/delete, compliance presets, template quick-add, validate & run |
-| `src/ruleset-editor/RuleEditor.tsx` | Single-rule form | Dispatches fields by `check.type` (property / intersection / clearance / headroom / dimension / duplicate) |
+| `src/ruleset-editor/RuleEditor.tsx` | Single-rule form | Dispatches fields by `check.type` (property / intersection / clearance / headroom / dimension / duplicate / count / containment) |
 | `src/clash/ClashMatrix.tsx` | Clash matrix panel | Overlay: hard / gap / clearance with tolerances, ignore same discipline, run matrix, discipline table & issue list |
 | `src/ids/IdsEditor.tsx` | IDS editor | Overlay: IDS XML editing / example loading / parse preview / XML export / validation with per-spec report |
 | `src/takeoff/TakeoffPanel.tsx` | Takeoff panel | Overlay: fixed fields & suggested columns, custom computed columns (controlled expressions), run, per-element results & totals, Excel export |

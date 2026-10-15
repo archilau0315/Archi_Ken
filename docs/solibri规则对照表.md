@@ -78,7 +78,7 @@
 | 248 Accessible Area around Objects | 物体周围无障碍区域 | 🚧 | 自由空间几何分析 |
 | 252 Accessible Route Compliance | 无障碍路线合规 | 🚧 | 路径分析（远期） |
 | 179 Escape Route Analysis | 疏散路径长度/可选路径 | 🚧 | 路径分析（远期） |
-| 243 Exit Access Doorway Arrangement | 安全出口分散布置、间距 ≥5m | 🔧 | clearance 同集合两两净距（本批新增 egress-exit-door-spacing）；出口数量 ≥2 需 count 🚧 |
+| 243 Exit Access Doorway Arrangement | 安全出口分散布置、间距 ≥5m | ✅ | clearance 同集合两两净距（egress-exit-door-spacing）+ count 按楼层分组（Phase B 新增 egress-exit-door-count-per-storey，每层 ≥2） |
 | 209/226 Free Area in Front | 构件前方自由区域 | 🚧 | 自由空间几何分析 |
 | 236 Guarded Against Falling | 临边防护（栏杆） | 🔧 部分 | 本批新增 guard.py：栏杆/扶手高度（dimension axis z）；临边判定几何 🚧 |
 | 237 Parking Rule | 车位尺寸/净高/数量 | ✅ 部分 | headroom-parking-bay、access-parking-min-dim；车位计数 🚧 |
@@ -96,7 +96,7 @@
 
 | Solibri 规则 | 检查意图 | 档位 | ArchiKen 对应 / 说明 |
 |---|---|---|---|
-| 11 Model Should Have Components | 模型必须含某类构件 | 🚧 | count 计数（模型级存在性） |
+| 11 Model Should Have Components | 模型必须含某类构件 | ✅ | Phase B 落地 model-has-spaces（count 全模型统计）；任意类型存在性可按同写法配置 |
 | 176 Model Structure | 门窗有洞口、墙厚=材料层和 | 🚧 | 结构关系校验 |
 | 228 Floor Names Consecutive | 楼层命名连续 | 🔧 部分 | 命名规范 matches 可表达（本批新增 quality-storey-naming）；连续性判断需脚本 🚧 |
 | 220 Floor Distance | 层高上下限 | 🚧 | 楼层标高差计算 |
@@ -144,3 +144,19 @@
 - 09/215 → opening-fire-door-rating-enum、opening-fire-window-rating-enum（枚举白名单）
 - 228 → quality-storey-naming（楼层命名规范，连续性部分留 🚧）
 - 216/218（洞口净距 bbox 近似）与 211（窗台高属性名无约定）误报风险高，暂缓至 Phase C 验证后决定
+
+### Phase B 落地记录（2026-10-15，引擎三能力 + 规则回填）
+
+引擎能力（checks_group.py 新建 + selector.py 扩展，冒烟全部通过）：
+
+- **any_of OR 条件组**：selector 单条件可套 `any_of` 子条件列表，组内 OR、组间 AND；guard-balcony-railing-height（阳台/露台/天台/屋面）、space-corridor-min-width（过道/走廊）已改写示范
+- **count 计数**：`{"type": "count", "op", "value", "group_by": "storey"?}`；缺省全模型统计，group_by=storey 按楼层分组（get_container 取楼层名）
+- **containment 包含**：目标包围盒中心须落在 other 集合任一空间包围盒内
+
+规则回填（105→109，均 warning/info 级、阈值标注待复核）：
+
+- 11 → model-has-spaces（通用，模型应含空间，info）
+- 243 出口数量部分 → egress-exit-door-count-per-storey（疏散，count/storey ≥2，warning）
+- containment 示范规则 → fire-hydrant-in-corridor（消火栓须位于走道/前室/楼梯间/大堂/门厅，any_of 五关键词，warning）、mep-switchgear-in-room（配电柜须位于配电间/机房/电井，info）
+
+其余 🚧 档条目中，containment（162/175/191/223/224/234/25）与 count（225/235/38/36/237）**引擎能力已就绪**，规则留待 Phase C 真实模型验证时按误报情况逐条回填；路径分析、比率/聚合、自由空间、max-distance、外围护拓扑、反向语义仍为引擎缺口。

@@ -6,7 +6,7 @@
       "name": "门最小宽度",
       "severity": "error",                       # error / warning / info
       "target": {"ifc_type": ["IfcDoor"], "where": [...]},
-      "check": {"type": "property", ...},         # property / intersection / clearance / duplicate / headroom / dimension
+      "check": {"type": "property", ...},         # property / intersection / clearance / duplicate / headroom / dimension / count / containment
       "message": "门宽 {actual} 小于最小要求 {expected}"   # 可选，支持占位符
     }
 """
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-CHECK_TYPES = {"property", "intersection", "clearance", "duplicate", "headroom", "dimension"}
+CHECK_TYPES = {"property", "intersection", "clearance", "duplicate", "headroom", "dimension", "count", "containment"}
 SEVERITIES = {"error", "warning", "info"}
 
 

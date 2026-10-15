@@ -1,4 +1,4 @@
-"""通用内置规则模板（12 条，开箱即用，可作规则编写参考）。
+"""通用内置规则模板（15 条，开箱即用，可作规则编写参考）。
 
 覆盖碰撞检查、模型质量与通用合规；合规性专用模板见 compliance.py。
 """
@@ -208,5 +208,17 @@ COMMON_TEMPLATES: list[dict[str, Any]] = [
         },
         "message": "楼层 {name} 命名不符合约定格式（示例：B1 / 1F / F1 / 1层 / Level 1）",
         "message_en": "Storey {name} naming outside convention (e.g. B1 / 1F / F1 / Level 1)",
+    },
+    {
+        "id": "model-has-spaces",
+        "name": "模型应包含空间",
+        "name_en": "Model Should Have Spaces",
+        "category": "模型质量",
+        "category_en": "Model Quality",
+        "severity": "info",
+        "target": {"ifc_type": ["IfcSpace"]},
+        "check": {"type": "count", "op": ">=", "value": 1},
+        "message": "模型中未找到任何 IfcSpace 空间构件，空间/面积/净高类规则无法生效",
+        "message_en": "No IfcSpace found in model; space/area/headroom rules cannot take effect",
     },
 ]

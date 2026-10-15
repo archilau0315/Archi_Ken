@@ -5,6 +5,9 @@ target 结构：
 条件结构（两种取值来源）：
     {"pset": "Pset_DoorCommon", "prop": "IsExternal", "op": "==", "value": true}
     {"attr": "Name", "op": "contains", "value": "门"}
+OR 条件组（组内任一满足即算该条件满足，多条件之间仍是 AND）：
+    {"any_of": [{"attr": "Name", "op": "contains", "value": "卫生间"},
+                {"attr": "Name", "op": "contains", "value": "浴室"}]}
 """
 
 from __future__ import annotations
@@ -33,13 +36,18 @@ def property_value(element: Any, spec: dict[str, Any]) -> Any:
     return operators.MISSING
 
 
+def _match_single(element: Any, cond: dict[str, Any]) -> bool:
+    """单个条件判定；any_of 组内任一满足即算满足（支持嵌套普通条件）。"""
+    sub = cond.get("any_of")
+    if isinstance(sub, list) and sub:
+        return any(_match_single(element, item) for item in sub if isinstance(item, dict))
+    value = property_value(element, cond)
+    return operators.compare(cond.get("op", "=="), value, cond.get("value"))
+
+
 def match_conditions(element: Any, where: list[dict[str, Any]]) -> bool:
-    """全部条件均满足才命中。"""
-    for cond in where:
-        value = property_value(element, cond)
-        if not operators.compare(cond.get("op", "=="), value, cond.get("value")):
-            return False
-    return True
+    """全部条件均满足才命中（条件之间为 AND，any_of 组内为 OR）。"""
+    return all(_match_single(element, cond) for cond in where)
 
 
 def select(model: ifcopenshell.file, target: dict[str, Any]) -> list[dict[str, Any]]:

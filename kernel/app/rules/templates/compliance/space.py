@@ -93,7 +93,14 @@ SPACE_TEMPLATES: list[dict[str, Any]] = [
         "severity": "warning",
         "target": {
             "ifc_type": ["IfcSpace"],
-            "where": [{"attr": "Name", "op": "contains", "value": "过道"}],
+            "where": [
+                {
+                    "any_of": [
+                        {"attr": "Name", "op": "contains", "value": "过道"},
+                        {"attr": "Name", "op": "contains", "value": "走廊"},
+                    ]
+                }
+            ],
         },
         "check": {"type": "dimension", "axis": "min", "value": 1000, "unit": "mm"},
         "message": "过道 {name} 净宽 {actual} 小于最小要求 {expected}（阈值待按现行规范原文复核）",

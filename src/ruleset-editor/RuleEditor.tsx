@@ -4,7 +4,7 @@ import type { RuleSpec } from '../services/kernel'
 // 单条规则编辑表单（L4）：按检查类型展示对应参数字段。
 // 编辑结果通过 onChange 回传，父组件负责保存。
 
-const CHECK_TYPES = ['property', 'intersection', 'clearance', 'headroom', 'dimension', 'duplicate']
+const CHECK_TYPES = ['property', 'intersection', 'clearance', 'headroom', 'dimension', 'duplicate', 'count', 'containment']
 
 const SEVERITIES = ['error', 'warning', 'info']
 
@@ -50,6 +50,8 @@ function defaultCheck(type: string): { type: string; [key: string]: unknown } {
   if (type === 'headroom') return { type, other: { ifc_type: ['IfcSlab'] }, value: 2400, unit: 'mm' }
   if (type === 'dimension') return { type, axis: 'min', value: 1200, unit: 'mm' }
   if (type === 'duplicate') return { type, size_tolerance: 0.02, center_tolerance: 0.05 }
+  if (type === 'count') return { type, op: '>=', value: 1 }
+  if (type === 'containment') return { type, other: { ifc_type: ['IfcSpace'] } }
   return { type: 'property', pset: 'Pset_WallCommon', prop: 'IsExternal', op: '==', value: true }
 }
 
@@ -283,6 +285,52 @@ export default function RuleEditor({ rule, onChange, onRemove }: Props) {
               value={valueToText(check.center_tolerance ?? 0.05)}
               onChange={(e) => setCheck({ center_tolerance: Number(e.target.value) || 0 })}
             />
+          </label>
+        </div>
+      )}
+
+      {check.type === 'count' && (
+        <div className="rule-grid">
+          <label>
+            {t('ruleset.count.op')}
+            <select value={String(check.op ?? '>=')} onChange={(e) => setCheck({ op: e.target.value })}>
+              {['==', '!=', '>', '>=', '<', '<='].map((op) => (
+                <option key={op} value={op}>
+                  {op}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t('ruleset.count.value')}
+            <input
+              value={valueToText(check.value)}
+              onChange={(e) => setCheck({ value: parseValue(e.target.value) })}
+            />
+          </label>
+          <label>
+            {t('ruleset.count.groupBy')}
+            <select
+              value={String(check.group_by ?? '')}
+              onChange={(e) => {
+                const next = { ...check }
+                if (e.target.value === 'storey') next.group_by = 'storey'
+                else delete next.group_by
+                set({ check: next as RuleSpec['check'] })
+              }}
+            >
+              <option value="">-</option>
+              <option value="storey">storey</option>
+            </select>
+          </label>
+        </div>
+      )}
+
+      {check.type === 'containment' && (
+        <div className="rule-grid">
+          <label>
+            {t('ruleset.containment.otherTypes')}
+            <input value={typesToText(other.ifc_type)} onChange={(e) => setOtherTypes(e.target.value)} />
           </label>
         </div>
       )}

@@ -227,4 +227,21 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版) 第 5.5.2 条：相邻两个安全出口最近边缘之间的水平距离不应小于 5m）",
         "reference_en": "GB 55037-2022 (formerly GB 50016-2014 Clause 5.5.2: adjacent exits ≥ 5m apart)",
     },
+    {
+        "id": "egress-exit-door-count-per-storey",
+        "name": "每层安全出口数量",
+        "name_en": "Exit Doors per Storey",
+        "category": "疏散",
+        "category_en": "Evacuation",
+        "severity": "warning",
+        "target": {
+            "ifc_type": ["IfcDoor"],
+            "where": [{"attr": "Name", "op": "contains", "value": "安全出口"}],
+        },
+        "check": {"type": "count", "group_by": "storey", "op": ">=", "value": 2},
+        "message": "{name} 安全出口数量 {actual} 不满足 {expected}",
+        "message_en": "{name}: exit door count {actual} does not satisfy {expected}",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：每个防火分区或楼层安全出口不应少于 2 个；按名称关键词统计，待按项目复核）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014: ≥2 exits per compartment/storey; keyword-based count)",
+    },
 ]

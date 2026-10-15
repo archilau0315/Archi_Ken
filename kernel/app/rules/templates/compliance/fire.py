@@ -129,4 +129,37 @@ FIRE_TEMPLATES: list[dict[str, Any]] = [
         "reference": "GB 55036-2022《消防设施通用规范》/ BIM 交付数据完整性",
         "reference_en": "GB 55036-2022 / BIM data completeness",
     },
+    {
+        "id": "fire-hydrant-in-corridor",
+        "name": "消火栓布置位置",
+        "name_en": "Hydrant in Corridor",
+        "category": "消防",
+        "category_en": "Fire Safety",
+        "severity": "warning",
+        "target": {
+            "ifc_type": ["IfcValve"],
+            "where": [{"attr": "Name", "op": "contains", "value": "消火栓"}],
+        },
+        "check": {
+            "type": "containment",
+            "other": {
+                "ifc_type": ["IfcSpace"],
+                "where": [
+                    {
+                        "any_of": [
+                            {"attr": "Name", "op": "contains", "value": "走道"},
+                            {"attr": "Name", "op": "contains", "value": "前室"},
+                            {"attr": "Name", "op": "contains", "value": "楼梯间"},
+                            {"attr": "Name", "op": "contains", "value": "大堂"},
+                            {"attr": "Name", "op": "contains", "value": "门厅"},
+                        ]
+                    }
+                ],
+            },
+        },
+        "message": "消火栓 {name} 未布置在走道/前室/楼梯间等便于取用的公共空间内（按名称关键词判定）",
+        "message_en": "Hydrant {name} not placed in corridor/lobby/stairwell space (keyword-based)",
+        "reference": "GB 55036-2022《消防设施通用规范》（原 GB 50974-2014：室内消火栓应设置在楼梯间及其休息平台和前室、走道等明显易于取用的地点）",
+        "reference_en": "GB 55036-2022 (formerly GB 50974-2014: hydrants in stairwells, lobbies, corridors and other accessible locations)",
+    },
 ]
