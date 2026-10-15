@@ -78,7 +78,7 @@ sleep 20; docker compose ps
 curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health; echo
 ```
 
-**预期**：两行 JSON，都含 `"status":"ok"`，且 `"build"` 是一串类似 `1407608-20261015141731` 的构建号（**不是 `dev-local`**）。
+**预期**：两行 JSON，都含 `"status":"ok"`，且 `"build"` 是一串类似 `1407608-20261015142426` 的构建号（**不是 `dev-local`**）。
 
 > 如果提示 `docker: 'compose' is not a docker command`，说明是旧版 compose，把命令里的 `docker compose` 换成 `docker-compose` 再执行。
 
@@ -184,7 +184,7 @@ https://你的域名/healthz
 应返回类似：
 
 ```json
-{"status":"ok","service":"archiken-kernel","version":"0.12.0","build":"1407608-20261015141731"}
+{"status":"ok","service":"archiken-kernel","version":"0.12.0","build":"1407608-20261015142426"}
 ```
 
 再打开 `https://你的域名/` → 应该看到 ArchiKen 的三维工作台界面 → 上传一个 IFC 模型试试。
