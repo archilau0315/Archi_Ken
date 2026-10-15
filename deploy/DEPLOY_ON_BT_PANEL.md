@@ -44,8 +44,8 @@ free -h ; df -h /
 解压后应当是这个结构（统一收在主站的 `aitools/` 目录里，便于管理）：
 
 ```
-/www/wwwroot/kbitai.com.cn/aitools/archiken/      ← 后端容器编排 + 源码
-/www/wwwroot/kbitai.com.cn/aitools/archiken-web/  ← 前端网页文件
+/www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken/      ← 后端容器编排 + 源码
+/www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken-web/  ← 前端网页文件
 ```
 
 ---
@@ -55,7 +55,7 @@ free -h ; df -h /
 宝塔面板 → 左侧 **终端** → **逐行**复制粘贴执行（每行回车）：
 
 ```bash
-cd /www/wwwroot/kbitai.com.cn/aitools/archiken
+cd /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken
 ```
 
 ```bash
@@ -98,7 +98,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
 ```nginx
     # ===== ArchiKen 子路径开始 =====
     # 安全：后端源码和 .env 在网站目录下，禁止公网直接下载（应用本身不受影响）
-    location ^~ /aitools/archiken/ {
+    location ^~ /aitools/archi_ken/ {
         deny all;
     }
 
@@ -134,7 +134,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
     }
 
     location /aitools/aichiken/ {
-        alias /www/wwwroot/kbitai.com.cn/aitools/archiken-web/;
+        alias /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken-web/;
         try_files $uri $uri/ /aitools/aichiken/index.html;
     }
     # ===== ArchiKen 子路径结束 =====
@@ -144,7 +144,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
 
 > 说明：
 > - 主站首页和其他页面**不受任何影响**。
-> - 静态文件放在 `/www/wwwroot/kbitai.com.cn/aitools/archiken-web/`（第 1 步解压出来的），不占主站目录。
+> - 静态文件放在 `/www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken-web/`（第 1 步解压出来的），不占主站目录。
 
 ---
 
@@ -181,12 +181,12 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 | 网站打不开、超时 | 阿里云**安全组**没放行 80/443（见第 0.1 步） |
 | `docker compose build` 卡在 `npm ci` 很久 | 依赖源问题，**把终端输出贴给我**，我给换源方案 |
 | 502 Bad Gateway | 后端容器没起好。终端执行 `docker compose ps` 和 `docker compose logs --tail=50`，结果贴给我 |
-| 页面白屏 | 配置文件里 `alias /www/wwwroot/kbitai.com.cn/aitools/archiken-web/;` 路径写错了，或子路径块贴错了位置，对照 3.1 检查 |
+| 页面白屏 | 配置文件里 `alias /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken-web/;` 路径写错了，或子路径块贴错了位置，对照 3.1 检查 |
 | API 全报 404 | 前端包不是子路径版（构建号太旧），用最新 zip 重新解压覆盖 |
 | 上传模型报错 / 一直转圈 | 多半是内核容器没 healthy，或模型文件没落到 `/data/uploads`。贴日志给我 |
 | 保存 Nginx 配置报错 | 说明括号不配对，把报错贴给我 |
 
-> 万不得已要重来：终端执行 `cd /www/wwwroot/kbitai.com.cn/aitools/archiken && docker compose down`，删掉重装即可，**上传的模型和规则集存在数据卷里，不会丢**。
+> 万不得已要重来：终端执行 `cd /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken && docker compose down`，删掉重装即可，**上传的模型和规则集存在数据卷里，不会丢**。
 
 ---
 
@@ -197,14 +197,14 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 **① 生成密码文件**：宝塔终端执行（把账号密码换成你自己的）：
 
 ```bash
-printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/kbitai.com.cn/aitools/archiken.htpasswd
+printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken.htpasswd
 ```
 
 **② 改配置**：主站「配置文件」里，在 ArchiKen 子路径块的**三个 location 内**（`api/kernel/`、`api/server/`、静态 `location /aitools/aichiken/`）各加这两行，保存：
 
 ```nginx
         auth_basic "ArchiKen";
-        auth_basic_user_file /www/wwwroot/kbitai.com.cn/aitools/archiken.htpasswd;
+        auth_basic_user_file /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken.htpasswd;
 ```
 
 保存后访问 `https://www.kbitai.com.cn/aitools/aichiken/` 会先弹登录框。想取消密码，把这两行删掉再保存即可。
