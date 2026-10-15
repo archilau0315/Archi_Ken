@@ -1,0 +1,10 @@
+# Docker 构建上下文排除清单（放到打包产物 archiken/ 目录下，命名 .dockerignore）
+# 作用：避免本地开发残留（Windows 缓存、测试数据、依赖目录）被打进镜像，镜像更小、构建更快。
+
+**/__pycache__
+**/*.pyc
+**/.data
+**/.cache
+**/node_modules
+**/.git
+**/*.log

@@ -1,0 +1,10 @@
+{
+  "version": "0.1",
+  "updated_at": "2026-10-13",
+  "matrix": {
+    "ifc_versions": ["IFC2X3", "IFC4", "IFC4X1", "IFC4X3"],
+    "exporters": ["Revit", "ArchiCAD", "Tekla", "Bentley"],
+    "size_tiers": ["small", "medium", "large", "xlarge"]
+  },
+  "samples": []
+}

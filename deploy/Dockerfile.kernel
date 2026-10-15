@@ -1,0 +1,32 @@
+# ArchiKen L2 计算内核 Dockerfile
+#
+# 说明：
+#  1. ifcopenshell / ifctester / uvicorn 在 PyPI 上都有 manylinux 预编译包，
+#     所以镜像里不需要 gcc / build-essential，构建更快、体积更小。
+#  2. PDF 中文用 reportlab 内置 CID 字体（STSong-Light），不需要系统字体包。
+#  3. 默认走阿里云 PyPI 镜像（服务器同区域，拉取快）；如需官方源，
+#     构建时传 --build-arg PIP_INDEX=https://pypi.org/simple/
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 依赖清单先复制，利用 Docker 层缓存
+ARG PIP_INDEX=https://mirrors.aliyun.com/pypi/simple/
+COPY kernel/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --index-url ${PIP_INDEX} -r /tmp/requirements.txt
+
+# 内核源码
+COPY kernel/ /app/
+
+EXPOSE 4319
+
+# 健康检查用 python 自带 urllib（slim 镜像没有 curl/wget）
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4319/health').read()" || exit 1
+
+ENV ARCHIKEN_KERNEL_HOST=0.0.0.0
+ENV ARCHIKEN_KERNEL_PORT=4319
+ENV ARCHIKEN_BUILD_ID=dev
+
+CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "4319"]

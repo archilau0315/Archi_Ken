@@ -1,0 +1,49 @@
+# ArchiKen L3 业务服务 Dockerfile — 多阶段构建
+#
+# Stage 1（builder）：装全部依赖 + 把 TS 编译成 CommonJS 的 JS
+# Stage 2（runtime）：只装运行时依赖，直接用 node 跑编译产物
+#
+# 两个关键点：
+#  1. 编译配置用 tsconfig.server.build.json（覆盖了 noEmit:true，真正产出文件）
+#  2. 必须跳过 electron 二进制下载 —— 它只是 devDependency，
+#     但 npm ci 默认会去 GitHub 下载上百兆二进制，国内服务器经常失败。
+
+# ========== Stage 1: 编译 ==========
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
+
+COPY package.json package-lock.json* ./
+RUN npm config set registry ${NPM_REGISTRY} && npm ci
+
+COPY server/ /app/server/
+COPY tsconfig.server.json /app/tsconfig.server.json
+COPY tsconfig.server.build.json /app/tsconfig.server.build.json
+
+RUN npx tsc -p tsconfig.server.build.json
+
+# ========== Stage 2: 运行时 ==========
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+
+COPY package.json package-lock.json* ./
+RUN npm config set registry ${NPM_REGISTRY} && npm ci --omit=dev
+
+COPY --from=builder /app/dist-server /app/server/
+
+EXPOSE 4318
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:4318/health || exit 1
+
+ENV ARCHIKEN_SERVER_HOST=0.0.0.0
+ENV ARCHIKEN_SERVER_PORT=4318
+ENV ARCHIKEN_BUILD_ID=dev
+
+CMD ["node", "server/index.js"]

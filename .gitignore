@@ -1,0 +1,16 @@
+node_modules/
+corpus/samples/
+.cache/
+.data/
+dist/
+dist-electron/
+dist-server/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
+.DS_Store
+deploy/_stage/
+deploy/_build.log
+deploy/archiken-deploy.zip

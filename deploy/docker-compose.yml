@@ -1,0 +1,75 @@
+# ArchiKen 云端生产部署 — Docker Compose 编排（宝塔面板版）
+#
+# 架构：宝塔 Nginx（HTTPS + 反代 + 静态资源托管）
+#         ├─→ 127.0.0.1:4319  archiken-kernel（Python 内核 L2）
+#         └─→ 127.0.0.1:4318  archiken-server（Node 业务 L3）
+#
+# 端口策略：两个后端容器只绑定 127.0.0.1，公网无法直连，必须经宝塔 Nginx 反代。
+# 数据卷：archiken-data 同时挂到两个容器的 /data，保证
+#         上传模型 → 内核读取 → 导出报告 → 业务分发 全链路共享同一份文件。
+#
+# 注意：本文件必须与 kernel/、server/、package.json、Dockerfile* 位于同一目录
+#       （即打包产物 archiken/ 目录内），构建上下文为当前目录。
+
+name: archiken
+
+networks:
+  archiken-net:
+    driver: bridge
+
+volumes:
+  archiken-data:       # 上传模型 + 规则集 + BCF + 报告 + 几何缓存（持久化）
+
+services:
+
+  # ========== L2 计算内核（Python / FastAPI） ==========
+  archiken-kernel:
+    build:
+      context: .
+      dockerfile: Dockerfile.kernel
+    container_name: archiken-kernel
+    restart: unless-stopped
+    networks: [archiken-net]
+    ports:
+      - "127.0.0.1:4319:4319"
+    volumes:
+      - archiken-data:/data
+    environment:
+      ARCHIKEN_KERNEL_HOST: 0.0.0.0
+      ARCHIKEN_KERNEL_PORT: "4319"
+      ARCHIKEN_BUILD_ID: ${ARCHIKEN_BUILD_ID:-dev}
+      # 内核有模型路径白名单：必须放开 L3 的上传目录，否则拒绝读取上传的 IFC
+      ARCHIKEN_MODEL_ROOTS: /data/uploads
+      # 几何缓存（.kengeo）落数据卷，容器重建后仍可命中
+      ARCHIKEN_CACHE_DIR: /data/.cache
+      # 导出目录（PDF/Excel）必须在共享卷内，L3 才能复制到运行目录
+      ARCHIKEN_DATA_DIR: /data
+
+  # ========== L3 业务服务（Node / Koa） ==========
+  archiken-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: archiken-server
+    restart: unless-stopped
+    depends_on:
+      archiken-kernel:
+        condition: service_healthy
+    networks: [archiken-net]
+    ports:
+      - "127.0.0.1:4318:4318"
+    volumes:
+      - archiken-data:/data
+    environment:
+      ARCHIKEN_SERVER_HOST: 0.0.0.0
+      ARCHIKEN_SERVER_PORT: "4318"
+      # 容器间用服务名互访
+      ARCHIKEN_KERNEL_URL: http://archiken-kernel:4319
+      # 上传目录 /data/uploads，与内核白名单一致
+      ARCHIKEN_DATA_DIR: /data
+      # 留空 = 不鉴权（仅本机调试）；公网部署必须在 .env 里设置
+      ARCHIKEN_API_KEY: ${ARCHIKEN_API_KEY:-}
+      ARCHIKEN_BUILD_ID: ${ARCHIKEN_BUILD_ID:-dev}
+
+# ========== L4 前端静态资源 ==========
+# 不进容器：dist/ 上传到宝塔站点根目录，由宝塔 Nginx 直接托管

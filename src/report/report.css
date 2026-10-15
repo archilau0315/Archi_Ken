@@ -1,0 +1,117 @@
+/* 报告面板（M9）：摘要统计 + 问题清单预览表。 */
+
+/* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw（导入顺序晚于本文件）。 */
+.editor-dialog.report-dialog {
+  width: min(1100px, 94vw);
+  height: auto;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-toolbar {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.report-message {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border: 1px solid #b2ddff;
+  background: #eff8ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #175cd3;
+  word-break: break-all;
+}
+
+.report-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.report-stat {
+  flex: 1;
+  border: 1px solid var(--line, #e4e7ec);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.report-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.report-stat-label {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.sev-error-text { color: #d92d20; }
+.sev-warning-text { color: #dc6803; }
+.sev-info-text { color: #1570ef; }
+
+.report-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--line, #e4e7ec);
+  border-radius: 8px;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.report-table th,
+.report-table td {
+  border-bottom: 1px solid var(--line, #e4e7ec);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-table th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.report-muted {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.report-mono {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.report-steps {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.report-link {
+  color: #1570ef;
+  cursor: pointer;
+}
+
+.report-link:hover {
+  text-decoration: underline;
+}
+
+.report-more {
+  padding: 8px 12px;
+  margin: 0;
+}

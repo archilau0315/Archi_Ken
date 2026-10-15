@@ -1,0 +1,6 @@
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.30,<1.0
+ifcopenshell>=0.9,<1.0
+ifctester>=0.9,<1.0
+openpyxl>=3.1,<4.0
+reportlab>=4.0

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    // 覆盖 noEmit：Docker 构建必须真正产出 JS 文件
+    "noEmit": false,
+    // 输出 CommonJS：package.json 无 "type":"module"，Node 按 CJS 加载
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "dist-server",
+    // 不生成 .d.ts / sourcemap，容器里不需要
+    "declaration": false,
+    "sourceMap": false
+  }
+}

@@ -1,0 +1,266 @@
+/* 视图系统面板（M10）：视角 / 剖切 / 标记 / 演示视角。 */
+
+/* 非模态浮动卡片：贴在 3D 视图右上角，不遮挡视图，参数改动即时可见。 */
+.view-float {
+  position: fixed;
+  top: 60px;
+  right: 356px;
+  width: 344px;
+  max-height: calc(100vh - 76px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--border, #e4e7ec);
+  border-radius: 10px;
+  box-shadow: 0 10px 32px rgba(16, 24, 40, 0.16);
+  z-index: 45;
+  overflow: hidden;
+}
+
+.view-float-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border, #e4e7ec);
+  background: #fafbfc;
+  /* 头部即拖动把手：按住可把卡片移到不遮挡模型的位置。 */
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+.view-float-top .tagline {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted, #6b7280);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.view-float-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+/* 卡片内的提示 / 错误条：加内边距，不贴卡片边缘。 */
+.view-float-alert {
+  padding: 10px 12px 0;
+}
+
+.view-float-alert .error-bar {
+  border-radius: 6px;
+}
+
+/* 手风琴分区：标题行点击即展开 / 折叠，默认全部折叠，卡片保持小巧。 */
+.view-sec {
+  border-top: 1px solid var(--line, #e4e7ec);
+}
+
+.view-sec:first-of-type {
+  border-top: none;
+}
+
+.view-sec-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #fff;
+  border: none;
+  border-radius: 0;
+  color: var(--text, #1f2430);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.view-sec-head:hover {
+  background: #f9fafb;
+}
+
+.view-caret {
+  width: 10px;
+  color: var(--muted, #6b7280);
+  font-size: 11px;
+}
+
+.view-sec-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted, #6b7280);
+}
+
+.view-sec-body {
+  padding: 8px 12px 12px;
+  border-top: 1px solid #f2f4f7;
+}
+
+.view-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.view-row input[type='text'],
+.view-row input:not([type]),
+.view-row select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.view-active {
+  background: #1570ef;
+  color: #fff;
+  border-color: #1570ef;
+}
+
+/* 3D 视图顶部紧凑工具条：视角与剖切的高频操作。
+   占据布局高度（不浮在画布上），窄窗口自动折行，始终不遮挡模型。 */
+.view-toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border, #e4e7ec);
+  background: #fafbfc;
+}
+
+.view-toolbar .vt-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-toolbar .vt-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border, #e4e7ec);
+}
+
+.view-toolbar .vt-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.view-toolbar .vt-axis {
+  min-width: 28px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.view-toolbar .vt-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #6b7280);
+}
+
+.view-toolbar .vt-slider {
+  flex: 1 1 140px;
+  min-width: 110px;
+  margin: 0;
+}
+
+/* 外壳透明度滑杆：固定宽度，避免与剖切滑杆的弹性宽度互相挤压。 */
+.view-toolbar .vt-slider.vt-fade {
+  flex: 0 0 120px;
+  min-width: 120px;
+}
+
+.view-toolbar .vt-value {
+  min-width: 34px;
+  font-size: 11px;
+  color: var(--muted, #6b7280);
+  text-align: right;
+}
+
+.view-muted {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.view-message {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #b2ddff;
+  background: #eff8ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #175cd3;
+}
+
+.view-marker-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--line, #e4e7ec);
+  border-radius: 6px;
+}
+
+.view-marker-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f2f4f7;
+  font-size: 13px;
+}
+
+.view-marker-list li:last-child {
+  border-bottom: none;
+}
+
+.view-marker-list li.active {
+  background: #eff8ff;
+}
+
+.view-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.view-index {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f2f4f7;
+  color: #344054;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.view-link {
+  color: #1570ef;
+  cursor: pointer;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.view-link:hover {
+  text-decoration: underline;
+}
+
+.view-del {
+  flex: none;
+  padding: 2px 8px;
+  font-size: 12px;
+}

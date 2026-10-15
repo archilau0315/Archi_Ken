@@ -1,0 +1,126 @@
+{
+  "checks": {
+    "clash": {
+      "candidate_pairs": 4,
+      "total": 4,
+      "triangle_tests": 154
+    },
+    "clash_matrix": {
+      "candidate_pairs": 4,
+      "ignored": 3,
+      "totals": {
+        "clearance": 0,
+        "gap": 0,
+        "hard": 1,
+        "total": 1
+      }
+    },
+    "geometry": {
+      "by_type": {
+        "IfcBeam": 1,
+        "IfcColumn": 2,
+        "IfcDuctSegment": 1,
+        "IfcFooting": 1
+      },
+      "elements_with_geometry": 5,
+      "triangles": 60
+    },
+    "ids": {
+      "status": false,
+      "totals": {
+        "percent_checks_pass": "N/A",
+        "percent_requirements_pass": 0,
+        "percent_specifications_pass": 0,
+        "total_checks": 0,
+        "total_checks_fail": 0,
+        "total_checks_pass": 0,
+        "total_requirements": 3,
+        "total_requirements_fail": 3,
+        "total_requirements_pass": 0,
+        "total_specifications": 3,
+        "total_specifications_fail": 3,
+        "total_specifications_pass": 0
+      }
+    },
+    "rules_all": {
+      "per_rule": {
+        "access-corridor-width": 0,
+        "access-door-clear-width": 0,
+        "access-door-handicap-flag": 0,
+        "access-opening-height": 0,
+        "beam-slab-headroom": 0,
+        "clash-interdisciplinary": 0,
+        "door-min-width": 0,
+        "door-required-handicap": 0,
+        "duct-slab-clearance": 0,
+        "duplicate-member": 0,
+        "external-wall-fire-rating": 0,
+        "fire-door-rating": 0,
+        "fire-door-self-closing": 0,
+        "fire-escape-width": 0,
+        "fire-sprinkler-clearance": 0,
+        "fire-wall-rating": 0,
+        "headroom-beam-clearance": 0,
+        "headroom-corridor": 0,
+        "headroom-room": 0,
+        "member-naming-convention": 3,
+        "pipe-duplicate": 0,
+        "pipe-min-spacing": 0,
+        "wall-window-intersection": 0,
+        "window-required-fire-rating": 0
+      },
+      "rules_failed": 1,
+      "rules_passed": 23,
+      "rules_run": 24,
+      "violations_total": 3
+    },
+    "rules_compliance": {
+      "per_rule": {
+        "access-corridor-width": 0,
+        "access-door-clear-width": 0,
+        "access-door-handicap-flag": 0,
+        "access-opening-height": 0,
+        "fire-door-rating": 0,
+        "fire-door-self-closing": 0,
+        "fire-escape-width": 0,
+        "fire-sprinkler-clearance": 0,
+        "fire-wall-rating": 0,
+        "headroom-beam-clearance": 0,
+        "headroom-corridor": 0,
+        "headroom-room": 0
+      },
+      "rules_failed": 0,
+      "rules_passed": 12,
+      "rules_run": 12,
+      "violations_total": 0
+    },
+    "summary": {
+      "counts_by_type": {
+        "IfcBeam": 1,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcColumn": 2,
+        "IfcDuctSegment": 1,
+        "IfcFooting": 1,
+        "IfcSite": 1
+      },
+      "exporter": "IfcOpenShell 0.9.0 / IfcOpenShell 0.9.0",
+      "length_unit": {
+        "kind": "SI",
+        "name": "METRE",
+        "prefix": ""
+      },
+      "products_total": 8,
+      "schema": "IFC4"
+    },
+    "takeoff": {
+      "expression_errors": 0,
+      "total": 5,
+      "totals": {}
+    }
+  },
+  "kernel_version": "0.12.0",
+  "key": "smoke-structural-ifc4",
+  "model": "E:\\works\\Aidev\\Kbitai绝对安全\\kbitai_com_cn\\aitools\\AchiAudit\\corpus\\samples\\_smoke\\smoke-structural-ifc4.ifc",
+  "recorded_at": "2026-10-14T19:35:15"
+}
