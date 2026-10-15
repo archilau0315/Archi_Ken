@@ -650,8 +650,8 @@ The two backend containers bind only to `127.0.0.1`, so they are unreachable fro
 网页版挂在主站子路径 `https://www.kbitai.com.cn/aitools/aichiken/`，不单独建站：
 
 1. 阿里云安全组放行 **80 / 443**（公网 IP `47.93.210.248`）。
-2. 把 `archiken-deploy.zip` 上传到服务器 `/www/wwwroot/` 并解压（得到 `archi_ken/archiken` + `archi_ken/archiken-web`）。
-3. 终端执行：`cd /www/wwwroot/archi_ken/archiken` → `docker compose build` → `docker compose up -d`。
+2. 把 `archiken-deploy.zip` 上传到服务器 `/www/wwwroot/kbitai.com.cn/aitools/` 并解压（得到 `archiken` + `archiken-web`）。
+3. 终端执行：`cd /www/wwwroot/kbitai.com.cn/aitools/archiken` → `docker compose build` → `docker compose up -d`。
 4. 在主站 kbitai.com.cn 的「配置文件」末尾粘贴子路径块（`/aitools/aichiken/` 静态 + 两个 API 反代 + healthz），SSL 复用主站证书无需新申请。
 5. 默认**开放访问**；如需限制访问，按指南文末「可选：开启密码访问」加 Nginx Basic Auth。
 
