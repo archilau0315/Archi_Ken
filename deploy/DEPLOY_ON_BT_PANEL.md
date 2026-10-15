@@ -84,24 +84,16 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
 
 ---
 
-## 第 3 步：在主站配置子路径 + 密码访问
+## 第 3 步：在主站配置子路径
 
 > ArchiKen 不单独建站，挂在主站 **kbitai.com.cn** 的 `/aitools/aichiken/` 子路径下。
 > 所有改动都在主站配置里加几段，**不影响主站原有内容**。
+> 当前为**开放访问**（无密码）；想加密码见文末「可选：开启密码访问」。
 
-### 3.1 先生成密码文件（必须最先做）
-> 顺序不能反：配置文件里引用了这个密码文件，文件不存在就保存配置会导致网站 500。
-
-宝塔面板 → 左侧 **终端** → 把 `zhangsan` / `MyPass123` 换成你想要的账号密码，粘贴执行：
-
-```bash
-printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.htpasswd
-```
-
-### 3.2 主站配置文件粘贴子路径块
+### 3.1 主站配置文件粘贴子路径块
 1. 左侧 **网站** → 找到 **kbitai.com.cn** 主站 → 点 **设置** → 左侧 **配置文件**
 2. 滚动到 `server { }` 花括号的**最后面**（也就是配置末尾的 `}` 之前）
-3. 把下面整段**原样粘贴**进去（注意把两处密码文件路径保持原样即可）：
+3. 把下面整段**原样粘贴**进去：
 
 ```nginx
     # ===== ArchiKen 子路径开始 =====
@@ -110,8 +102,6 @@ printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.ht
     }
 
     location /aitools/aichiken/api/kernel/ {
-        auth_basic "ArchiKen";
-        auth_basic_user_file /www/wwwroot/archiken.htpasswd;
         proxy_pass http://127.0.0.1:4319/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -123,8 +113,6 @@ printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.ht
     }
 
     location /aitools/aichiken/api/server/ {
-        auth_basic "ArchiKen";
-        auth_basic_user_file /www/wwwroot/archiken.htpasswd;
         proxy_pass http://127.0.0.1:4318/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -141,8 +129,6 @@ printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.ht
     }
 
     location /aitools/aichiken/ {
-        auth_basic "ArchiKen";
-        auth_basic_user_file /www/wwwroot/archiken.htpasswd;
         alias /www/wwwroot/archiken-web/;
         try_files $uri $uri/ /aitools/aichiken/index.html;
     }
@@ -152,7 +138,7 @@ printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.ht
 4. **保存**。保存成功 = 配置语法没问题；如果报错，把报错**原样贴给我**。
 
 > 说明：
-> - 主站首页和其他页面**不受任何影响**，只有 `/aitools/aichiken/` 这一个路径会弹登录框。
+> - 主站首页和其他页面**不受任何影响**。
 > - 静态文件放在 `/www/wwwroot/archiken-web/`（第 1 步解压出来的），不占主站目录。
 
 ---
@@ -177,7 +163,7 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 {"status":"ok","service":"archiken-kernel","version":"0.12.0","build":"1407608-20261015142426"}
 ```
 
-再打开 `https://www.kbitai.com.cn/aitools/aichiken/` → 先弹登录框（输入 3.1 设置的账号密码）→ 应该看到 ArchiKen 的三维工作台界面 → 上传一个 IFC 模型试试。
+再打开 `https://www.kbitai.com.cn/aitools/aichiken/` → 应该直接看到 ArchiKen 的三维工作台界面 → 上传一个 IFC 模型试试。
 
 **把上面这个 JSON 原样贴给我**，我这边会远程核对构建号与前端版本是否一致。
 
@@ -190,10 +176,30 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 | 网站打不开、超时 | 阿里云**安全组**没放行 80/443（见第 0.1 步） |
 | `docker compose build` 卡在 `npm ci` 很久 | 依赖源问题，**把终端输出贴给我**，我给换源方案 |
 | 502 Bad Gateway | 后端容器没起好。终端执行 `docker compose ps` 和 `docker compose logs --tail=50`，结果贴给我 |
-| 页面白屏 | 配置文件里 `alias /www/wwwroot/archiken-web/;` 路径写错了，或子路径块贴错了位置，对照 3.2 检查 |
+| 页面白屏 | 配置文件里 `alias /www/wwwroot/archiken-web/;` 路径写错了，或子路径块贴错了位置，对照 3.1 检查 |
 | API 全报 404 | 前端包不是子路径版（构建号太旧），用最新 zip 重新解压覆盖 |
 | 上传模型报错 / 一直转圈 | 多半是内核容器没 healthy，或模型文件没落到 `/data/uploads`。贴日志给我 |
 | 保存 Nginx 配置报错 | 说明括号不配对，把报错贴给我 |
-| 浏览器一直弹登录框、密码不对 | 用 3.1 的命令重新生成一次密码文件 |
 
 > 万不得已要重来：终端执行 `cd /www/wwwroot/archiken && docker compose down`，删掉重装即可，**上传的模型和规则集存在数据卷里，不会丢**。
+
+---
+
+## 可选：开启密码访问
+
+> 现在暂不启用。哪天想限制访问了，按下面两步即可，全程 2 分钟。
+
+**① 生成密码文件**：宝塔终端执行（把账号密码换成你自己的）：
+
+```bash
+printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/archiken.htpasswd
+```
+
+**② 改配置**：主站「配置文件」里，在 ArchiKen 子路径块的**三个 location 内**（`api/kernel/`、`api/server/`、静态 `location /aitools/aichiken/`）各加这两行，保存：
+
+```nginx
+        auth_basic "ArchiKen";
+        auth_basic_user_file /www/wwwroot/archiken.htpasswd;
+```
+
+保存后访问 `https://www.kbitai.com.cn/aitools/aichiken/` 会先弹登录框。想取消密码，把这两行删掉再保存即可。

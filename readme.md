@@ -652,12 +652,12 @@ The two backend containers bind only to `127.0.0.1`, so they are unreachable fro
 1. 阿里云安全组放行 **80 / 443**（公网 IP `47.93.210.248`）。
 2. 把 `archiken-deploy.zip` 上传到服务器 `/www/wwwroot/` 并解压。
 3. 终端执行：`cd /www/wwwroot/archiken` → `docker compose build` → `docker compose up -d`。
-4. 终端生成访问密码文件 `archiken.htpasswd`（Basic Auth）。
-5. 在主站 kbitai.com.cn 的「配置文件」末尾粘贴子路径块（`/aitools/aichiken/` 静态 + 两个 API 反代 + healthz），SSL 复用主站证书无需新申请。
+4. 在主站 kbitai.com.cn 的「配置文件」末尾粘贴子路径块（`/aitools/aichiken/` 静态 + 两个 API 反代 + healthz），SSL 复用主站证书无需新申请。
+5. 默认**开放访问**；如需限制访问，按指南文末「可选：开启密码访问」加 Nginx Basic Auth。
 
 ### API Key 鉴权 / API-key auth
 
-L3 支持 `ARCHIKEN_API_KEY` 环境变量鉴权（未设置则本地放行，**不影响单机版**）。**公网部署默认不启用**：前端页面 JS 任何人可下载，把 Key 写进前端等于公开密钥。网页版的访问保护改由宝塔 Nginx 的**基础认证（Basic Auth）**承担，凭据不落前端。如需启用 API Key，在 `deploy/.env` 填 `ARCHIKEN_API_KEY=<值>` 后重新 `docker compose up -d`，并在前端构建时通过 `VITE_ARCHIKEN_API_KEY` 注入（仅适用于内网可信场景）。
+L3 支持 `ARCHIKEN_API_KEY` 环境变量鉴权（未设置则本地放行，**不影响单机版**）。**公网部署默认不启用**：前端页面 JS 任何人可下载，把 Key 写进前端等于公开密钥。网页版当前为**开放访问**；如需限流，可由宝塔 Nginx 的**基础认证（Basic Auth）**承担（凭据不落前端，见指南文末可选步骤）。如需启用 API Key，在 `deploy/.env` 填 `ARCHIKEN_API_KEY=<值>` 后重新 `docker compose up -d`，并在前端构建时通过 `VITE_ARCHIKEN_API_KEY` 注入（仅适用于内网可信场景）。
 
 L3 supports `ARCHIKEN_API_KEY`-based auth (when unset, local requests pass — **the standalone edition is unaffected**). **Public deployments leave it off by default**: front-end JS is publicly downloadable, so embedding the key there is equivalent to publishing it. Web-edition access control is instead handled by BT Nginx **Basic Auth**, keeping the credential out of the front end.
 
