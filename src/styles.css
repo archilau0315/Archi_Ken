@@ -56,6 +56,15 @@ body {
   margin-right: 8px;
 }
 
+.brand .version {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: Consolas, monospace;
+}
+
 .logo {
   color: #2f6feb;
   flex-shrink: 0;

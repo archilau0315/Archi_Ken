@@ -14,4 +14,7 @@ declare global {
 
   /** 构建期注入的项目根目录（绝对路径，正斜杠），用于定位示例模型。 */
   const __PROJECT_ROOT__: string
+
+  /** 构建期注入的应用版本号（取自 package.json version）。 */
+  const __APP_VERSION__: string
 }

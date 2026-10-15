@@ -1,5 +1,10 @@
+import { readFileSync } from 'node:fs'
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+// 从 package.json 读版本号，构建期注入到前端常量 __APP_VERSION__。
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string }
 
 // 渲染进程（L4 UI 层）构建配置。
 // base 使用相对路径，保证 Electron 通过 file:// 加载打包产物时不丢资源。
@@ -10,6 +15,7 @@ export default defineConfig({
   base: './',
   define: {
     __PROJECT_ROOT__: JSON.stringify(process.cwd().replace(/\\/g, '/')),
+    __APP_VERSION__: JSON.stringify(pkg.version),
     'import.meta.env.VITE_APP_MODE': JSON.stringify(process.env.VITE_APP_MODE ?? 'electron')
   },
   server: {
