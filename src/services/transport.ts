@@ -9,6 +9,9 @@ export const APP_MODE: 'electron' | 'web' | 'cloud' =
 /** 生产 Web 版 API Key（Nginx 层或 L3 层鉴权时用）。 */
 const API_KEY = import.meta.env.VITE_ARCHIKEN_API_KEY as string | undefined
 
+/** 云端部署的子路径前缀（如 /aitools/aichiken），本地开发/单机版为空串。 */
+const API_PREFIX = (import.meta.env.VITE_ARCHIKEN_API_PREFIX as string | undefined) ?? ''
+
 export type ServiceTarget = 'kernel' | 'server'
 
 export interface ServiceRequest {
@@ -26,10 +29,11 @@ export interface RawResponse {
   text: string
 }
 
-/** 浏览器开发期使用的 vite 代理前缀，与 vite.config.ts 中保持一致。 */
+/** 浏览器开发期使用的 vite 代理前缀，与 vite.config.ts 中保持一致；
+ *  云端子路径部署时由 API_PREFIX 拼出完整前缀（如 /aitools/aichiken/api/kernel）。 */
 const PROXY_PREFIX: Record<ServiceTarget, string> = {
-  kernel: '/api/kernel',
-  server: '/api/server'
+  kernel: `${API_PREFIX}/api/kernel`,
+  server: `${API_PREFIX}/api/server`
 }
 
 function buildQuery(query: ServiceRequest['query']): string {

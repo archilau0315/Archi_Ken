@@ -18,6 +18,9 @@ $env:VITE_APP_MODE = 'cloud'
 # 前端不内置 API Key：公网页面的 JS 谁都能读，内置等于把钥匙贴在门上。
 # 云端访问保护交给宝塔 Nginx 的「基础认证（Basic Auth）」，凭据不落前端。
 $env:VITE_ARCHIKEN_API_KEY = ''
+# 云端访问地址是主站子路径 https://www.kbitai.com.cn/aitools/aichiken/，
+# 前端所有 API 请求都要带这个前缀，否则会打到主站根 /api 上去（404）。
+$env:VITE_ARCHIKEN_API_PREFIX = '/aitools/aichiken'
 
 # 注意：PS5 下 $ErrorActionPreference='Stop' 会把 npm 的 stderr 警告当成终止错误，
 # 所以构建期间临时放宽，成败只认 $LASTEXITCODE。
@@ -32,7 +35,7 @@ if ($buildCode -ne 0) {
     exit 1
 }
 $distIndex = Get-Content (Join-Path $root 'dist\index.html') -Raw
-$frontendHash = if ($distIndex -match 'index-([A-Za-z0-9]+)\.js') { $Matches[1] } else { 'unknown' }
+$frontendHash = if ($distIndex -match 'index-([A-Za-z0-9_-]+)\.js') { $Matches[1] } else { 'unknown' }
 $gitHash = (git rev-parse --short HEAD 2>$null)
 if (-not $gitHash) { $gitHash = 'nogit' } else { $gitHash = "$gitHash".Trim() }
 $buildId = "$gitHash-$(Get-Date -Format 'yyyyMMddHHmmss')"
