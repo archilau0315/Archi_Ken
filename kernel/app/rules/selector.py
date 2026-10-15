@@ -71,7 +71,11 @@ def select(model: ifcopenshell.file, target: dict[str, Any]) -> list[dict[str, A
                 push(element)
         else:
             for ifc_type in types:
-                for element in model.by_type(ifc_type):
+                try:
+                    candidates_iter = model.by_type(ifc_type)
+                except RuntimeError:
+                    continue  # 类型在当前 IFC 版本不存在（如 IFC2x3 无 IfcDuctSegment），视为无匹配
+                for element in candidates_iter:
                     push(element)
     except RuntimeError as exc:
         raise ValueError(f"未知的 IFC 类型：{types}") from exc

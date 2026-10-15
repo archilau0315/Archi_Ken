@@ -204,10 +204,10 @@ COMMON_TEMPLATES: list[dict[str, Any]] = [
             "type": "property",
             "attr": "Name",
             "op": "matches",
-            "value": "(B\\d+|\\d+F|F\\d+|\\d+层|Level)",
+            "value": "(B\\d+|\\d+F|F\\d+|\\d+层|Level|[Gg]round)",
         },
-        "message": "楼层 {name} 命名不符合约定格式（示例：B1 / 1F / F1 / 1层 / Level 1）",
-        "message_en": "Storey {name} naming outside convention (e.g. B1 / 1F / F1 / Level 1)",
+        "message": "楼层 {name} 命名不符合约定格式（示例：B1 / 1F / F1 / 1层 / Level 1 / groundfloor）",
+        "message_en": "Storey {name} naming outside convention (e.g. B1 / 1F / F1 / Level 1 / groundfloor)",
     },
     {
         "id": "model-has-spaces",

@@ -51,6 +51,10 @@ def run(
 ) -> dict[str, Any]:
     """依次求值每条规则，返回逐规则结果与整体统计。"""
     model_unit_to_meter = summary.unit_to_meter(model)
+    # 几何提取（ifcopenshell）输出的坐标/包围盒恒为米，与文件声明单位无关；
+    # 因此几何类检查（clearance/headroom/dimension）的阈值换算因子固定为 1.0。
+    # 属性检查读的是 Pset/Qto 原始值（文件单位），仍用 model_unit_to_meter。
+    geometry_unit_to_meter = 1.0
 
     entries_slot: dict[str, dict] = {}
 
@@ -83,17 +87,17 @@ def run(
             others = selector.select(model, check.get("other", {}))
             refs.update(_refs_for(model, others))
             items, truncated = checks.clearance_check(
-                entries(), set_a, {other["guid"] for other in others}, check, model_unit_to_meter, refs, max_violations, lang
+                entries(), set_a, {other["guid"] for other in others}, check, geometry_unit_to_meter, refs, max_violations, lang
             )
         elif check_type == "headroom":
             others = selector.select(model, check.get("other", {}))
             refs.update(_refs_for(model, others))
             items, truncated = checks.headroom_check(
-                entries(), set_a, {other["guid"] for other in others}, check, model_unit_to_meter, refs, max_violations, lang
+                entries(), set_a, {other["guid"] for other in others}, check, geometry_unit_to_meter, refs, max_violations, lang
             )
         elif check_type == "dimension":
             items, truncated = checks.dimension_check(
-                entries(), set_a, check, refs, model_unit_to_meter, max_violations, lang
+                entries(), set_a, check, refs, geometry_unit_to_meter, max_violations, lang
             )
         elif check_type == "count":
             items, truncated = checks_group.count_check(targets, check, max_violations, lang)

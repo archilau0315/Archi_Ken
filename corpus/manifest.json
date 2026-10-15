@@ -1,10 +1,43 @@
 {
-  "version": "0.1",
-  "updated_at": "2026-10-13",
+  "version": "0.2",
+  "updated_at": "2026-10-16",
   "matrix": {
     "ifc_versions": ["IFC2X3", "IFC4", "IFC4X1", "IFC4X3"],
     "exporters": ["Revit", "ArchiCAD", "Tekla", "Bentley"],
     "size_tiers": ["small", "medium", "large", "xlarge"]
   },
-  "samples": []
+  "samples": [
+    {
+      "file": "samples/IFC2x3-Building-Architecture.ifc",
+      "schema": "IFC2X3",
+      "source": "buildingSMART/Sample-Test-Files (GitHub) IFC 2x3 TC1 / Simple-Scene",
+      "discipline": "architecture",
+      "size_tier": "small",
+      "notes": "声明 LENGTHUNIT=MILLI.METRE 但几何按米解释（ifcopenshell 几何输出恒为米）"
+    },
+    {
+      "file": "samples/IFC2x3-Building-Hvac.ifc",
+      "schema": "IFC2X3",
+      "source": "buildingSMART/Sample-Test-Files (GitHub) IFC 2x3 TC1 / Simple-Scene",
+      "discipline": "hvac",
+      "size_tier": "small",
+      "notes": "暖通专业模型，无 IfcSpace；IFC2x3 无 IfcDuctSegment/IfcPipeSegment（用 IfcFlowSegment）"
+    },
+    {
+      "file": "samples/IFC2x3-Building-Structural.ifc",
+      "schema": "IFC2X3",
+      "source": "buildingSMART/Sample-Test-Files (GitHub) IFC 2x3 TC1 / Simple-Scene",
+      "discipline": "structure",
+      "size_tier": "small",
+      "notes": "结构专业模型，无 IfcSpace；含 6 根 girder 梁"
+    },
+    {
+      "file": "samples/IFC4-Building-Architecture.ifc",
+      "schema": "IFC4",
+      "source": "buildingSMART/Sample-Test-Files (GitHub) IFC 4 ADD2 TC1 / Simple-Scene",
+      "discipline": "architecture",
+      "size_tier": "small",
+      "notes": "与 IFC2x3 建筑模型同一场景的 IFC4 版本，用于跨版本回归"
+    }
+  ]
 }

@@ -214,7 +214,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L4 桥接 | `electron/` | 主窗口、内核进程拉起、IPC 请求转发（内核 / 业务服务） | 已实现（v1） |
 | L3 业务逻辑层 | `server/` | 健康检查 + 结果与报告服务（统一问题清单 / 原因链 / HTML 报告 / PDF 与 Excel 导出）+ 规则集管理 + 沟通与 BCF（问题生命周期 / 评论 / 视图快照 / 检查结果导入 / BCF 2.1 导出）+ Autorun 批量检查 | 已实现（v1） |
 | L2 核心计算层 | `kernel/` | IFC 解析 + 几何内核（`.kengeo` 缓存）+ 碰撞引擎（硬碰撞 + 冲突矩阵）+ 简化规则引擎（DSL v1 + 109 模板 + 校验）+ 合规性检查（无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护）+ 模型融合与专业分类 + IDS 校验 + ITO / QTO 信息提取 + 报告渲染（PDF / Excel）+ 健康检查 | 已实现，端到端冒烟通过 |
-| L1 数据层 | `corpus/` | 回归语料库（4 版本 × 4 导出方 × 4 规模档）、探针模型 | 清单与校验工具已就绪，样本待采集 |
+| L1 数据层 | `corpus/` | 回归语料库（4 版本 × 4 导出方 × 4 规模档）、探针模型 | 已收录 buildingSMART 公开样本 4 个（IFC2x3 建筑/暖通/结构 + IFC4 建筑），持续扩充 |
 | 横切工具 | `tools/` | 语料覆盖率校验、冒烟模型生成、内核 / 业务服务冒烟测试、黄金基准比对流水线、性能基线脚本 | 均已就绪 |
 
 | Layer | Directory | Modules | Status |
@@ -223,7 +223,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L4 bridge | `electron/` | Main window, kernel process spawn, IPC forwarding (kernel / business service) | Implemented (v1) |
 | L3 business | `server/` | Health check + results & reports (unified issue list / reason chains / HTML report / PDF & Excel export) + ruleset management + communication & BCF (lifecycle / comments / snapshots / import / BCF 2.1 export) + Autorun batch checking | Implemented (v1) |
 | L2 kernel | `kernel/` | IFC parsing + geometry kernel (`.kengeo` cache) + clash engine (hard clash + matrix) + rule engine (DSL v1 + 109 templates + validation) + compliance (accessibility / headroom / fire / evacuation / MEP / structure / openings / space / guarding, GB code references) + federation & discipline classification + IDS validation + ITO / QTO takeoff + report rendering (PDF / Excel) + health check | Implemented, E2E smoke passed |
-| L1 data | `corpus/` | Regression corpus (4 versions × 4 exporters × 4 size tiers), probe models | Manifest & validators ready, samples pending |
+| L1 data | `corpus/` | Regression corpus (4 versions × 4 exporters × 4 size tiers), probe models | 4 buildingSMART public samples registered (IFC2x3 arch/HVAC/struct + IFC4 arch), growing |
 | Cross-cutting | `tools/` | Corpus coverage validation, smoke model generation, kernel / server smoke tests, golden-master pipeline, performance baseline | All ready |
 
 详细模块划分与阶段归属见 [docs/模块清单.md](docs/模块清单.md)；功能对标清单与填写规范见 [docs/功能矩阵与行为规格.md](docs/功能矩阵与行为规格.md)；语料库使用方式见 [corpus/README.md](corpus/README.md)。
