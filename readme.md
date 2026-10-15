@@ -608,7 +608,7 @@ The 3D view currently draws simplified boxes from element bboxes (`/geometry/bbo
 |---|---|---|
 | 桌面单机版 | `electron` | Electron IPC（`window.archiken.forward`） |
 | 本机网页调试 | `web` | Vite 开发代理 |
-| 云端网页版 | `cloud` | 同源 `/aitools/aichiken/api/*`，由主站 Nginx 反代到 L3 |
+| 云端网页版 | `cloud` | 同源 `/aitools/archiken/api/*`，由主站 Nginx 反代到 L3 |
 
 The same codebase serves both the **standalone desktop** and the **web** edition; the running mode is selected by the build switch `VITE_APP_MODE` without forking branches:
 
@@ -647,12 +647,12 @@ The two backend containers bind only to `127.0.0.1`, so they are unreachable fro
 
 ### 上线流程（宝塔面板）/ Go-live (BT panel)
 
-网页版挂在主站子路径 `https://www.kbitai.com.cn/aitools/aichiken/`，不单独建站：
+网页版挂在主站子路径 `https://www.kbitai.com.cn/aitools/archiken/`，不单独建站：
 
 1. 阿里云安全组放行 **80 / 443**（公网 IP `47.93.210.248`）。
 2. 把 `archiken-deploy.zip` 上传到服务器 `/www/wwwroot/kbitai.com.cn/aitools/` 并解压（得到 `archi_ken/archiken` + `archi_ken/archiken-web`）。
 3. 终端执行：`cd /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken` → `docker compose build` → `docker compose up -d`。
-4. 在主站 kbitai.com.cn 的「配置文件」末尾粘贴子路径块（`/aitools/aichiken/` 静态 + 两个 API 反代 + healthz），SSL 复用主站证书无需新申请。
+4. 在主站 kbitai.com.cn 的「配置文件」末尾粘贴子路径块（`/aitools/archiken/` 静态 + 两个 API 反代 + healthz），SSL 复用主站证书无需新申请。
 5. 默认**开放访问**；如需限制访问，按指南文末「可选：开启密码访问」加 Nginx Basic Auth。
 
 ### API Key 鉴权 / API-key auth
@@ -666,7 +666,7 @@ L3 supports `ARCHIKEN_API_KEY`-based auth (when unset, local requests pass — *
 更新后三处构建标识必须一致，用于确认单机版与网页版同源同版：
 
 1. 前端产物名 `dist/assets/index-<hash>.js` 的 `<hash>`；
-2. 云端 `https://www.kbitai.com.cn/aitools/aichiken/healthz` 返回 JSON 的 `build` 字段；
+2. 云端 `https://www.kbitai.com.cn/aitools/archiken/healthz` 返回 JSON 的 `build` 字段；
 3. 打包输出的 `BUILD_INFO.txt`（含构建 ID、前端 hash、git 短哈希）。
 
 After each update the following three build markers must match, proving both editions come from the same source and version:

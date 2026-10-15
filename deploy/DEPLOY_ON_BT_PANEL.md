@@ -86,7 +86,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
 
 ## 第 3 步：在主站配置子路径
 
-> ArchiKen 不单独建站，挂在主站 **kbitai.com.cn** 的 `/aitools/aichiken/` 子路径下。
+> ArchiKen 不单独建站，挂在主站 **kbitai.com.cn** 的 `/aitools/archiken/` 子路径下。
 > 所有改动都在主站配置里加几段，**不影响主站原有内容**。
 > 当前为**开放访问**（无密码）；想加密码见文末「可选：开启密码访问」。
 
@@ -102,11 +102,11 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
         deny all;
     }
 
-    location = /aitools/aichiken {
-        return 301 /aitools/aichiken/;
+    location = /aitools/archiken {
+        return 301 /aitools/archiken/;
     }
 
-    location /aitools/aichiken/api/kernel/ {
+    location /aitools/archiken/api/kernel/ {
         proxy_pass http://127.0.0.1:4319/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -117,7 +117,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
         client_max_body_size 512m;
     }
 
-    location /aitools/aichiken/api/server/ {
+    location /aitools/archiken/api/server/ {
         proxy_pass http://127.0.0.1:4318/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -128,14 +128,14 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
         client_max_body_size 512m;
     }
 
-    location = /aitools/aichiken/healthz {
+    location = /aitools/archiken/healthz {
         access_log off;
         proxy_pass http://127.0.0.1:4319/health;
     }
 
-    location /aitools/aichiken/ {
+    location /aitools/archiken/ {
         alias /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken-web/;
-        try_files $uri $uri/ /aitools/aichiken/index.html;
+        try_files $uri $uri/ /aitools/archiken/index.html;
     }
     # ===== ArchiKen 子路径结束 =====
 ```
@@ -159,7 +159,7 @@ curl -s http://127.0.0.1:4319/health; echo; curl -s http://127.0.0.1:4318/health
 浏览器打开：
 
 ```
-https://www.kbitai.com.cn/aitools/aichiken/healthz
+https://www.kbitai.com.cn/aitools/archiken/healthz
 ```
 
 应返回类似：
@@ -168,7 +168,7 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 {"status":"ok","service":"archiken-kernel","version":"0.12.0","build":"1407608-20261015142426"}
 ```
 
-再打开 `https://www.kbitai.com.cn/aitools/aichiken/` → 应该直接看到 ArchiKen 的三维工作台界面 → 上传一个 IFC 模型试试。
+再打开 `https://www.kbitai.com.cn/aitools/archiken/` → 应该直接看到 ArchiKen 的三维工作台界面 → 上传一个 IFC 模型试试。
 
 **把上面这个 JSON 原样贴给我**，我这边会远程核对构建号与前端版本是否一致。
 
@@ -200,11 +200,11 @@ https://www.kbitai.com.cn/aitools/aichiken/healthz
 printf "zhangsan:$(openssl passwd -apr1 MyPass123)\n" > /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken.htpasswd
 ```
 
-**② 改配置**：主站「配置文件」里，在 ArchiKen 子路径块的**三个 location 内**（`api/kernel/`、`api/server/`、静态 `location /aitools/aichiken/`）各加这两行，保存：
+**② 改配置**：主站「配置文件」里，在 ArchiKen 子路径块的**三个 location 内**（`api/kernel/`、`api/server/`、静态 `location /aitools/archiken/`）各加这两行，保存：
 
 ```nginx
         auth_basic "ArchiKen";
         auth_basic_user_file /www/wwwroot/kbitai.com.cn/aitools/archi_ken/archiken.htpasswd;
 ```
 
-保存后访问 `https://www.kbitai.com.cn/aitools/aichiken/` 会先弹登录框。想取消密码，把这两行删掉再保存即可。
+保存后访问 `https://www.kbitai.com.cn/aitools/archiken/` 会先弹登录框。想取消密码，把这两行删掉再保存即可。
