@@ -201,4 +201,30 @@ EVACUATION_TEMPLATES: list[dict[str, Any]] = [
         "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：疏散走道隔墙耐火极限要求）",
         "reference_en": "GB 55037-2022 (formerly GB 50016-2014: egress corridor wall fire resistance)",
     },
+    {
+        "id": "egress-exit-door-spacing",
+        "name": "安全出口分散布置间距",
+        "name_en": "Exit Door Spacing",
+        "category": "疏散",
+        "category_en": "Evacuation",
+        "severity": "warning",
+        "target": {
+            "ifc_type": ["IfcDoor"],
+            "where": [{"attr": "Name", "op": "contains", "value": "安全出口"}],
+        },
+        "check": {
+            "type": "clearance",
+            "other": {
+                "ifc_type": ["IfcDoor"],
+                "where": [{"attr": "Name", "op": "contains", "value": "安全出口"}],
+            },
+            "axis": "all",
+            "value": 5000,
+            "unit": "mm",
+        },
+        "message": "安全出口 {name} 与 {related.name} 间距 {actual} 小于分散布置要求 {expected}",
+        "message_en": "Exit door {name} to {related.name} spacing {actual} below required {expected}",
+        "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版) 第 5.5.2 条：相邻两个安全出口最近边缘之间的水平距离不应小于 5m）",
+        "reference_en": "GB 55037-2022 (formerly GB 50016-2014 Clause 5.5.2: adjacent exits ≥ 5m apart)",
+    },
 ]

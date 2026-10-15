@@ -177,4 +177,21 @@ MEP_TEMPLATES: list[dict[str, Any]] = [
         "reference": "BIM 交付数据完整性要求",
         "reference_en": "BIM deliverable data completeness",
     },
+    {
+        "id": "mep-elec-shaft-min-dim",
+        "name": "电气井道检修尺寸",
+        "name_en": "Electrical Shaft Maintenance Size",
+        "category": "机电",
+        "category_en": "MEP",
+        "severity": "warning",
+        "target": {
+            "ifc_type": ["IfcSpace"],
+            "where": [{"attr": "Name", "op": "contains", "value": "电井"}],
+        },
+        "check": {"type": "dimension", "axis": "min", "value": 600, "unit": "mm"},
+        "message": "电气井道 {name} 短边 {actual} 小于检修要求 {expected}（阈值待按现行规范原文复核）",
+        "message_en": "Electrical shaft {name} short side {actual} below maintenance requirement {expected} (pending review)",
+        "reference": "GB 55024-2022《建筑电气与智能化通用规范》（原 GB 50303-2015：电气竖井检修空间要求）",
+        "reference_en": "GB 55024-2022 (formerly GB 50303-2015: electrical shaft access space)",
+    },
 ]

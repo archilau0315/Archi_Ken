@@ -15,17 +15,23 @@ MISSING = object()
 # 单位 → 米 的换算系数；model 表示沿用模型自身单位（不换算）
 UNIT_FACTORS: dict[str, float] = {"m": 1.0, "meter": 1.0, "metre": 1.0, "cm": 0.01, "mm": 0.001}
 
+# 面积单位 → 平方米 的换算系数（用于 Qto 面积类属性比较）
+AREA_FACTORS: dict[str, float] = {"m2": 1.0, "sqm": 1.0, "cm2": 1e-4, "mm2": 1e-6}
+
 
 def to_model_units(value: float, unit: str, model_unit_to_meter: float) -> float:
-    """把阈值的 unit 换算为模型长度单位的数值。
+    """把阈值的 unit 换算为模型单位的数值（长度按一次方、面积按平方）。
 
     model_unit_to_meter：模型 1 单位 = 多少米（由 IfcOpenShell 单位换算给出）。
     """
     if unit in ("model", "", None):
         return float(value)
+    area = AREA_FACTORS.get(unit)
+    if area is not None:
+        return float(value) * area / (model_unit_to_meter**2)
     factor = UNIT_FACTORS.get(unit)
     if factor is None:
-        raise ValueError(f"不支持的单位：{unit}（可选 model/m/cm/mm）")
+        raise ValueError(f"不支持的单位：{unit}（可选 model/m/cm/mm/m2/cm2/mm2）")
     return float(value) * factor / model_unit_to_meter
 
 
