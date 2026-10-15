@@ -121,6 +121,7 @@ def run(
                 "category": rule["category"],
                 "severity": rule["severity"],
                 "check_type": check_type,
+                "reference": rule.get("reference") or None,
                 "target_total": len(targets),
                 "violations": len(items),
                 "truncated": truncated,

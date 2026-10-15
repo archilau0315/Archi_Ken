@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useT } from '../i18n'
 import { rulePresets, ruleTemplates, validateRules } from '../services/kernel'
@@ -21,6 +21,28 @@ const BLANK_RULE: RuleSpec = {
 
 function makeError(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
+}
+
+// 规则集导出文件格式：带 kind/version 包裹，导入时兼容裸规则数组与裸规则集对象。
+interface RulesetFile {
+  kind?: string
+  version?: number
+  name?: string
+  description?: string
+  rules?: RuleSpec[]
+}
+
+/** 解析导入 JSON：支持导出包裹格式、裸规则集对象、裸规则数组三种形态。 */
+export function parseRulesetFile(raw: unknown): { name: string; description: string; rules: RuleSpec[] } {
+  const data = (Array.isArray(raw) ? { rules: raw } : raw) as RulesetFile | null
+  if (!data || typeof data !== 'object' || !Array.isArray(data.rules) || !data.rules.length) {
+    throw new Error('JSON 中缺少非空 rules 数组')
+  }
+  return {
+    name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : '',
+    description: typeof data.description === 'string' ? data.description : '',
+    rules: data.rules
+  }
 }
 
 function uniqueRuleId(base: string, rules: RuleSpec[]): string {
@@ -48,6 +70,7 @@ export default function RulesetEditor({ modelPath, onReport, onClose }: Props) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const fileInput = useRef<HTMLInputElement>(null)
 
   async function refresh(): Promise<void> {
     const result = await listRulesets()
@@ -118,6 +141,49 @@ export default function RulesetEditor({ modelPath, onReport, onClose }: Props) {
       id: uniqueRuleId(BLANK_RULE.id, draft.rules)
     }
     setDraft({ ...draft, rules: [...draft.rules, rule] })
+  }
+
+  /** 导出当前草稿为 JSON 文件（含名称/说明/规则，便于团队分享）。 */
+  function exportRuleset(): void {
+    if (!draft) return
+    const payload = {
+      kind: 'archiken-ruleset',
+      version: 1,
+      exported_at: new Date().toISOString(),
+      name: draft.name,
+      description: draft.description,
+      rules: draft.rules
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${(draft.name || 'ruleset').replace(/[\\/:*?"<>|]+/g, '-')}.ruleset.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  /** 导入 JSON：解析 → 内核校验 → 作为未保存的新草稿打开。 */
+  async function importRuleset(file: File): Promise<void> {
+    setError('')
+    setNotice('')
+    try {
+      setBusy('import')
+      const parsed = parseRulesetFile(JSON.parse(await file.text()))
+      const result = await validateRules(parsed.rules)
+      setDraft({
+        id: '',
+        name: parsed.name || t('ruleset.import.name'),
+        description: parsed.description,
+        rules: parsed.rules,
+        updated_at: ''
+      })
+      setNotice(t('ruleset.notice.imported', { name: parsed.name || t('ruleset.import.name'), n: result.total }))
+    } catch (err) {
+      setError(t('ruleset.error.importInvalid', { msg: makeError(err) }))
+    } finally {
+      setBusy('')
+    }
   }
 
   function addPreset(): void {
@@ -226,6 +292,23 @@ export default function RulesetEditor({ modelPath, onReport, onClose }: Props) {
             <button onClick={newRuleset} disabled={disabled}>
               {t('ruleset.new')}
             </button>
+            <button className="ghost" onClick={() => fileInput.current?.click()} disabled={disabled}>
+              {t('ruleset.import')}
+            </button>
+            <button className="ghost" onClick={exportRuleset} disabled={!draft || !draft.rules.length || disabled}>
+              {t('ruleset.export')}
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".json,application/json"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void importRuleset(file)
+                e.target.value = ''
+              }}
+            />
             <ul>
               {list.map((item) => (
                 <li

@@ -11,6 +11,7 @@ export interface Issue {
   severity: Severity
   category: string
   title: string
+  reference: string | null
   element: ElementRef
   related: ElementRef | null
   location: number[] | null
@@ -75,6 +76,7 @@ function fromRules(rules: RulesResponse): Issue[] {
         severity: asSeverity(rule.severity),
         category: rule.category,
         title: rule.name,
+        reference: rule.reference ?? null,
         element: { guid: item.guid, name: item.name, ifc_type: item.ifc_type },
         related: item.related,
         location: item.location ?? null,
@@ -98,6 +100,7 @@ function fromClash(clash: ClashResponse, lang: string): Issue[] {
       severity: 'error',
       category: txt.category,
       title: txt.title,
+      reference: null,
       element: item.a,
       related: item.b,
       location: item.contact_point,

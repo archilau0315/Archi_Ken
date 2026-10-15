@@ -26,11 +26,12 @@ def pick_text(obj: dict[str, Any], key: str, lang: Lang) -> str:
 
 
 def localize_rule(rule: dict[str, Any], lang: Lang) -> dict[str, Any]:
-    """返回按语言本地化的规则副本（name / category / message）。"""
+    """返回按语言本地化的规则副本（name / category / message / reference）。"""
     out = dict(rule)
     out["name"] = pick_text(rule, "name", lang)
     out["category"] = pick_text(rule, "category", lang)
     out["message"] = pick_text(rule, "message", lang)
+    out["reference"] = pick_text(rule, "reference", lang)
     return out
 
 

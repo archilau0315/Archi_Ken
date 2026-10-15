@@ -26,7 +26,7 @@ I18N = {
         "by_category": "按分类统计",
         "by_source": "按来源统计",
         "count": "数量",
-        "headers": ["级别", "分类", "规则", "构件", "构件类型", "关联构件", "关联类型", "原因", "判定链", "位置", "来源"],
+        "headers": ["级别", "分类", "规则", "依据", "构件", "构件类型", "关联构件", "关联类型", "原因", "判定链", "位置", "来源"],
     },
     "en": {
         "severity": {"error": "Error", "warning": "Warning", "info": "Info"},
@@ -42,7 +42,7 @@ I18N = {
         "by_category": "By Category",
         "by_source": "By Source",
         "count": "Count",
-        "headers": ["Severity", "Category", "Rule", "Element", "Element Type", "Related Element", "Related Type", "Reason", "Decision Chain", "Location", "Source"],
+        "headers": ["Severity", "Category", "Rule", "Reference", "Element", "Element Type", "Related Element", "Related Type", "Reason", "Decision Chain", "Location", "Source"],
     },
 }
 
@@ -51,7 +51,7 @@ HEAD_FONT = Font(bold=True)
 TITLE_FONT = Font(bold=True, size=14)
 WRAP = Alignment(vertical="top", wrap_text=True)
 
-WIDTHS = [8, 14, 22, 26, 14, 26, 14, 42, 42, 24, 8]
+WIDTHS = [8, 14, 22, 26, 26, 14, 26, 14, 42, 42, 24, 8]
 
 
 def _fmt(value: Any) -> Any:
@@ -134,6 +134,7 @@ def _write_issues(book: Workbook, issues: list[dict], lang: str = "zh") -> None:
                 txt["severity"].get(issue.get("severity") or "", issue.get("severity") or ""),
                 issue.get("category") or "",
                 issue.get("title") or "",
+                issue.get("reference") or "",
                 element.get("name") or element.get("guid") or "",
                 element.get("ifc_type") or "",
                 related.get("name") or related.get("guid") or "",

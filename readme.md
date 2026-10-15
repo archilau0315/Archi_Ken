@@ -38,13 +38,13 @@
 | 能力 | 说明 |
 |---|---|
 | IFC 模型解析 | 摘要 / 空间层级 / 构件属性，多专业模型融合与专业自动映射 |
-| 规则化检查 | 规则 DSL v1 + 109 个内置模板，规则集编辑器（保存 / 复用 / 校验 / 运行） |
+| 规则化检查 | 规则 DSL v1 + 109 个内置模板，规则集编辑器（保存 / 复用 / 校验 / 运行 / JSON 导入导出） |
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检） |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
 | 信息提取 | ITO / QTO：工程量推导、受控表达式自定义列、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
-| 检查报告 | 统一问题清单 → HTML 预览 / PDF / Excel 导出 |
+| 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
 | 视图系统 | 透视 / 平面（2D）切换、七标准视角、三向剖切（含 3D 内拖拽实时调节）、3D 标记、演示视角播放 |
 | 3D 真实化 | 逐构件三角网格真实显示（批量网格端点），包围盒降级兜底 |
@@ -53,13 +53,13 @@
 | Capability | Description |
 |---|---|
 | IFC parsing | Summary / spatial hierarchy / element properties; multi-model federation with automatic discipline mapping |
-| Rule-based checking | Rule DSL v1 + 109 built-in templates; ruleset editor (save / reuse / validate / run) |
+| Rule-based checking | Rule DSL v1 + 109 built-in templates; ruleset editor (save / reuse / validate / run / JSON import & export) |
 | Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks) |
 | Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
 | Takeoff | ITO / QTO: quantity derivation, custom columns via controlled expressions, Excel export |
 | Communication | Issue lifecycle / comments / view snapshots; BCF 2.1 export (importable into Solibri / Navisworks) |
-| Reports | Unified issue list → HTML preview / PDF / Excel export |
+| Reports | Unified issue list (with rule code references) → HTML preview / PDF / Excel export |
 | Batch automation | Autorun unattended batch checking with report artifacts and distribution-folder copy |
 | View system | Perspective / plan (2D) toggle, seven standard views, 3-axis section clipping, 3D markers, presentation viewpoints |
 | 3D real mesh | Per-element real triangle-mesh display (batch mesh endpoint), bbox fallback |
@@ -136,9 +136,9 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | 加载融合 | 多模型融合：专业自动映射（命名 / 导出软件 / 类型三级规则）、融合模型树（模型节点带专业推断徽章、空间节点带构件级专业分布）、构件按专业着色、点击拾取查看属性 |
 | 真实模型 | 拉取**全部模型源**的逐构件三角网格，按各模型的地理参考偏移（georef）叠加到同一空间，3D 视图切换为真实几何显示（包围盒降级兜底）；构建期间按钮实时显示「构建中…」；玻璃构件（窗 / 门 / 玻璃材质面组）自动半透明、框料保持实心 |
 | 运行检查 | 以第一个模型源为输入，产出规则与碰撞统一问题清单 |
-| 报告 | 摘要统计 + 问题清单预览（点击构件联动 3D），重新生成 / 新窗口 HTML 预览 / 一键导出 PDF / Excel 到 `.data/exports/` |
+| 报告 | 摘要统计 + 问题清单预览（规则问题附规范依据出处，点击构件联动 3D），重新生成 / 新窗口 HTML 预览 / 一键导出 PDF / Excel 到 `.data/exports/` |
 | 视图 | 3D 视图上方紧凑工具条（占布局高度、完全不遮挡画面）+ 手风琴浮窗（默认全折叠、头部可拖拽移位）。工具条承接高频操作：透视 / 平面（正交 2D）一键切换与七个标准视角（点击即到、无跳转）；X / Y / Z 三向剖切一键启用（点击轴名即切、无确认与存盘环节），滑杆实时拖动，选中「拖动」后可直接在 3D 视图中拖拽切面（沿该轴屏幕投影换算，拖拽中同步刷新）、翻转切向、全部清除；浮窗只留低频项：检查结果按严重度配色一键放置 3D 标记、点击图钉飞行定位；演示视角命名保存（localStorage）与顺序自动播放。另有一键「透视外壳」：把建筑 / 结构 / 场地淡化为半透明并关闭深度写入，透明度由旁边滑杆实时可调（5% ~ 90%，默认 12%），直接看见内部的暖通、给排水、电气管线（融合包围盒与真实网格两种模式均可用） |
-| 规则集 | 规则集编辑器：新建 / 编辑 / 保存 / 复用，内置模板快速添加，合规预设一键添加（无障碍 / 净高 / 消防），支持「校验」与「运行」 |
+| 规则集 | 规则集编辑器：新建 / 编辑 / 保存 / 复用，内置模板快速添加，合规预设一键添加（无障碍 / 净高 / 消防），支持「校验」「运行」与 JSON 导入 / 导出（团队分享） |
 | 碰撞矩阵 | 勾选硬碰撞 / 间隙 / 净空并设容差，可忽略同专业；运行后查看专业矩阵与问题清单，点击问题联动 3D 选中 |
 | IDS 校验 | IDS 编辑器：载入示例或粘贴 IDS XML、解析预览结构、导出 XML，对模型运行校验并逐规范 / 逐要求查看通过情况与失败构件（点击联动 3D） |
 | 信息提取 | ITO / QTO 面板：固定字段与建议列，自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数），逐构件结果与合计，一键导出 Excel |
@@ -226,7 +226,7 @@ ArchiKen/                  项目根目录（磁盘目录名保持 AchiAudit）/
 | L1 data | `corpus/` | Regression corpus (4 versions × 4 exporters × 4 size tiers), probe models | 4 buildingSMART public samples registered (IFC2x3 arch/HVAC/struct + IFC4 arch), growing |
 | Cross-cutting | `tools/` | Corpus coverage validation, smoke model generation, kernel / server smoke tests, golden-master pipeline, performance baseline | All ready |
 
-详细模块划分与阶段归属见 [docs/模块清单.md](docs/模块清单.md)；功能对标清单与填写规范见 [docs/功能矩阵与行为规格.md](docs/功能矩阵与行为规格.md)；语料库使用方式见 [corpus/README.md](corpus/README.md)。
+详细模块划分与阶段归属见 [docs/模块清单.md](docs/模块清单.md)；功能对标清单与填写规范见 [docs/功能矩阵与行为规格.md](docs/功能矩阵与行为规格.md)；规则编写与定级规范见 [docs/规则编写规范.md](docs/规则编写规范.md)；语料库使用方式见 [corpus/README.md](corpus/README.md)。
 
 Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese); feature matrix & behavior specs: [docs/功能矩阵与行为规格.md](docs/功能矩阵与行为规格.md) (Chinese); corpus usage: [corpus/README.md](corpus/README.md).
 

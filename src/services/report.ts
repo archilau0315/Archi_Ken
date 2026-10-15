@@ -11,6 +11,8 @@ export interface Issue {
   severity: Severity
   category: string
   title: string
+  /** 规则依据（现行规范条文出处），碰撞问题为 null。 */
+  reference: string | null
   element: ElementRef
   related: ElementRef | null
   location: number[] | null

@@ -103,6 +103,7 @@ export default function ReportPanel({ modelPath, onSelect, onClose }: Props) {
         <td>
           {issue.category}
           <div className="report-muted">{issue.title}</div>
+          {issue.reference && <div className="report-muted">{issue.reference}</div>}
         </td>
         <td>
           <a className="report-link" onClick={() => onSelect(issue.element.guid)}>

@@ -15,6 +15,7 @@ const I18N = {
     clash: '硬碰撞',
     failed: '未通过规则',
     headers: ['级别', '分类 / 规则', '构件', '关联构件', '原因（含判定链）', '位置'],
+    reference: '依据',
     empty: '未发现问题：所有检查均通过。'
   },
   en: {
@@ -29,6 +30,7 @@ const I18N = {
     clash: 'Hard Clashes',
     failed: 'Failed Rules',
     headers: ['Severity', 'Category / Rule', 'Element', 'Related Element', 'Reason (with decision chain)', 'Location'],
+    reference: 'Reference',
     empty: 'No issues found: all checks passed.'
   }
 }
@@ -56,7 +58,7 @@ function issueRow(issue: Issue, txt: typeof I18N.zh): string {
   const steps = issue.steps.map((step) => `<li>${esc(step)}</li>`).join('')
   return `<tr>
     <td><span class="badge ${esc(issue.severity)}">${esc(txt.severity[issue.severity] ?? issue.severity)}</span></td>
-    <td>${esc(issue.category)}<div class="muted">${esc(issue.title)}</div></td>
+    <td>${esc(issue.category)}<div class="muted">${esc(issue.title)}</div>${issue.reference ? `<div class="muted">${esc(txt.reference)}：${esc(issue.reference)}</div>` : ''}</td>
     <td>${esc(issue.element.name ?? issue.element.guid)}<span class="muted">（${esc(issue.element.ifc_type)}）</span></td>
     <td>${related}</td>
     <td>${esc(issue.reason)}<ul class="steps">${steps}</ul></td>

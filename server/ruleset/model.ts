@@ -7,7 +7,7 @@ import { tr, type Lang } from '../i18n'
 export type Severity = 'error' | 'warning' | 'info'
 
 // 与内核 DSL v1 的 CHECK_TYPES 保持一致（kernel/app/rules/dsl.py）。
-export const CHECK_TYPES = ['property', 'intersection', 'clearance', 'duplicate', 'headroom', 'dimension'] as const
+export const CHECK_TYPES = ['property', 'intersection', 'clearance', 'duplicate', 'headroom', 'dimension', 'count', 'containment'] as const
 export const SEVERITIES: Severity[] = ['error', 'warning', 'info']
 
 export interface RuleTarget {

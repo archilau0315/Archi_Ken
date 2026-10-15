@@ -26,6 +26,7 @@ export interface RuleResult {
   category: string
   severity: string
   check_type: string
+  reference?: string | null
   target_total: number
   violations: number
   truncated: boolean

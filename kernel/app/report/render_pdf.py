@@ -157,10 +157,13 @@ def _issue_table(issues: list[dict], styles: dict[str, ParagraphStyle], lang: st
     head = [Paragraph(_esc(text), styles["head"]) for text in txt["headers"]]
     rows = [head]
     for issue in issues:
+        ref = issue.get("reference") or ""
+        rule_cell = f"{_esc(issue.get('category') or '—')}<br/><font size=\"7.5\" color=\"#6b7280\">{_esc(issue.get('title') or '')}</font>"
+        if ref:
+            rule_cell += f'<br/><font size="7" color="#6b7280">{_esc(ref)}</font>'
         rows.append(
             [
-                Paragraph(f"{_esc(issue.get('category') or '—')}<br/>"
-                          f'<font size="7.5" color="#6b7280">{_esc(issue.get("title") or "")}</font>', styles["cell"]),
+                Paragraph(rule_cell, styles["cell"]),
                 Paragraph(_esc(_element_text(issue.get("element"))), styles["cell"]),
                 Paragraph(_esc(_element_text(issue.get("related"))), styles["cell"]),
                 _reason_cell(issue, styles),
