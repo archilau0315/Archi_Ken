@@ -1,4 +1,4 @@
-// English dictionary: IDS editor.
+﻿// English dictionary: IDS editor.
 export default {
   'ids.title': 'IDS Validation & Editor',
   'ids.tagline': 'buildingSMART IDS · Edit / Import / Export / Report',
@@ -34,4 +34,11 @@ export default {
   'ids.reqPass': 'Passed {pass}/{total}',
   'ids.noGuid': '(no GUID)',
   'ids.noSpecs': 'This IDS has no specifications',
+  'ids.toIssues': 'Send {n} failures to issues',
+  'ids.toIssuesBusy': 'Creating issues…',
+  'ids.toIssuesHint': 'Create a communication issue for each failed element; existing ones are skipped',
+  'ids.toIssuesDone': 'Created {created} issues, skipped {skipped} duplicates',
+  'ids.toIssuesDescSpec': 'IDS specification',
+  'ids.toIssuesDescReq': 'Failed requirement',
+  'ids.toIssuesDescReason': 'Failure reason',
 } as Record<string, string>

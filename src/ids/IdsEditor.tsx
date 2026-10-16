@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useT } from '../i18n'
 import { idsExample, idsParse, idsValidate } from '../services/kernel'
 import type { IdsDocumentPreview, IdsEntityRef, IdsValidateResponse } from '../services/kernel'
+import { issueCreate, issuesList } from '../services/issues'
 
 // IDS 校验与编辑器（L4，M7）：编辑 / 载入 IDS XML，预览结构，对模型执行校验并查看报告。
 // 校验由 L2 内核基于 buildingSMART IDS 标准（ifctester）完成。
@@ -28,8 +29,9 @@ export default function IdsEditor({ modelPath, onSelect, onClose }: Props) {
   const [preview, setPreview] = useState<IdsDocumentPreview | null>(null)
   const [result, setResult] = useState<IdsValidateResponse | null>(null)
   const [hideSkipped, setHideSkipped] = useState(false)
-  const [busy, setBusy] = useState<'' | 'example' | 'parse' | 'validate'>('')
+  const [busy, setBusy] = useState<'' | 'example' | 'parse' | 'validate' | 'toIssues'>('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   async function loadExample(): Promise<void> {
     setBusy('example')
@@ -94,6 +96,59 @@ export default function IdsEditor({ modelPath, onSelect, onClose }: Props) {
     URL.revokeObjectURL(url)
   }
 
+  /** 报告中全部失败实体（规范名 + 要求描述 + 构件），供转问题单与按钮计数共用。 */
+  function failedItems(): { specName: string; reqDesc: string; entity: IdsEntityRef }[] {
+    if (!result) return []
+    const items: { specName: string; reqDesc: string; entity: IdsEntityRef }[] = []
+    result.specifications.forEach((spec, specIndex) => {
+      if (spec.status) return
+      const specName = spec.name || t('ids.specFallback', { n: specIndex + 1 })
+      for (const req of spec.requirements) {
+        for (const entity of req.failed_entities) items.push({ specName, reqDesc: req.description, entity })
+      }
+    })
+    return items
+  }
+
+  /** 把 IDS 失败项逐条转为沟通问题：标题含规范名与构件名，按标题对已有 ids 问题去重。 */
+  async function sendFailuresToIssues(): Promise<void> {
+    const items = failedItems()
+    if (!items.length) return
+    setBusy('toIssues')
+    setError('')
+    setNotice('')
+    try {
+      const existing = await issuesList({ source: 'ids' })
+      const seen = new Set(existing.items.map((issue) => issue.title))
+      let created = 0
+      let skipped = 0
+      for (const { specName, reqDesc, entity } of items) {
+        const entityName = entity.name || entity.guid || t('ids.noGuid')
+        const title = `[IDS] ${specName} - ${entityName}`
+        if (seen.has(title)) {
+          skipped += 1
+          continue
+        }
+        await issueCreate({
+          title,
+          description: `${t('ids.toIssuesDescSpec')}: ${specName}\n${t('ids.toIssuesDescReq')}: ${reqDesc}\n${t('ids.toIssuesDescReason')}: ${entity.reason || '—'}`,
+          severity: 'error',
+          category: 'ids',
+          source: 'ids',
+          model_path: modelPath,
+          element: entity.guid ? { guid: entity.guid, name: entity.name, ifc_type: entity.ifc_type } : null
+        })
+        seen.add(title)
+        created += 1
+      }
+      setNotice(t('ids.toIssuesDone', { created, skipped }))
+    } catch (err) {
+      setError(makeError(err))
+    } finally {
+      setBusy('')
+    }
+  }
+
   return (
     <div className="editor-overlay">
       <div className="editor-dialog">
@@ -106,6 +161,7 @@ export default function IdsEditor({ modelPath, onSelect, onClose }: Props) {
         </header>
 
         {error && <div className="error-bar">{error}</div>}
+        {notice && <div className="error-bar" style={{ borderColor: '#2f9e44', color: '#2f9e44' }}>{notice}</div>}
 
         <div className="ids-tools">
           <button className="ghost" onClick={() => void loadExample()} disabled={busy !== ''}>
@@ -193,6 +249,14 @@ export default function IdsEditor({ modelPath, onSelect, onClose }: Props) {
                 <span className="chip warning">{t('ids.chipReqsFail', { n: result.totals.total_requirements_fail })}</span>
                 <span className="chip">{t('ids.chipChecks', { n: result.totals.total_checks })}</span>
                 <span className="chip info">{t('ids.chipPassRate', { rate: percentText(result.totals.percent_checks_pass) })}</span>
+                <button
+                  className="ghost tiny"
+                  onClick={() => void sendFailuresToIssues()}
+                  disabled={busy !== '' || failedItems().length === 0}
+                  title={t('ids.toIssuesHint')}
+                >
+                  {busy === 'toIssues' ? t('ids.toIssuesBusy') : t('ids.toIssues', { n: failedItems().length })}
+                </button>
               </div>
 
               <ul className="ids-results">

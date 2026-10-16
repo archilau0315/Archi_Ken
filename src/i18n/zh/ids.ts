@@ -1,4 +1,4 @@
-// 中文词典：IDS 编辑器（ids）。
+﻿// 中文词典：IDS 编辑器（ids）。
 export default {
   'ids.title': 'IDS 校验与编辑器',
   'ids.tagline': 'buildingSMART IDS · 编辑 / 导入 / 导出 / 报告',
@@ -34,4 +34,11 @@ export default {
   'ids.reqPass': '通过 {pass}/{total}',
   'ids.noGuid': '（无 GUID）',
   'ids.noSpecs': '该 IDS 无规范',
+  'ids.toIssues': '失败项转问题单（{n}）',
+  'ids.toIssuesBusy': '正在转问题单…',
+  'ids.toIssuesHint': '把本次校验失败的构件逐条创建为沟通问题，已存在的自动跳过',
+  'ids.toIssuesDone': '已创建 {created} 个问题，跳过重复 {skipped} 个',
+  'ids.toIssuesDescSpec': 'IDS 规范',
+  'ids.toIssuesDescReq': '未通过要求',
+  'ids.toIssuesDescReason': '失败原因',
 } as Record<string, string>
