@@ -416,3 +416,4 @@
 | 2026-10-16 | docs/规则验证记录.md + docs/规则库完善计划.md | 真实模型复核沉淀：验证记录新增第五节（MEP 样本复核全过程——模型特征 2588 构件无 IfcSpace、2 处修复明细、error 级逐条结论表、真实误报清零总结），第四节遗留项 1 划线标注完成；计划文档 Phase D 第 1 项从「挂起」改为「已完成」并补复核摘要 | error 级阈值固化收官，规则库四阶段全部完成 |
 | 2026-10-16 | review_rules.py（通用化）+ corpus/rulesets/ + rulesets/（入库） | 工作区清理：删除一次性脚本 run_general_rules.py/inspect_door_width.py/review_result.txt；review_rules.py 通用化入库（支持命令行传 IFC 路径与域过滤，缺省跑 .data/uploads 最新模型）；两个规则集备份目录重新生成为修复后最新版（door-min-width 已是 warning+attr:OverallWidth）并入库，作为 .data 丢失时的恢复包 | git 推送已完成（11 笔），跟踪关系修正为 origin/main |
 | 2026-10-16 | server/report/html.ts | HTML 报告预览页两侧留白：内容包进 max-width 1200px 居中的白色卡片容器，页面底色改浅灰 | 宽屏下不再贴边，窄屏（<1200px）自动保持 16px 边距 |
+| 2026-10-16 | src/report/report.css + src/communication/communication.css | 报告/沟通弹窗两侧留白对齐基础弹窗：两对话框的 width 从 min(Npx, 94vw) 改为 min(Npx, 92vw)，与 styles.css 基础 .editor-dialog 的 92vw 保持一致 | 此前 94vw 导致两侧留白比其它弹窗（IDS/碰撞矩阵/信息提取）窄 2vw，视觉上更贴边 |

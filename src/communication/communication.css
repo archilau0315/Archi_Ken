@@ -1,8 +1,9 @@
 /* ===== M8 沟通与 BCF 面板 ===== */
 
-/* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw/86vh（导入顺序晚于本文件）。 */
+/* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw/86vh（导入顺序晚于本文件）。
+   两侧留白与基础弹窗一致（92vw），仅在宽屏下放宽到 860px。 */
 .editor-dialog.comm-dialog {
-  width: min(860px, 94vw);
+  width: min(860px, 92vw);
   height: auto;
   max-height: 90vh;
   display: flex;
