@@ -24,6 +24,11 @@ _SKIPPED_TYPES = {
 # 分组字段白名单：仅允许容器（楼层）、IFC 类型、构造层角色或材质名，避免任意表达式注入
 _GROUP_KEYS = {"container", "ifc_type", "layer_role", "layer_material"}
 
+# 幕墙类构件（幕墙本体 + 其面板 / 龙骨子构件）按「洞口 / 框外围面积」计量：
+# 只保留面积与轮廓尺寸，不计体积 / 表面积，也不按材质拆层（区别于实体墙的分层口径）。
+_CURTAIN_TYPES = {"IfcCurtainWall"}
+_CURTAIN_KEEP = {"area", "length", "width", "height"}
+
 
 def run_takeoff(
     model: ifcopenshell.file,
@@ -59,31 +64,40 @@ def run_takeoff(
         and (not type_filter or element.is_a() in type_filter)
     ]
     guids = {element.GlobalId for element in candidates}
+    # 幕墙本体 guid：其面板 / 龙骨子构件随之走幕墙口径（只作明细、不计体积 / 表面积、不拆层）
+    curtain_guids = {element.GlobalId for element in candidates if element.is_a() in _CURTAIN_TYPES}
     for element in candidates:
         entry = _resolve_geometry(geometry, element)
         quantities = from_geometry(entry) if entry else {}
+        parent_guid = _parent_guid_in(element, guids)
+        # 幕墙类（幕墙本体 + 其面板 / 龙骨子构件）按「洞口 / 框外围面积」计量：
+        # 只保留面积（与轮廓尺寸），不计体积 / 表面积，也不按材质分层（区别于实体墙的分层口径）。
+        is_curtain = element.is_a() in _CURTAIN_TYPES or parent_guid in curtain_guids
+        if is_curtain:
+            quantities = {k: v for k, v in quantities.items() if k in _CURTAIN_KEEP}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
-        # 材质名：供 group_by=layer_material 时按材质分组（多材质父构件无单一材质，留空避免与明细重复）
-        material = _material_of(entry)
-        if material:
-            row["layer_material"] = material
-        parent_guid = _parent_guid_in(element, guids)
+        if not is_curtain:
+            # 材质名：供 group_by=layer_material 时按材质分组（多材质父构件无单一材质，留空避免与明细重复）
+            material = _material_of(entry)
+            if material:
+                row["layer_material"] = material
         if parent_guid:
             # 子构件（幕墙面板 / 龙骨 / 复合墙构造层）只作展开明细，不计入合计，避免父子重复
             row["parent_guid"] = parent_guid
-            # 构造层角色：供 group_by=layer_role 时按角色分组、各组只汇总自洽的口径
-            row["layer_role"] = classify_layer(getattr(element, "Name", None))
+            if not is_curtain:
+                # 构造层角色：供 group_by=layer_role 时按角色分组、各组只汇总自洽的口径
+                row["layer_role"] = classify_layer(getattr(element, "Name", None))
         else:
             _accumulate(totals, values, numeric_keys)
         rows.append(row)
-        # 多材质构件（复合墙 / 幕墙）：按材质拆开的几何组另出子行明细，
-        # 父行仍代表整体并计入合计，子行只作展开明细，避免重复计量。
-        layer_rows, layer_errors = _material_rows(element, split_parts.get(element.GlobalId) or [], normalized)
-        errors += layer_errors
-        for layer_row in layer_rows:
-            layer_row["parent_guid"] = element.GlobalId
-            rows.append(layer_row)
+        # 多材质构件（复合墙）：按材质拆开的几何组另出子行明细；幕墙不拆层，整幕墙按洞口面积计。
+        if not is_curtain:
+            layer_rows, layer_errors = _material_rows(element, split_parts.get(element.GlobalId) or [], normalized)
+            errors += layer_errors
+            for layer_row in layer_rows:
+                layer_row["parent_guid"] = element.GlobalId
+                rows.append(layer_row)
         if len(rows) >= limit:
             truncated = True
             break
