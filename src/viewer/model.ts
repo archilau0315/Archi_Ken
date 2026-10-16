@@ -13,10 +13,12 @@ const PALETTE = [
 
 const SELECT_COLOR = 0x1d4ed8
 
-/** 常规不透明度（轻微半透明，保留一点层次感）。 */
-const BASE_OPACITY = 0.92
+/** 常规不透明度：实体构件完全实心，侧面分层清晰、无透明排序伪影。 */
+const BASE_OPACITY = 1.0
 /** 玻璃面组不透明度：半透明可看穿，框料保持常规实心。 */
 export const GLASS_OPACITY = 0.35
+/** IFC 样式透明度超过该阈值才按玻璃渲染（0.05 以下视为导出误差）。 */
+const GLASS_TRANSPARENCY_THRESHOLD = 0.05
 /** 外壳淡化默认不透明度：既看穿又不完全消失（滑杆可调 0.05 ~ 0.9）。 */
 export const DEFAULT_SHELL_OPACITY = 0.12
 /** 外壳专业：淡化后即可看到内部的暖通 / 给排水 / 电气管线。 */
@@ -32,21 +34,46 @@ export function colorForType(ifcType: string): string {
 /** 显色模式：discipline=按专业配色；ifc=按 IFC 原生颜色（无样式构件回退类型色）。 */
 export type ColorMode = 'discipline' | 'ifc'
 
-/** 按显色模式取构件颜色：原始色模式用 ifc_color，专业色模式用融合给出的 color。 */
+/**
+ * 按显色模式取构件颜色：原始色模式用 ifc_color；专业色模式优先用融合给出的 color，
+ * 缺省回退几何接口按专业映射的标准配色（与左栏色卡 / 碰撞矩阵表头同源，保证一致）。
+ */
 function modeColor(item: BboxItem, mode: ColorMode): string | undefined {
-  return mode === 'ifc' ? item.ifc_color : item.color
+  return mode === 'ifc' ? item.ifc_color : (item.color ?? item.discipline_color)
 }
 
-/** 玻璃判定：IfcWindow / IfcDoor 以玻璃为主，或材质名含 glass / 玻璃 的面组按玻璃渲染（半透明），框料保持实心。 */
+/**
+ * IFC 样式透明度换算的面组不透明度：样式声明了有效透明度（> 阈值）时返回换算值，
+ * 其余返回 null（由玻璃类型判定兜底）。
+ */
+function styleOpacity(item: BboxItem): number | null {
+  const t = item.transparency
+  if (typeof t !== 'number' || t <= GLASS_TRANSPARENCY_THRESHOLD) return null
+  return Math.min(0.9, Math.max(0.1, 1 - t))
+}
+
+/**
+ * 玻璃判定：材质名含 glass / 玻璃 的面组按玻璃渲染；多材质拆分的子片（guid 含 #m）
+ * 材质名不含玻璃一律实心（框料 / 型材不再整窗半透明）；整体未拆分的门 / 窗保持
+ * 玻璃为主的兜底（无面组信息可依据）。
+ */
 function isGlass(item: BboxItem): boolean {
+  if (/glass|玻璃/i.test(item.material ?? '')) return true
+  if (item.guid.includes('#m')) return false
   const type = item.ifc_type.toUpperCase()
-  return type === 'IFCWINDOW' || type === 'IFCDOOR' || /glass|玻璃/i.test(item.material ?? '')
+  return type === 'IFCWINDOW' || type === 'IFCDOOR'
 }
 
-/** 材质按「玻璃 + 专业 + 颜色」缓存：玻璃与框料即使同色也必须分开建材质。 */
+/** 面组不透明度：样式透明度优先，玻璃类型判定兜底，实体构件全实心。 */
+function faceOpacity(item: BboxItem): number {
+  return styleOpacity(item) ?? (isGlass(item) ? GLASS_OPACITY : BASE_OPACITY)
+}
+
+/** 材质按「玻璃 + 透明度 + 专业 + 颜色」缓存：同色不同透明度的面组必须分开建材质。 */
 function materialKey(item: BboxItem, mode: ColorMode): string {
   const glass = isGlass(item) ? 'g' : 'o'
-  return `${glass}|${item.discipline ?? ''}|${modeColor(item, mode) ?? item.ifc_type}`
+  const transparency = typeof item.transparency === 'number' ? item.transparency.toFixed(2) : ''
+  return `${glass}|${transparency}|${item.discipline ?? ''}|${modeColor(item, mode) ?? item.ifc_type}`
 }
 
 /** 把材质登记到所属专业分组，供「淡化外壳」整组切换透明度。 */
@@ -73,8 +100,8 @@ function makeShellFade(
       const faded = on && SHELL_DISCIPLINES.has(key)
       for (const material of group) {
         const glass = material.userData.isGlass === true
-        // 淡化时整组用外壳透明度；未淡化时玻璃保持玻璃透明度、深度写入保持关闭。
-        material.opacity = faded ? opacity : glass ? GLASS_OPACITY : BASE_OPACITY
+        // 淡化时整组用外壳透明度；未淡化时恢复各自的基础透明度（玻璃面组按样式各自不同）。
+        material.opacity = faded ? opacity : (material.userData.baseOpacity as number ?? BASE_OPACITY)
         material.depthWrite = faded ? false : !glass
       }
     }
@@ -165,17 +192,24 @@ export function buildModelLayer(items: BboxItem[]): ModelLayer {
       Math.max(dy, 1e-4),
       Math.max(dz, 1e-4)
     )
-    // 融合模型按专业给色；单模型无显式颜色时按 IFC 类型着色（包围盒模式恒为专业配色）。
+    // 融合模型按专业给色；单模型无显式颜色时回退专业标准配色，最后按 IFC 类型着色。
     const key = materialKey(item, 'discipline')
     let material = materials.get(key)
     if (!material) {
+      const glass = isGlass(item)
+      const opacity = faceOpacity(item)
       material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(item.color ?? colorForType(item.ifc_type)),
-        transparent: true,
-        opacity: BASE_OPACITY,
+        color: new THREE.Color(modeColor(item, 'discipline') ?? colorForType(item.ifc_type)),
+        transparent: opacity < 1,
+        opacity,
         metalness: 0.05,
         roughness: 0.75
       })
+      material.userData.baseOpacity = opacity
+      if (glass) {
+        material.userData.isGlass = true
+        if (opacity < 1) material.depthWrite = false
+      }
       materials.set(key, material)
       registerMaterial(byDiscipline, item.discipline, material)
     }
@@ -243,18 +277,20 @@ export function buildMeshLayer(items: ElementMesh[], mode: ColorMode = 'discipli
     let material = materials.get(key)
     if (!material) {
       const glass = isGlass(item)
+      const opacity = faceOpacity(item)
       material = new THREE.MeshStandardMaterial({
         color: new THREE.Color(modeColor(item, mode) ?? colorForType(item.ifc_type)),
-        transparent: true,
-        opacity: glass ? GLASS_OPACITY : BASE_OPACITY,
+        transparent: opacity < 1,
+        opacity,
         metalness: glass ? 0.1 : 0.05,
         roughness: glass ? 0.15 : 0.75,
         side: THREE.DoubleSide
       })
+      material.userData.baseOpacity = opacity
       if (glass) {
         // 玻璃关深度写入避免双面半透明自遮挡；userData 标记供外壳淡化回填时识别。
-        material.depthWrite = false
         material.userData.isGlass = true
+        if (opacity < 1) material.depthWrite = false
       }
       materials.set(key, material)
       registerMaterial(byDiscipline, item.discipline, material)

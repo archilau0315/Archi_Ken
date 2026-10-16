@@ -12,7 +12,7 @@ from app.geometry.extract import load_or_extract
 from app.takeoff.columns import normalize_columns
 from app.takeoff.expr import ExprError, evaluate
 from app.takeoff.layers import ROLE_QUANTITIES, classify_layer, role_name
-from app.takeoff.quantities import from_geometry
+from app.takeoff.quantities import from_bbox, from_geometry
 
 # 默认跳过的非物理构件：空间结构 + 洞口虚体，均不进入提取表。
 # 若调用方显式把对应类型放进 ifc_types，则按豁免处理（如「空间面积」模板用 IfcSpace）。
@@ -29,6 +29,32 @@ _GROUP_KEYS = {"container", "ifc_type", "layer_role", "layer_material"}
 _CURTAIN_TYPES = {"IfcCurtainWall"}
 _CURTAIN_KEEP = {"area", "length", "width", "height"}
 
+# 门 / 窗：宽度 / 高度优先读 IFC 实体属性（几何包围盒的最小维是墙厚方向，不是宽度）。
+_OPENING_TYPES = {"IfcDoor", "IfcWindow"}
+
+
+def _opening_sizes(model, element, entry: dict, quantities: dict, unit_scale: float | None) -> dict:
+    """修正门 / 窗的宽度与高度：属性优先，几何推导兜底。
+
+    包围盒三维是「宽 × 厚 × 高」，几何推导的 width（最小维）拿到的是墙厚方向尺寸；
+    IFC4 的 IfcDoor / IfcWindow（及 IFC2x3 的 IfcWindow）自带 OverallWidth / OverallHeight
+    属性（文件单位，需换算为米），最可靠。无属性时兜底：宽 = 水平面内较大边，高 = 竖向尺寸。
+    """
+    if unit_scale is None:
+        try:
+            from ifcopenshell.util.unit import calculate_unit_scale
+
+            unit_scale = calculate_unit_scale(model) or 1.0
+        except Exception:
+            unit_scale = 1.0
+    bbox = entry.get("bbox") or [0.0] * 6
+    dx, dy, dz = bbox[3] - bbox[0], bbox[4] - bbox[1], bbox[5] - bbox[2]
+    width = getattr(element, "OverallWidth", None)
+    height = getattr(element, "OverallHeight", None)
+    quantities["width"] = round(width * unit_scale, 6) if width else round(max(dx, dy), 6)
+    quantities["height"] = round(height * unit_scale, 6) if height else round(dz, 6)
+    return quantities
+
 
 def run_takeoff(
     model: ifcopenshell.file,
@@ -44,6 +70,8 @@ def run_takeoff(
     if group_by is not None and group_by not in _GROUP_KEYS:
         group_by = None
     geometry, cache_hit = load_or_extract(model, path)
+    # 门窗宽度 / 高度优先取 IFC 实体属性（OverallWidth / OverallHeight，文件单位换算为米），按需惰性计算换算系数
+    unit_scale: float | None = None
     # 多材质构件的几何拆分索引：<父 guid> → 各材质组条目，供分层明细行使用（一次遍历，避免逐构件扫描）。
     split_parts: dict[str, list[dict]] = {}
     for key, entry in geometry.items():
@@ -69,6 +97,8 @@ def run_takeoff(
     for element in candidates:
         entry = _resolve_geometry(geometry, element)
         quantities = from_geometry(entry) if entry else {}
+        if element.is_a() in _OPENING_TYPES and entry:
+            quantities = _opening_sizes(model, element, entry, quantities, unit_scale)
         parent_guid = _parent_guid_in(element, guids)
         # 幕墙类（幕墙本体 + 其面板 / 龙骨子构件）按「洞口 / 框外围面积」计量：
         # 只保留面积（与轮廓尺寸），不计体积 / 表面积，也不按材质分层（区别于实体墙的分层口径）。
@@ -136,12 +166,61 @@ def _resolve_geometry(geometry: dict, element) -> dict | None:
         return None
     # 父构件自身没有网格（几何挂在各子条目下）：体积 / 表面积按子条目的真实几何累加，
     # 避免用外包包围盒算"毛体积"（多块拼合的包围盒会虚高数倍，与实际工程量对不上）；
-    # 面积仍是合并包围盒的最大投影面（轮廓展开面积），对整墙来说正投影是准的。
+    # 面积取子条目净面积叠合取大 / 拼接取和，同样不用外包包围盒（毛面积不扣洞口）。
     quantities = [from_geometry(p) for p in parts]
     result: dict = {"bbox": merged, "volume": sum(q.get("volume") or 0.0 for q in quantities)}
     if quantities and all("surface_area" in q for q in quantities):
         result["surface_area"] = sum(q["surface_area"] for q in quantities)
+    # 面积不能取外包包围盒（毛面积，不扣洞口）：
+    # 叠合构造层（同一墙面）→ 毛面积 − 洞口投影面积（窗套等饰面层会包裹洞口反边，不能用子面积取大）；
+    # 互不重叠（拼接段）→ 各段子面积之和（子网格已扣洞口，直接相加）。
+    areas = [q["area"] for q in quantities if q.get("area") is not None]
+    if areas:
+        if _layers_overlap(merged, parts):
+            gross = from_bbox(merged)["area"]
+            holes = _openings_face_area(element, geometry)
+            result["area"] = _round6(gross - holes) if holes > 0 and gross - holes > 0 else max(areas)
+        else:
+            result["area"] = sum(areas)
     return result
+
+
+def _openings_face_area(element, geometry: dict) -> float:
+    """构件全部洞口的投影面积之和（洞口包围盒最大投影面 = 洞口宽 × 高）。"""
+    total = 0.0
+    for rel in getattr(element, "HasOpenings", []) or []:
+        opening = getattr(rel, "RelatedOpeningElement", None) or getattr(rel, "RelatingOpeningElement", None)
+        if opening is None:
+            continue
+        entry = geometry.get(opening.GlobalId)
+        if entry and entry.get("bbox"):
+            total += from_bbox(entry["bbox"])["area"]
+    return total
+
+
+def _round6(value: float) -> float:
+    return round(value, 6)
+
+
+def _layers_overlap(merged: list[float], parts: list[dict]) -> bool:
+    """判断子条目在主投影面上是否互相叠合（构造层叠合 → True；拼接段分离 → False）。"""
+    dx = merged[3] - merged[0]
+    dy = merged[4] - merged[1]
+    dz = merged[5] - merged[2]
+    # 主投影面与 from_bbox 的面积口径一致：dx*dy（XY）/ dy*dz（YZ）/ dx*dz（XZ）取大者
+    axis_a, axis_b = max(((0, 1, dx * dy), (1, 2, dy * dz), (0, 2, dx * dz)), key=lambda item: item[2])[:2]
+    rects = []
+    for part in parts:
+        bbox = part.get("bbox")
+        if not bbox:
+            continue
+        rects.append((bbox[axis_a], bbox[axis_b], bbox[axis_a + 3], bbox[axis_b + 3]))
+    for i in range(len(rects)):
+        for j in range(i + 1, len(rects)):
+            a, b = rects[i], rects[j]
+            if a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]:
+                return True
+    return False
 
 
 def _decomposition_entries(geometry: dict, element) -> list[dict]:

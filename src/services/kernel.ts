@@ -68,6 +68,8 @@ export interface BboxItem {
   material?: string
   /** 专业标准配色（几何网格接口按 discipline 映射给出，真实网格模式按专业着色用）。 */
   discipline_color?: string
+  /** IFC 样式透明度（0=不透明 1=全透明，来自 IfcSurfaceStyleRendering.Transparency；缺省表示未声明）。 */
+  transparency?: number | null
   /** 网格整体平移（多模型真实网格叠加时按模型地理参考偏移，前端渲染与定位用）。 */
   position_offset?: [number, number, number]
   /** 源模型索引（融合模式提供，模型源显示开关按此过滤 3D 渲染项）。 */

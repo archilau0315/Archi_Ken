@@ -13,6 +13,7 @@ v3 新增 material 与 parent_guid 字段，支持多材质构件（如幕墙玻
 v4 新增 discipline 字段，使几何接口可按专业分组（如淡化外壳看内部管线）。
 v5 discipline 带文件名模型提示（与融合模式口径统一），旧缓存失效重提取。
 v6 新增 color 字段（IFC 原生表面颜色 "#rrggbb"，来自 IfcStyledItem），支持原始颜色显示。
+v7 新增 transparency 字段（IFC 样式透明度 0~1，-1 表示无），前端据此区分玻璃/框料。
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from pathlib import Path
 
 from app import config
 
-MAGIC = b"KENGE\x06"
+MAGIC = b"KENGE\x07"
 
 
 def cache_path(path: str | Path, mtime_ns: int, size: int) -> Path:
@@ -49,6 +50,7 @@ def load(file: Path) -> dict[str, dict] | None:
                 material = _read_str(fh)
                 parent_guid = _read_str(fh)
                 color = _read_str(fh)
+                transparency = struct.unpack("<f", fh.read(4))[0]
                 entries[guid] = {
                     "ifc_type": ifc_type,
                     "discipline": discipline or None,
@@ -58,6 +60,7 @@ def load(file: Path) -> dict[str, dict] | None:
                     "material": material or None,
                     "parent_guid": parent_guid or None,
                     "color": color or None,
+                    "transparency": None if transparency < 0 else transparency,
                 }
         return entries
     except (OSError, struct.error, UnicodeDecodeError):
@@ -81,6 +84,8 @@ def save(file: Path, entries: dict[str, dict]) -> None:
             _write_str(fh, entry.get("material") or "")
             _write_str(fh, entry.get("parent_guid") or "")
             _write_str(fh, entry.get("color") or "")
+            transparency = entry.get("transparency")
+            fh.write(struct.pack("<f", float(transparency) if transparency is not None else -1.0))
     tmp.replace(file)
 
 

@@ -108,6 +108,7 @@ def geometry_meshes(
             "discipline": entry.get("discipline"),
             "discipline_color": _DISCIPLINE_COLORS.get(entry.get("discipline")),
             "ifc_color": entry.get("color"),
+            "transparency": entry.get("transparency"),
             "material": entry.get("material"),
             "bbox": entry["bbox"],
             "center": _center(entry["bbox"]),

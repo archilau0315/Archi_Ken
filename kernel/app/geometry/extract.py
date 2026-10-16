@@ -155,19 +155,41 @@ def _material_colors(shape) -> list[str | None]:
     return colors
 
 
+def _material_transparency(shape) -> list[float | None]:
+    """从三角化结果读取 IFC 样式透明度（IfcSurfaceStyleRendering.Transparency，0=不透明 1=全透明）。
+
+    无样式构件的默认 style 返回 None；样式未声明 Transparency 时返回 None。
+    前端据此区分门窗的玻璃（半透明）与框料（不透明）。
+    """
+    values: list[float | None] = []
+    for style in shape.geometry.materials:
+        value: float | None = None
+        name = getattr(style, "name", None)
+        if isinstance(name, str) and name.startswith("IfcSurfaceStyleRendering"):
+            try:
+                t = float(style.transparency)
+                if 0.0 <= t <= 1.0:
+                    value = t
+            except (AttributeError, TypeError, ValueError):
+                value = None
+        values.append(value)
+    return values
+
+
 def _split_by_material(
     verts: list[float],
     faces: list[int],
     material_ids: list[int],
     material_names: list[str | None],
     style_colors: list[str | None],
-) -> dict[int, tuple[list[float], list[int], str | None, str | None]]:
-    """按材质 id 分组面，返回 {mat_id: (verts, faces, material_name, color)}。"""
+    style_transparency: list[float | None],
+) -> dict[int, tuple[list[float], list[int], str | None, str | None, float | None]]:
+    """按材质 id 分组面，返回 {mat_id: (verts, faces, material_name, color, transparency)}。"""
     groups: dict[int, list[int]] = {}
     for fi, mid in enumerate(material_ids):
         groups.setdefault(mid, []).append(fi)
 
-    result: dict[int, tuple[list[float], list[int], str | None, str | None]] = {}
+    result: dict[int, tuple[list[float], list[int], str | None, str | None, float | None]] = {}
     for mid, face_indices in groups.items():
         used: set[int] = set()
         for fi in face_indices:
@@ -187,7 +209,8 @@ def _split_by_material(
             new_faces.append(old_to_new[faces[base + 2]])
         name = material_names[mid] if mid < len(material_names) else None
         color = style_colors[mid] if mid < len(style_colors) else None
-        result[mid] = (new_verts, new_faces, name, color)
+        transparency = style_transparency[mid] if mid < len(style_transparency) else None
+        result[mid] = (new_verts, new_faces, name, color, transparency)
     return result
 
 
@@ -211,6 +234,7 @@ def extract_entry(element, model_hint: str = "other") -> dict[str, dict]:
     faces = list(geo.faces)
     material_ids = list(geo.material_ids) if hasattr(geo, "material_ids") else []
     style_colors = _material_colors(shape)
+    style_transparency = _material_transparency(shape)
 
     # 无材质 id 或材质种类 ≤ 1：不拆分
     unique_mats = set(material_ids)
@@ -228,14 +252,15 @@ def extract_entry(element, model_hint: str = "other") -> dict[str, dict]:
                 "material": mat_name,
                 "parent_guid": None,
                 "color": style_colors[0] if style_colors else None,
+                "transparency": style_transparency[0] if style_transparency else None,
             }
         }
 
     # 多材质：按面分组拆分
     material_names = _material_names(shape, element)
-    groups = _split_by_material(verts, faces, material_ids, material_names, style_colors)
+    groups = _split_by_material(verts, faces, material_ids, material_names, style_colors, style_transparency)
     result: dict[str, dict] = {}
-    for mid, (sub_verts, sub_faces, name, color) in groups.items():
+    for mid, (sub_verts, sub_faces, name, color, transparency) in groups.items():
         sub_guid = f"{element.GlobalId}#m{mid}"
         result[sub_guid] = {
             "ifc_type": ifc_type,
@@ -246,6 +271,7 @@ def extract_entry(element, model_hint: str = "other") -> dict[str, dict]:
             "material": name,
             "parent_guid": element.GlobalId,
             "color": color,
+            "transparency": transparency,
         }
     return result
 

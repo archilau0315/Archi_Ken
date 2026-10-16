@@ -29,33 +29,42 @@ def from_bbox(bbox: list[float]) -> dict[str, float]:
 
 
 def from_geometry(entry: dict) -> dict[str, float]:
-    """由几何条目推导工程量：真实网格优先（净体积 / 总表面积），包围盒兜底。"""
+    """由几何条目推导工程量：真实网格优先（净体积 / 净面积 / 总表面积），包围盒兜底。"""
     values = from_bbox(entry.get("bbox") or [0.0] * 6)
     verts = entry.get("verts") or []
     faces = entry.get("faces") or []
     if not verts or not faces:
-        # 无自身网格（父构件由子条目合并）：体积 / 表面积取子条目累加结果，其余维持包围盒口径
-        for key in ("volume", "surface_area"):
+        # 无自身网格（父构件由子条目合并）：体积 / 表面积 / 面积取子条目推导结果，其余维持包围盒口径
+        for key in ("volume", "surface_area", "area"):
             if entry.get(key) is not None:
                 values[key] = _round(entry[key])
         return values
-    closed, net, area = _mesh_stats(verts, faces)
+    closed, net, area, projected = _mesh_stats(verts, faces)
     # 表面积只与面片有关，与网格是否闭合无关，恒可用
     values["surface_area"] = _round(area)
     # 净体积必然 ≤ 包围盒体积；非闭合网格（开口壳）散度定理会失真，保持包围盒口径
     if closed and 0.0 < net <= values["volume"] * 1.001:
         values["volume"] = _round(net)
+        # 净面积：闭合实体的主投影面积 = 各三角面投影和的一半（正面 + 背面各一遍），
+        # 洞口处没有面片，自然被扣除（有窗外墙的面积 = 毛面积 − 窗洞）。
+        net_area = projected / 2.0
+        if 0.0 < net_area <= values["area"] * 1.001:
+            values["area"] = _round(net_area)
     return values
 
 
-def _mesh_stats(verts: list[float], faces: list[int]) -> tuple[bool, float, float]:
-    """单次遍历网格，返回（是否闭合流形, 净体积, 总表面积）。
+def _mesh_stats(verts: list[float], faces: list[int]) -> tuple[bool, float, float, float]:
+    """单次遍历网格，返回（是否闭合流形, 净体积, 总表面积, 主投影面积）。
 
     净体积用散度定理：累加各面片与原点构成的有向四面体体积。
     闭合判定：每条有向边只出现一次（闭合流形的邻接面朝向相反）。
+    主投影面积：三个坐标平面投影中最大者（Σ0.5·|法向分量|），闭合实体除以 2 即单面轮廓净面积。
     """
     total_v = 0.0
     total_a = 0.0
+    proj_x = 0.0
+    proj_y = 0.0
+    proj_z = 0.0
     edges: set[tuple[int, int]] = set()
     closed = True
     for i in range(0, len(faces) - 2, 3):
@@ -70,13 +79,16 @@ def _mesh_stats(verts: list[float], faces: list[int]) -> tuple[bool, float, floa
         ny = uz * vx - ux * vz
         nz = ux * vy - uy * vx
         total_a += (nx * nx + ny * ny + nz * nz) ** 0.5 / 2.0
+        proj_x += abs(nx) / 2.0
+        proj_y += abs(ny) / 2.0
+        proj_z += abs(nz) / 2.0
         if closed:
             for edge in ((a, b), (b, c), (c, a)):
                 if edge in edges:
                     closed = False
                     break
                 edges.add(edge)
-    return closed, abs(total_v) / 6.0, total_a
+    return closed, abs(total_v) / 6.0, total_a, max(proj_x, proj_y, proj_z)
 
 
 def _round(value: float) -> float:

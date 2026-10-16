@@ -42,12 +42,12 @@
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检、自定义构件对选择集、重复构件检测、邻近碰撞合并分组）；每条碰撞可标审查状态（新发现 / 已确认 / 已忽略，服务端持久化、重跑保留）；点击碰撞项 3D 定位碰撞点（图钉标记）、碰撞对框选并隔离显示 |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
-| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、幕墙按洞口面积计量、受控表达式自定义列、Excel 导出 |
+| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、门窗宽高取 IFC 属性（宽不再误取墙厚）、墙体净面积扣除门窗洞口、幕墙按洞口面积计量、受控表达式自定义列、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
 | 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出；碰撞接入冲突矩阵口径，每条碰撞带碰撞点坐标与构件 GUID（HTML 构件名下小字 / Excel 独立列 / PDF 名下小字），已标「已忽略」的碰撞不进报告 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
 | 视图系统 | 透视 / 平面（2D）切换、七标准视角、三向剖切（含 3D 内拖拽实时调节）、3D 标记、演示视角播放 |
-| 3D 真实化 | 逐构件三角网格真实显示（批量网格端点），包围盒降级兜底 |
+| 3D 真实化 | 逐构件三角网格真实显示（批量网格端点），包围盒降级兜底；实体构件全实心渲染、玻璃面组按 IFC 样式透明度精确半透明（仅玻璃透明、窗框实心）；专业配色与色卡同源一致 |
 | 中英双语 | 界面一键切换，默认中文，本机记忆 |
 
 | Capability | Description |
@@ -57,12 +57,12 @@
 | Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks, custom pair selection sets, duplicate element detection, nearby-clash merging); each clash carries a review status (new / acknowledged / ignored, persisted server-side and kept across reruns); click a clash to locate the contact point in 3D (pin marker) with the clashing pair boxed and isolated |
 | Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
-| Takeoff | ITO / QTO: quantity derivation, custom columns via controlled expressions, Excel export |
+| Takeoff | ITO / QTO: 14 built-in Definition templates (aligned with Solibri) + custom template library, IFC type filter, grouping by storey / type / layer role / material, composite walls expanded per layer, door & window sizes from IFC attributes (width no longer reads wall thickness), wall net area deducting openings, curtain walls measured by opening area, controlled-expression custom columns, Excel export |
 | Communication | Issue lifecycle / comments / view snapshots; BCF 2.1 export (importable into Solibri / Navisworks) |
 | Reports | Unified issue list (with rule code references) → HTML preview / PDF / Excel export; clashes come from the clash-matrix pipeline, each carrying contact-point coordinates and element GUIDs (small print under names in HTML/PDF, dedicated columns in Excel); clashes marked "Ignored" are excluded from reports |
 | Batch automation | Autorun unattended batch checking with report artifacts and distribution-folder copy |
 | View system | Perspective / plan (2D) toggle, seven standard views, 3-axis section clipping, 3D markers, presentation viewpoints |
-| 3D real mesh | Per-element real triangle-mesh display (batch mesh endpoint), bbox fallback |
+| 3D real mesh | Per-element real triangle-mesh display (batch mesh endpoint), bbox fallback; solids render fully opaque while glass panels derive translucency from IFC style transparency (frames stay solid); discipline colors consistent with the legend |
 | Bilingual UI | Chinese / English one-click switch (Chinese default, remembered locally) |
 
 ---
