@@ -22,6 +22,16 @@ const MODE_COLORS: Record<ClashMode, string> = {
   clearance: '#1f7a4d'
 }
 
+/** 解析逗号分隔的类型输入：自动补 Ifc 前缀，空输入返回 null（表示该侧不过滤）。 */
+function parseTypes(raw: string): string[] | null {
+  const types = raw
+    .split(/[,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => (/^ifc/i.test(item) ? `Ifc${item.slice(3)}` : `Ifc${item}`))
+  return types.length ? types : null
+}
+
 interface Props {
   modelPath: string
   viewerRef: RefObject<ViewerHandle>
@@ -39,6 +49,9 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
   const [clearanceOn, setClearanceOn] = useState(false)
   const [clearanceMm, setClearanceMm] = useState(100)
   const [ignoreSame, setIgnoreSame] = useState(true)
+  const [pairOn, setPairOn] = useState(false)
+  const [pairATypes, setPairATypes] = useState('')
+  const [pairBTypes, setPairBTypes] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<ClashMatrixResponse | null>(null)
@@ -122,6 +135,8 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
           gapMm: gapOn ? gapMm : null,
           clearanceMm: clearanceOn ? clearanceMm : null,
           ignoreSameDiscipline: ignoreSame,
+          selectionA: pairOn ? { ifcTypes: parseTypes(pairATypes) ?? undefined } : null,
+          selectionB: pairOn ? { ifcTypes: parseTypes(pairBTypes) ?? undefined } : null,
           maxClashes: 300,
           lang
         })
@@ -187,6 +202,27 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
             <input type="checkbox" checked={ignoreSame} onChange={(e) => setIgnoreSame(e.target.checked)} />
             {t('clash.ignoreSame')}
           </label>
+          <label className="clash-toggle">
+            <input type="checkbox" checked={pairOn} onChange={(e) => setPairOn(e.target.checked)} />
+            {t('clash.customPair')}
+          </label>
+          {pairOn && (
+            <div className="clash-pair">
+              <input
+                type="text"
+                value={pairATypes}
+                placeholder={t('clash.pairAPlaceholder')}
+                onChange={(e) => setPairATypes(e.target.value)}
+              />
+              <span className="clash-pair-x">×</span>
+              <input
+                type="text"
+                value={pairBTypes}
+                placeholder={t('clash.pairBPlaceholder')}
+                onChange={(e) => setPairBTypes(e.target.value)}
+              />
+            </div>
+          )}
           <button onClick={() => void run()} disabled={busy}>
             {busy ? t('clash.running') : t('clash.run')}
           </button>

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import ifcopenshell
+import ifcopenshell.util.element
 
 from app import i18n
 from app.clash import broadphase, classify, engine, ignore
@@ -18,6 +19,30 @@ from app.federation import discipline
 from app.ifc import summary as ifc_summary
 
 _ORDER = {item["key"]: index for index, item in enumerate(discipline.DISCIPLINES)}
+
+
+def _type_eq(actual: str, expected: str) -> bool:
+    """IFC 类型匹配支持前缀（如 IfcDuct 命中 IfcDuctSegment）。"""
+    return actual == expected or actual.startswith(expected)
+
+
+def _storey_of(element) -> str:
+    """取构件所属楼层名；未分配楼层返回空串。"""
+    container = ifcopenshell.util.element.get_container(element)
+    return getattr(container, "Name", None) or ""
+
+
+def _in_selection(meta_entry: dict, selection: dict | None) -> bool:
+    """构件是否命中选择集；selection 为空表示不过滤（全集）。"""
+    if not selection:
+        return True
+    types = selection.get("ifc_types") or []
+    if types and not any(_type_eq(meta_entry["ifc_type"], item) for item in types):
+        return False
+    storeys = selection.get("storeys") or []
+    if storeys and meta_entry.get("storey", "") not in storeys:
+        return False
+    return True
 
 
 def _cell_key(a: str, b: str) -> str:
@@ -47,6 +72,14 @@ def run(
     unit_to_meter = ifc_summary.unit_to_meter(model)
     model_hint = discipline.classify_model(Path(path).name, ifc_summary.exporter(model))["key"]
 
+    selection_a = options.get("selection_a")
+    selection_b = options.get("selection_b")
+    selections_on = bool(selection_a or selection_b)
+    # 仅当选择集带楼层过滤时才逐构件解析楼层名，避免无谓开销。
+    need_storey = selections_on and any(
+        (sel or {}).get("storeys") for sel in (selection_a, selection_b)
+    )
+
     meta: dict[str, dict] = {}
     counts: dict[str, int] = {}
     for guid, entry in entries.items():
@@ -58,6 +91,8 @@ def run(
             "discipline": key,
             "name": getattr(element, "Name", None),
         }
+        if need_storey:
+            meta[guid]["storey"] = _storey_of(element)
         counts[key] = counts.get(key, 0) + 1
 
     hard = bool(options.get("hard", True))
@@ -68,9 +103,18 @@ def run(
     cells = options.get("cells") or {}
     max_clashes = int(options.get("max_clashes", 200))
 
+    # 自定义构件对：宽相位前先按选择集收窄范围，减少候选对。
+    scope = entries
+    if selections_on:
+        scope = {
+            guid: entry
+            for guid, entry in entries.items()
+            if _in_selection(meta[guid], selection_a) or _in_selection(meta[guid], selection_b)
+        }
+
     thresholds = [value for value in (gap, clearance) if value is not None]
     expand = max(thresholds) if thresholds else 0.0
-    pairs = broadphase.near_pairs(entries, expand)
+    pairs = broadphase.near_pairs(scope, expand)
 
     tri_cache: dict[str, list] = {}
 
@@ -86,6 +130,12 @@ def run(
     truncated = False
     for guid_a, guid_b in pairs:
         meta_a, meta_b = meta[guid_a], meta[guid_b]
+        # 自定义构件对：仅保留「一侧命中 A、另一侧命中 B」的交叉对。
+        if selections_on and not (
+            (_in_selection(meta_a, selection_a) and _in_selection(meta_b, selection_b))
+            or (_in_selection(meta_b, selection_a) and _in_selection(meta_a, selection_b))
+        ):
+            continue
         if ignore.should_ignore(meta_a, meta_b, rules, ignore_same):
             ignored += 1
             continue
@@ -164,5 +214,6 @@ def run(
         "triangle_tests": tests,
         "ignored": ignored,
         "truncated": truncated,
+        "selections": {"a": selection_a, "b": selection_b} if selections_on else None,
         "items": items,
     }

@@ -17,6 +17,13 @@ from app.rules import operators
 router = APIRouter(prefix="/clash", tags=["clash"])
 
 
+class PairSelection(BaseModel):
+    """自定义构件对选择集：两个条件同时给出时取交集；均为空等价不过滤。"""
+
+    ifc_types: list[str] | None = Field(None, description="IFC 类型过滤，支持前缀（如 IfcDuct 命中 IfcDuctSegment）")
+    storeys: list[str] | None = Field(None, description="楼层名过滤（精确匹配楼层 Name）")
+
+
 class MatrixRequest(BaseModel):
     """冲突矩阵请求体。阈值单位为 mm（由内核按模型单位换算）。"""
 
@@ -27,6 +34,8 @@ class MatrixRequest(BaseModel):
     ignore_same_discipline: bool = Field(True, description="是否忽略同专业构件对")
     ignore: list[dict[str, Any]] | None = Field(None, description="忽略规则：type_a/type_b、discipline_a/discipline_b、guids")
     cells: dict[str, dict[str, bool]] | None = Field(None, description="按单元格启停，键为 discipline_a|discipline_b")
+    selection_a: PairSelection | None = Field(None, description="自定义构件对 A 侧选择集；与 selection_b 至少给一个才生效")
+    selection_b: PairSelection | None = Field(None, description="自定义构件对 B 侧选择集；缺省表示对侧为全集")
     max_clashes: int = Field(200, ge=1, le=5000, description="最多返回的问题条数")
     lang: str | None = Field(None, description="返回语言：zh（默认）/ en")
 
@@ -64,6 +73,8 @@ def clash_matrix(payload: MatrixRequest) -> dict[str, Any]:
         "ignore_same_discipline": payload.ignore_same_discipline,
         "ignore": payload.ignore,
         "cells": payload.cells,
+        "selection_a": payload.selection_a.model_dump() if payload.selection_a else None,
+        "selection_b": payload.selection_b.model_dump() if payload.selection_b else None,
         "max_clashes": payload.max_clashes,
     }
     result = matrix.run(model, entries, options, payload.path, i18n.pick_lang(payload.lang))

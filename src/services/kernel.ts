@@ -294,7 +294,13 @@ export interface ClashMatrixResponse {
   triangle_tests: number
   ignored: number
   truncated: boolean
+  selections: { a: ClashPairSelection | null; b: ClashPairSelection | null } | null
   items: ClashMatrixItem[]
+}
+
+export interface ClashPairSelection {
+  ifcTypes?: string[]
+  storeys?: string[]
 }
 
 export interface ClashMatrixOptions {
@@ -303,6 +309,8 @@ export interface ClashMatrixOptions {
   clearanceMm?: number | null
   ignoreSameDiscipline?: boolean
   ignore?: unknown[]
+  selectionA?: ClashPairSelection | null
+  selectionB?: ClashPairSelection | null
   maxClashes?: number
   lang?: 'zh' | 'en'
 }
@@ -320,6 +328,12 @@ export function clashMatrix(path: string, options: ClashMatrixOptions = {}): Pro
       clearance_mm: options.clearanceMm ?? null,
       ignore_same_discipline: options.ignoreSameDiscipline ?? true,
       ignore: options.ignore,
+      selection_a: options.selectionA
+        ? { ifc_types: options.selectionA.ifcTypes ?? null, storeys: options.selectionA.storeys ?? null }
+        : null,
+      selection_b: options.selectionB
+        ? { ifc_types: options.selectionB.ifcTypes ?? null, storeys: options.selectionB.storeys ?? null }
+        : null,
       max_clashes: options.maxClashes ?? 300,
       lang: options.lang
     }
