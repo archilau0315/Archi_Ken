@@ -1,0 +1,180 @@
+{
+  "kind": "archiken-ruleset",
+  "version": 1,
+  "exported_at": "2026-10-16T11:43:50",
+  "name": "内置模板-空间",
+  "description": "ArchiKen 内置规则模板（空间域，5 条），全部挂现行 GB 规范出处",
+  "rules": [
+    {
+      "id": "space-bedroom-min-area",
+      "name": "卧室最小使用面积",
+      "name_en": "Bedroom Min Area",
+      "category": "空间",
+      "category_en": "Space",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcSpace"
+        ],
+        "where": [
+          {
+            "attr": "Name",
+            "op": "contains",
+            "value": "卧室"
+          }
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Qto_SpaceBaseQuantities",
+        "prop": "NetFloorArea",
+        "op": ">=",
+        "value": 6,
+        "unit": "m2",
+        "missing": "skip"
+      },
+      "message": "卧室 {name} 使用面积 {actual} 小于最小要求 {expected}（阈值待按现行规范原文复核）",
+      "message_en": "Bedroom {name} area {actual} below minimum {expected} (threshold pending code review)",
+      "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011 第 5.2.1 条：单人卧室 6㎡、双人卧室 10㎡，本条取下限）",
+      "reference_en": "GB 55038-2025 (formerly GB 50096-2011 Clause 5.2.1: single 6sqm / double 10sqm; lower bound used)"
+    },
+    {
+      "id": "space-living-min-area",
+      "name": "起居室最小使用面积",
+      "name_en": "Living Room Min Area",
+      "category": "空间",
+      "category_en": "Space",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcSpace"
+        ],
+        "where": [
+          {
+            "attr": "Name",
+            "op": "contains",
+            "value": "起居室"
+          }
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Qto_SpaceBaseQuantities",
+        "prop": "NetFloorArea",
+        "op": ">=",
+        "value": 10,
+        "unit": "m2",
+        "missing": "skip"
+      },
+      "message": "起居室 {name} 使用面积 {actual} 小于最小要求 {expected}（阈值待按现行规范原文复核）",
+      "message_en": "Living room {name} area {actual} below minimum {expected} (threshold pending code review)",
+      "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011 第 5.2.2 条：起居室 10㎡）",
+      "reference_en": "GB 55038-2025 (formerly GB 50096-2011 Clause 5.2.2: living room 10sqm)"
+    },
+    {
+      "id": "space-kitchen-min-area",
+      "name": "厨房最小使用面积",
+      "name_en": "Kitchen Min Area",
+      "category": "空间",
+      "category_en": "Space",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcSpace"
+        ],
+        "where": [
+          {
+            "attr": "Name",
+            "op": "contains",
+            "value": "厨房"
+          }
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Qto_SpaceBaseQuantities",
+        "prop": "NetFloorArea",
+        "op": ">=",
+        "value": 4,
+        "unit": "m2",
+        "missing": "skip"
+      },
+      "message": "厨房 {name} 使用面积 {actual} 小于最小要求 {expected}（阈值待按现行规范原文复核）",
+      "message_en": "Kitchen {name} area {actual} below minimum {expected} (threshold pending code review)",
+      "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011 第 5.3.1 条：厨房 4.0㎡）",
+      "reference_en": "GB 55038-2025 (formerly GB 50096-2011 Clause 5.3.1: kitchen 4.0sqm)"
+    },
+    {
+      "id": "space-corridor-min-width",
+      "name": "户内过道净宽",
+      "name_en": "Interior Corridor Min Width",
+      "category": "空间",
+      "category_en": "Space",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcSpace"
+        ],
+        "where": [
+          {
+            "any_of": [
+              {
+                "attr": "Name",
+                "op": "contains",
+                "value": "过道"
+              },
+              {
+                "attr": "Name",
+                "op": "contains",
+                "value": "走廊"
+              }
+            ]
+          }
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "min",
+        "value": 1000,
+        "unit": "mm"
+      },
+      "message": "过道 {name} 净宽 {actual} 小于最小要求 {expected}（阈值待按现行规范原文复核）",
+      "message_en": "Corridor {name} width {actual} below minimum {expected} (threshold pending code review)",
+      "reference": "GB 55038-2025《住宅项目规范》（原 GB 50096-2011 第 5.7.1 条：通往卧室、起居室的过道净宽不宜小于 1.0m）",
+      "reference_en": "GB 55038-2025 (formerly GB 50096-2011 Clause 5.7.1: corridor to bedrooms/living ≥ 1.0m)"
+    },
+    {
+      "id": "space-fire-compartment-max-area",
+      "name": "防火分区最大面积",
+      "name_en": "Fire Compartment Max Area",
+      "category": "空间",
+      "category_en": "Space",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcSpace"
+        ],
+        "where": [
+          {
+            "attr": "Name",
+            "op": "contains",
+            "value": "防火分区"
+          }
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Qto_SpaceBaseQuantities",
+        "prop": "NetFloorArea",
+        "op": "<=",
+        "value": 1500,
+        "unit": "m2",
+        "missing": "skip"
+      },
+      "message": "防火分区 {name} 面积 {actual} 超过上限 {expected}（按高层建筑取值，待按建筑类型与现行规范原文复核）",
+      "message_en": "Fire compartment {name} area {actual} exceeds limit {expected} (high-rise value, pending review)",
+      "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版) 第 5.3.1 条：高层民用建筑防火分区 1500㎡）",
+      "reference_en": "GB 55037-2022 (formerly GB 50016-2014 Clause 5.3.1: high-rise compartment 1500sqm)"
+    }
+  ]
+}

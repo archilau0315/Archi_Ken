@@ -1,0 +1,320 @@
+{
+  "kind": "archiken-ruleset",
+  "version": 1,
+  "exported_at": "2026-10-16T11:43:50",
+  "name": "内置模板-结构",
+  "description": "ArchiKen 内置规则模板（结构域，13 条），全部挂现行 GB 规范出处",
+  "rules": [
+    {
+      "id": "struct-column-min-dim",
+      "name": "框架柱最小截面",
+      "name_en": "Column Min Section",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcColumn"
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "min",
+        "value": 300,
+        "unit": "mm"
+      },
+      "message": "柱 {name} 截面短边 {actual} 小于要求 {expected}",
+      "message_en": "Column {name} section short side {actual} below requirement {expected}",
+      "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010《建筑抗震设计规范》：框架柱截面尺寸要求）",
+      "reference_en": "GB 55002-2021 General Seismic Code (formerly GB 50011-2010: column section)"
+    },
+    {
+      "id": "struct-shearwall-thickness",
+      "name": "剪力墙最小厚度",
+      "name_en": "Shear Wall Min Thickness",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcWall"
+        ],
+        "where": [
+          {
+            "attr": "Name",
+            "op": "matches",
+            "value": "剪力墙|结构墙|Shear"
+          }
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "min",
+        "value": 160,
+        "unit": "mm"
+      },
+      "message": "剪力墙 {name} 厚度 {actual} 小于要求 {expected}",
+      "message_en": "Shear wall {name} thickness {actual} below requirement {expected}",
+      "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010：剪力墙厚度不应小于 160mm）",
+      "reference_en": "GB 55002-2021 (formerly GB 50011-2010: shear wall thickness >= 160mm)"
+    },
+    {
+      "id": "struct-beam-min-depth",
+      "name": "框架梁最小截面高度",
+      "name_en": "Beam Min Depth",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcBeam"
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "z",
+        "value": 300,
+        "unit": "mm"
+      },
+      "message": "梁 {name} 截面高度 {actual} 小于建议值 {expected}",
+      "message_en": "Beam {name} depth {actual} below recommended {expected}",
+      "reference": "GB 55001-2021《工程结构通用规范》（原 GB 50010-2010《混凝土结构设计规范》：梁截面尺寸要求）",
+      "reference_en": "GB 55001-2021 General Structural Code (formerly GB 50010-2010: beam section)"
+    },
+    {
+      "id": "struct-beam-min-width",
+      "name": "框架梁最小截面宽度",
+      "name_en": "Beam Min Width",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "warning",
+      "target": {
+        "ifc_type": [
+          "IfcBeam"
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "min",
+        "value": 200,
+        "unit": "mm"
+      },
+      "message": "梁 {name} 截面宽度 {actual} 小于要求 {expected}",
+      "message_en": "Beam {name} width {actual} below requirement {expected}",
+      "reference": "GB 55002-2021《建筑与市政工程抗震通用规范》（原 GB 50011-2010：框架梁截面宽度不宜小于 200mm）",
+      "reference_en": "GB 55002-2021 (formerly GB 50011-2010: frame beam width >= 200mm)"
+    },
+    {
+      "id": "struct-slab-min-thickness",
+      "name": "楼板最小厚度",
+      "name_en": "Slab Min Thickness",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcSlab"
+        ]
+      },
+      "check": {
+        "type": "dimension",
+        "axis": "z",
+        "value": 80,
+        "unit": "mm"
+      },
+      "message": "楼板 {name} 厚度 {actual} 小于最小构造厚度 {expected}",
+      "message_en": "Slab {name} thickness {actual} below minimum structural thickness {expected}",
+      "reference": "GB 55001-2021《工程结构通用规范》（原 GB 50010-2010：现浇板最小厚度要求）",
+      "reference_en": "GB 55001-2021 (formerly GB 50010-2010: cast-in-place slab minimum thickness)"
+    },
+    {
+      "id": "struct-beam-door-intersection",
+      "name": "梁与门洞相交复核",
+      "name_en": "Beam vs Door Opening Check",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcBeam"
+        ]
+      },
+      "check": {
+        "type": "intersection",
+        "other": {
+          "ifc_type": [
+            "IfcDoor"
+          ]
+        }
+      },
+      "message": "梁 {name} 与门 {related.name} 相交，复核门顶标高与梁底关系",
+      "message_en": "Beam {name} intersects door {related.name}; verify door head vs beam soffit",
+      "reference": "结构-建筑协调复核（门洞上方应为过梁或留足净高）",
+      "reference_en": "Structural-architectural coordination (lintel/headroom above opening)"
+    },
+    {
+      "id": "struct-column-tag",
+      "name": "柱编号完整性",
+      "name_en": "Column Tag",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcColumn"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "attr": "Tag",
+        "op": "exists"
+      },
+      "message": "柱 {name} 未填写 Tag 编号（结构构件应有编号）",
+      "message_en": "Column {name} missing Tag (structural elements should be numbered)",
+      "reference": "结构施工图构件编号要求 / BIM 交付数据完整性",
+      "reference_en": "Structural numbering requirement / BIM data completeness"
+    },
+    {
+      "id": "struct-beam-tag",
+      "name": "梁编号完整性",
+      "name_en": "Beam Tag",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcBeam"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "attr": "Tag",
+        "op": "exists"
+      },
+      "message": "梁 {name} 未填写 Tag 编号（结构构件应有编号）",
+      "message_en": "Beam {name} missing Tag (structural elements should be numbered)",
+      "reference": "结构施工图构件编号要求 / BIM 交付数据完整性",
+      "reference_en": "Structural numbering requirement / BIM data completeness"
+    },
+    {
+      "id": "struct-wall-tag",
+      "name": "结构墙编号完整性",
+      "name_en": "Structural Wall Tag",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcWall"
+        ],
+        "where": [
+          {
+            "pset": "Pset_WallCommon",
+            "prop": "LoadBearing",
+            "op": "==",
+            "value": true
+          }
+        ]
+      },
+      "check": {
+        "type": "property",
+        "attr": "Tag",
+        "op": "exists"
+      },
+      "message": "承重墙 {name} 未填写 Tag 编号（结构构件应有编号）",
+      "message_en": "Load-bearing wall {name} missing Tag",
+      "reference": "结构施工图构件编号要求 / BIM 交付数据完整性",
+      "reference_en": "Structural numbering requirement / BIM data completeness"
+    },
+    {
+      "id": "struct-slab-tag",
+      "name": "楼板编号完整性",
+      "name_en": "Slab Tag",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcSlab"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "attr": "Tag",
+        "op": "exists"
+      },
+      "message": "楼板 {name} 未填写 Tag 编号（结构构件应有编号）",
+      "message_en": "Slab {name} missing Tag",
+      "reference": "结构施工图构件编号要求 / BIM 交付数据完整性",
+      "reference_en": "Structural numbering requirement / BIM data completeness"
+    },
+    {
+      "id": "struct-foundation-tag",
+      "name": "基础编号完整性",
+      "name_en": "Foundation Tag",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcFooting"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "attr": "Tag",
+        "op": "exists"
+      },
+      "message": "基础 {name} 未填写 Tag 编号（结构构件应有编号）",
+      "message_en": "Foundation {name} missing Tag",
+      "reference": "结构施工图构件编号要求 / BIM 交付数据完整性",
+      "reference_en": "Structural numbering requirement / BIM data completeness"
+    },
+    {
+      "id": "struct-column-fire-rating",
+      "name": "柱耐火极限标注",
+      "name_en": "Column Fire Rating",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcColumn"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Pset_ColumnCommon",
+        "prop": "FireRating",
+        "op": "exists"
+      },
+      "message": "柱 {name} 未标注耐火极限（结构构件耐火要求）",
+      "message_en": "Column {name} missing fire rating (structural fire resistance)",
+      "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：结构构件耐火极限按建筑耐火等级确定）",
+      "reference_en": "GB 55037-2022 (formerly GB 50016-2014: member fire resistance per building class)"
+    },
+    {
+      "id": "struct-beam-fire-rating",
+      "name": "梁耐火极限标注",
+      "name_en": "Beam Fire Rating",
+      "category": "结构",
+      "category_en": "Structure",
+      "severity": "info",
+      "target": {
+        "ifc_type": [
+          "IfcBeam"
+        ]
+      },
+      "check": {
+        "type": "property",
+        "pset": "Pset_BeamCommon",
+        "prop": "FireRating",
+        "op": "exists"
+      },
+      "message": "梁 {name} 未标注耐火极限（结构构件耐火要求）",
+      "message_en": "Beam {name} missing fire rating (structural fire resistance)",
+      "reference": "GB 55037-2022《建筑防火通用规范》（原 GB 50016-2014(2018年版)：结构构件耐火极限按建筑耐火等级确定）",
+      "reference_en": "GB 55037-2022 (formerly GB 50016-2014: member fire resistance per building class)"
+    }
+  ]
+}
