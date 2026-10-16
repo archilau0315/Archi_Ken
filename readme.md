@@ -42,7 +42,7 @@
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检、自定义构件对选择集、重复构件检测、邻近碰撞合并分组）；每条碰撞可标审查状态（新发现 / 已确认 / 已忽略，服务端持久化、重跑保留）；点击碰撞项 3D 定位碰撞点（图钉标记）、碰撞对框选并隔离显示 |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
-| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、门窗宽高取 IFC 属性（宽不再误取墙厚）、墙体及构造层面积扣除门窗洞口（抹灰 / 保温等按面积计取层同步减洞口）、幕墙按洞口面积计量、受控表达式自定义列、Excel 导出 |
+| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、门窗宽高取 IFC 属性（宽不再误取墙厚）、墙体及构造层面积扣除门窗洞口（抹灰 / 保温等按面积计取层同步减洞口）、幕墙按框外围 / 洞口面积计量、受控表达式自定义列、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
 | 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出；碰撞接入冲突矩阵口径，每条碰撞带碰撞点坐标与构件 GUID（HTML 构件名下小字 / Excel 独立列 / PDF 名下小字），已标「已忽略」的碰撞不进报告 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
@@ -57,7 +57,7 @@
 | Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks, custom pair selection sets, duplicate element detection, nearby-clash merging); each clash carries a review status (new / acknowledged / ignored, persisted server-side and kept across reruns); click a clash to locate the contact point in 3D (pin marker) with the clashing pair boxed and isolated |
 | Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
-| Takeoff | ITO / QTO: 14 built-in Definition templates (aligned with Solibri) + custom template library, IFC type filter, grouping by storey / type / layer role / material, composite walls expanded per layer, door & window sizes from IFC attributes (width no longer reads wall thickness), wall & layer net area deducting openings (area-based layers like plaster / insulation capped at net wall area), curtain walls measured by opening area, controlled-expression custom columns, Excel export |
+| Takeoff | ITO / QTO: 14 built-in Definition templates (aligned with Solibri) + custom template library, IFC type filter, grouping by storey / type / layer role / material, composite walls expanded per layer, door & window sizes from IFC attributes (width no longer reads wall thickness), wall & layer net area deducting openings (area-based layers like plaster / insulation capped at net wall area), curtain walls measured by frame outline / opening area, controlled-expression custom columns, Excel export |
 | Communication | Issue lifecycle / comments / view snapshots; BCF 2.1 export (importable into Solibri / Navisworks) |
 | Reports | Unified issue list (with rule code references) → HTML preview / PDF / Excel export; clashes come from the clash-matrix pipeline, each carrying contact-point coordinates and element GUIDs (small print under names in HTML/PDF, dedicated columns in Excel); clashes marked "Ignored" are excluded from reports |
 | Batch automation | Autorun unattended batch checking with report artifacts and distribution-folder copy |
@@ -546,7 +546,7 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/communication/CommunicationPanel.tsx` | 沟通面板 | 悬浮层：导入检查结果生成问题清单、新建问题（可关联选中构件）、状态 / 级别过滤、BCF 2.1 导出 |
 | `src/communication/IssueDetail.tsx` | 沟通问题详情 | 状态 / 级别调整、评论列表与发送、附加 3D 视图快照、定位构件、删除 |
 | `src/report/ReportPanel.tsx` | 报告面板 | 悬浮层：摘要统计 + 问题清单预览（前 100 条，构件点击联动 3D），重新生成 / HTML 预览 / 导出 PDF / 导出 Excel |
-| `src/views/ViewToolbar.tsx` | 视图工具条 | 固定占位在 3D 视图上方（非浮层、零遮挡）：「透视外壳」淡化 + 透明度滑杆（居最前）、透视切换、六个标准视角（顶 / 前 / 后 / 左 / 右自动切正投影、等轴回透视）、X / Y / Z 剖切一键启用 + 实时滑杆 + 翻转 + 全部清除 |
+| `src/views/ViewToolbar.tsx` | 视图工具条 | 固定占位在 3D 视图上方（非浮层、零遮挡）：「透视外壳」淡化 + 透明度滑杆（居最前）、透视切换、六个标准视角（顶 / 前 / 后 / 左 / 右自动切正投影、等轴回透视）、X / Y / Z 剖切一键启用 + 实时滑杆 + 翻转 |
 | `src/views/ViewPanel.tsx` | 视图系统面板 | 手风琴浮动卡片（默认全折叠、头部可拖拽移位，只放低频项）：检查结果标记与手动标记、演示视角保存与顺序播放 |
 
 | Directory | Module | Description |
@@ -573,7 +573,7 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/communication/CommunicationPanel.tsx` | Communication panel | Overlay: import check results as issues, create issue (linked to selection), status / severity filters, BCF 2.1 export |
 | `src/communication/IssueDetail.tsx` | Issue detail | Status / severity adjustment, comments, attach 3D snapshot, locate element, delete |
 | `src/report/ReportPanel.tsx` | Report panel | Overlay: summary stats + issue preview (first 100, click to select in 3D), regenerate / HTML preview / PDF / Excel export |
-| `src/views/ViewToolbar.tsx` | View toolbar | Docked above the 3D view (in-layout, zero occlusion): "X-Ray Shell" fade with opacity slider (first), perspective toggle, six standard views (top / front / back / left / right auto-switch to orthographic, isometric back to perspective), X / Y / Z sections with axis click + live slider + flip + clear all |
+| `src/views/ViewToolbar.tsx` | View toolbar | Docked above the 3D view (in-layout, zero occlusion): "X-Ray Shell" fade with opacity slider (first), perspective toggle, six standard views (top / front / back / left / right auto-switch to orthographic, isometric back to perspective), X / Y / Z sections with axis click + live slider + flip |
 | `src/views/ViewPanel.tsx` | View system panel | Accordion floating card (collapsed by default, draggable by header, low-frequency items only): result & manual markers, viewpoint save & auto-play |
 
 3D 视图当前用构件包围盒（`/geometry/bboxes`）绘制简化盒体以验证交互链路；逐构件三角网格真实显示与剖切截面填充（cap）列入后续阶段。

@@ -114,11 +114,13 @@ export class ViewerCore {
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.08
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.85))
-    const sun = new THREE.DirectionalLight(0xffffff, 1.1)
+    // 光照以高环境光 + 弱方向光组合：同一材质的不同朝向面（如墙端面与顶面）
+    // 亮度差控制在 ~15% 内，避免侧面出现「深浅两种颜色」的观感。
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.95))
+    const sun = new THREE.DirectionalLight(0xffffff, 0.5)
     sun.position.set(8, 10, 14)
     this.scene.add(sun)
-    const fill = new THREE.DirectionalLight(0xffffff, 0.35)
+    const fill = new THREE.DirectionalLight(0xffffff, 0.22)
     fill.position.set(-10, -8, 6)
     this.scene.add(fill)
 

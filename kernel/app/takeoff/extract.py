@@ -110,6 +110,10 @@ def run_takeoff(
         is_curtain = element.is_a() in _CURTAIN_TYPES or parent_guid in curtain_guids
         if is_curtain:
             quantities = {k: v for k, v in quantities.items() if k in _CURTAIN_KEEP}
+            if entry and entry.get("bbox"):
+                # 幕墙按框外围 / 洞口展开面积计量：取外包包围盒最大投影面，
+                # 不用网格净面积（玻璃分片、龙骨拼不满框，网格投影会略小于框外围，如 9.86 ≠ 10）。
+                quantities["area"] = from_bbox(entry["bbox"])["area"]
         # 有门窗洞口的构件：面积口径封顶为净面积（毛面积 − 洞口投影面积）。
         # 网格被洞口剪断的层本就 ≤ 净面积不受影响；包裹洞口反边的抹灰 / 找平层被压回净墙面面积。
         net_face = net_face_cache.get(element.GlobalId, _UNCACHED)

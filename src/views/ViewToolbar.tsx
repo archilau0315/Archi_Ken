@@ -91,10 +91,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
     setActivePreset(preset)
   }
 
-  function stopDrag(): void {
-    viewerRef.current?.setSectionDrag(null)
-  }
-
   function toggleAxis(axis: ClipAxis, on: boolean): void {
     const viewer = viewerRef.current
     // 每次交互都重取范围，网格模式切换后滑杆区间自动跟上。
@@ -113,12 +109,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
   function flipAxis(axis: ClipAxis): void {
     const nextSide: ClipSide = clips[axis].side === 'plus' ? 'minus' : 'plus'
     viewerRef.current?.setClip(axis, true, nextSide, clips[axis].position)
-  }
-
-  function clearAllClips(): void {
-    viewerRef.current?.clearClip()
-    stopDrag()
-    setSelectedAxis(null)
   }
 
   function toggleShellFade(): void {
@@ -218,9 +208,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
           title={t('views.clipFlip')}
         >
           {sliderAxis && clips[sliderAxis].side === 'minus' ? '−→+' : '+→−'}
-        </button>
-        <button className="ghost vt-btn" disabled={!enabledAxes.length} onClick={clearAllClips}>
-          {t('views.clearAll')}
         </button>
       </div>
     </div>

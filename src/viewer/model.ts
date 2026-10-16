@@ -100,8 +100,10 @@ function makeShellFade(
       const faded = on && SHELL_DISCIPLINES.has(key)
       for (const material of group) {
         const glass = material.userData.isGlass === true
-        // 淡化时整组用外壳透明度；未淡化时恢复各自的基础透明度（玻璃面组按样式各自不同）。
-        material.opacity = faded ? opacity : (material.userData.baseOpacity as number ?? BASE_OPACITY)
+        // 淡化只能让构件更透明、不能更实心：取滑杆值与基础透明度的较小者，
+        // 否则玻璃（基础透明度 0.1~0.3）会被抬到滑杆值变成近实心灰盒，幕墙像被灰玻璃包死。
+        const base = (material.userData.baseOpacity as number | undefined) ?? BASE_OPACITY
+        material.opacity = faded ? Math.min(opacity, base) : base
         material.depthWrite = faded ? false : !glass
       }
     }

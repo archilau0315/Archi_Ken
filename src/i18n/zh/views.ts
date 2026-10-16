@@ -19,7 +19,6 @@ export default {
   'views.axis.x': 'X 轴',
   'views.axis.y': 'Y 轴',
   'views.axis.z': 'Z 轴（水平切）',
-  'views.clearAll': '全部清除',
   'views.clipEnableAxis': '点击启用 / 关闭该轴剖切',
   'views.clipFlip': '翻转剖切方向',
   'views.clipOff': '未启用',

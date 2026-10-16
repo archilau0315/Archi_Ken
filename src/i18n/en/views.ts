@@ -20,7 +20,6 @@ export default {
   'views.axis.x': 'X Axis',
   'views.axis.y': 'Y Axis',
   'views.axis.z': 'Z Axis (horizontal cut)',
-  'views.clearAll': 'Clear All',
   'views.clipEnableAxis': 'Click to enable / disable this axis section',
   'views.clipFlip': 'Flip section direction',
   'views.clipOff': 'Off',
