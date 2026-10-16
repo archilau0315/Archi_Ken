@@ -679,6 +679,8 @@ export function idsValidate(path: string, xml: string, options: IdsValidateOptio
 export interface TakeoffColumn {
   key: string
   name: string
+  /** 计量单位，表头显示为「面积 (m²)」；无单位则不显示括号。 */
+  unit?: string
   expr: string
 }
 

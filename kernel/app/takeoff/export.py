@@ -37,6 +37,12 @@ _TOTAL_FILL = PatternFill("solid", fgColor="F2F4F7")
 _BOLD = Font(bold=True)
 
 
+def _column_header(column: dict) -> str:
+    """列头带计量单位：面积 → 面积 (m²)；无单位则原样返回。"""
+    unit = str(column.get("unit") or "").strip()
+    return f"{column['name']} ({unit})" if unit else column["name"]
+
+
 def export_xlsx(
     result: dict,
     out: Path,
@@ -46,7 +52,9 @@ def export_xlsx(
     txt = I18N[lang if lang in I18N else "zh"]
     columns: list[dict] = result.get("columns") or []
     # 列名已按语言本地化（由路由层传入 localize_columns 结果）。
-    headers = [field["name"] for field in localize_columns(FIXED_FIELDS, lang)] + [column["name"] for column in columns]
+    headers = [field["name"] for field in localize_columns(FIXED_FIELDS, lang)] + [
+        _column_header(column) for column in columns
+    ]
     keys = [field["key"] for field in FIXED_FIELDS] + [column["key"] for column in columns]
     if len(set(keys)) != len(FIXED_KEY_SET) + len(columns):
         raise ColumnError("存在与固定字段重名的自定义列")

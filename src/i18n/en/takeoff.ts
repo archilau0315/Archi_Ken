@@ -11,6 +11,7 @@ export default {
   'takeoff.noCustomColumns': 'No custom columns (fixed fields only)',
   'takeoff.phKey': 'key, e.g. volume',
   'takeoff.phName': 'column name, e.g. Volume',
+  'takeoff.phUnit': 'unit, e.g. m³',
   'takeoff.phExpr': "expression, e.g. qty('volume')",
   'takeoff.add': 'Add',
   'takeoff.functionsSyntax': 'Available Functions & Syntax',

@@ -223,7 +223,7 @@
 
 .takeoff-add {
   display: grid;
-  grid-template-columns: 140px 140px 1fr auto;
+  grid-template-columns: 120px 120px 80px 1fr auto;
   gap: 8px;
 }
 

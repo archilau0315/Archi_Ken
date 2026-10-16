@@ -11,6 +11,7 @@ export default {
   'takeoff.noCustomColumns': '未添加自定义列（仅提取固定字段）',
   'takeoff.phKey': 'key，如 volume',
   'takeoff.phName': '列名，如 体积',
+  'takeoff.phUnit': '单位，如 m³',
   'takeoff.phExpr': "表达式，如 qty('volume')",
   'takeoff.add': '添加',
   'takeoff.functionsSyntax': '可用函数与语法',

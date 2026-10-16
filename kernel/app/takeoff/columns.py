@@ -65,6 +65,10 @@ def normalize_columns(items: list[dict[str, Any]] | None) -> list[dict[str, str]
         name_en = item.get("name_en")
         if isinstance(name_en, str) and name_en.strip():
             col["name_en"] = name_en.strip()
+        # 计量单位随列透传（表头与 Excel 导出展示为「面积 (m²)」）
+        unit = item.get("unit")
+        if isinstance(unit, str) and unit.strip():
+            col["unit"] = unit.strip()
         columns.append(col)
     return columns
 

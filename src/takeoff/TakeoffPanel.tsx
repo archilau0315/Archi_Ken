@@ -59,7 +59,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
   const [busy, setBusy] = useState<'' | 'run' | 'export' | 'save'>('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  const [draftCol, setDraftCol] = useState({ key: '', name: '', expr: '' })
+  const [draftCol, setDraftCol] = useState({ key: '', name: '', unit: '', expr: '' })
   // 层级展开状态：默认折叠，只显示父构件汇总行（避免父子重复计量）
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -270,8 +270,12 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
       setError(t('takeoff.keyExists', { key }))
       return
     }
-    updateDraft({ columns: [...draft.columns, { key, name: draftCol.name.trim() || key, expr }] })
-    setDraftCol({ key: '', name: '', expr: '' })
+    const unit = draftCol.unit.trim()
+    const label = draftCol.name.trim() || key
+    updateDraft({
+      columns: [...draft.columns, unit ? { key, name: label, unit, expr } : { key, name: label, expr }]
+    })
+    setDraftCol({ key: '', name: '', unit: '', expr: '' })
     setError('')
   }
 
@@ -465,7 +469,10 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                     <ul className="takeoff-columns">
                       {draft.columns.map((col) => (
                         <li key={col.key}>
-                          <span className="col-name">{col.name}</span>
+                          <span className="col-name">
+                            {col.name}
+                            {col.unit ? ` (${col.unit})` : ''}
+                          </span>
                           <code>{col.expr}</code>
                           <button className="ghost small" onClick={() => removeColumn(col.key)}>
                             {t('takeoff.remove')}
@@ -477,6 +484,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                     <div className="takeoff-add">
                       <input placeholder={t('takeoff.phKey')} value={draftCol.key} onChange={(e) => setDraftCol({ ...draftCol, key: e.target.value })} />
                       <input placeholder={t('takeoff.phName')} value={draftCol.name} onChange={(e) => setDraftCol({ ...draftCol, name: e.target.value })} />
+                      <input className="unit" placeholder={t('takeoff.phUnit')} value={draftCol.unit} onChange={(e) => setDraftCol({ ...draftCol, unit: e.target.value })} />
                       <input className="expr" placeholder={t('takeoff.phExpr')} value={draftCol.expr} onChange={(e) => setDraftCol({ ...draftCol, expr: e.target.value })} />
                       <button className="ghost" onClick={addDraftColumn}>
                         {t('takeoff.add')}
@@ -512,7 +520,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                               <th>{t('takeoff.thIfcType')}</th>
                               <th>{t('takeoff.thContainer')}</th>
                               {result.columns.map((col) => (
-                                <th key={col.key}>{col.name}</th>
+                                <th key={col.key}>{col.unit ? `${col.name} (${col.unit})` : col.name}</th>
                               ))}
                             </tr>
                           </thead>

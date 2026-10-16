@@ -12,6 +12,8 @@ export type GroupKey = (typeof GROUP_KEYS)[number]
 export interface TakeoffColumn {
   key: string
   name: string
+  /** 计量单位，表头展示为「面积 (m²)」；缺省则不显示括号。 */
+  unit?: string
   expr: string
 }
 
@@ -66,7 +68,8 @@ function checkColumn(raw: unknown, index: number, lang: Lang | undefined): Takeo
   if (!key) fail(tr(lang, `第 ${index + 1} 列缺少 key`, `Column #${index + 1} is missing key`))
   if (!expr) fail(tr(lang, `列「${key}」缺少表达式 expr`, `Column "${key}" is missing expr`))
   const name = typeof col.name === 'string' && col.name.trim() ? col.name.trim() : key
-  return { key, name, expr }
+  const unit = typeof col.unit === 'string' ? col.unit.trim() : ''
+  return unit ? { key, name, unit, expr } : { key, name, expr }
 }
 
 /** 校验并规范化保存请求体，返回可直接入库的输入。 */

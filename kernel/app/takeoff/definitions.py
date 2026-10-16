@@ -19,9 +19,9 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcWall", "IfcWallStandardCase"],
         "group_by": "container",
         "columns": [
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     {
@@ -34,9 +34,9 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcCurtainWall", "IfcPlate", "IfcMember"],
         "group_by": "container",
         "columns": [
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
     {
@@ -49,9 +49,9 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcDoor"],
         "group_by": "container",
         "columns": [
-            {"key": "width", "name": "宽度", "name_en": "Width", "expr": "qty('width')"},
-            {"key": "height", "name": "高度", "name_en": "Height", "expr": "qty('height')"},
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
+            {"key": "width", "name": "宽度", "name_en": "Width", "unit": "m", "expr": "qty('width')"},
+            {"key": "height", "name": "高度", "name_en": "Height", "unit": "m", "expr": "qty('height')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
         ],
     },
     {
@@ -64,9 +64,9 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcWindow"],
         "group_by": "container",
         "columns": [
-            {"key": "width", "name": "宽度", "name_en": "Width", "expr": "qty('width')"},
-            {"key": "height", "name": "高度", "name_en": "Height", "expr": "qty('height')"},
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
+            {"key": "width", "name": "宽度", "name_en": "Width", "unit": "m", "expr": "qty('width')"},
+            {"key": "height", "name": "高度", "name_en": "Height", "unit": "m", "expr": "qty('height')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
         ],
     },
     {
@@ -79,8 +79,8 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcSpace"],
         "group_by": "container",
         "columns": [
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     {
@@ -93,7 +93,7 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcRailing"],
         "group_by": "container",
         "columns": [
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
     {
@@ -106,7 +106,7 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcStair", "IfcStairFlight"],
         "group_by": "container",
         "columns": [
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     # ---------- 结构 ----------
@@ -120,8 +120,8 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcColumn"],
         "group_by": "container",
         "columns": [
-            {"key": "height", "name": "高度", "name_en": "Height", "expr": "qty('height')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "height", "name": "高度", "name_en": "Height", "unit": "m", "expr": "qty('height')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     {
@@ -134,8 +134,8 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcBeam"],
         "group_by": "container",
         "columns": [
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     {
@@ -148,8 +148,8 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcSlab"],
         "group_by": "container",
         "columns": [
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
         ],
     },
     # ---------- 机电 ----------
@@ -163,7 +163,7 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcDuctSegment", "IfcDuctFitting"],
         "group_by": "container",
         "columns": [
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
     {
@@ -176,7 +176,7 @@ DEFINITIONS: list[dict] = [
         "ifc_types": ["IfcPipeSegment", "IfcPipeFitting"],
         "group_by": "container",
         "columns": [
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
     # ---------- 通用 ----------
@@ -190,9 +190,9 @@ DEFINITIONS: list[dict] = [
         "ifc_types": [],
         "group_by": "ifc_type",
         "columns": [
-            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
-            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
-            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
 ]
