@@ -50,11 +50,15 @@ def _as_number(value: Any) -> float | None:
 
 
 def compare(op: str, left: Any, right: Any) -> bool:
-    """按 op 比较 left（实际值）与 right（期望值）。"""
+    """按 op 比较 left（实际值）与 right（期望值）。
+
+    exists/not_exists 语义：空字符串视为「未填写」——部分建模工具会导出
+    空串占位属性（如 FireRating=""），若不剔除会把未标注构件误判为已标注。
+    """
     if op == "exists":
-        return left is not MISSING and left is not None
+        return left is not MISSING and left is not None and left != ""
     if op == "not_exists":
-        return left is MISSING or left is None
+        return left is MISSING or left is None or left == ""
     if left is MISSING or left is None:
         return False
     if op == "in":
