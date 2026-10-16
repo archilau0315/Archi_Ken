@@ -25,6 +25,21 @@ DEFINITIONS: list[dict] = [
         ],
     },
     {
+        "id": "curtain-walls",
+        "category": "arch",
+        "name": "幕墙",
+        "name_en": "Curtain Walls",
+        "description": "按楼层统计幕墙的面积、体积与长度（含玻璃面板与龙骨）",
+        "description_en": "Curtain wall area, volume and length grouped by storey (glass panels and mullions included)",
+        "ifc_types": ["IfcCurtainWall", "IfcPlate", "IfcMember"],
+        "group_by": "container",
+        "columns": [
+            {"key": "area", "name": "面积", "name_en": "Area", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "expr": "qty('volume')"},
+            {"key": "length", "name": "长度", "name_en": "Length", "expr": "qty('length')"},
+        ],
+    },
+    {
         "id": "doors",
         "category": "arch",
         "name": "门统计",
