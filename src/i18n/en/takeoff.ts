@@ -34,6 +34,10 @@ export default {
   'takeoff.yes': 'Yes',
   'takeoff.no': 'No',
   'takeoff.ungrouped': '(Ungrouped)',
+  'takeoff.expand': 'Expand',
+  'takeoff.collapse': 'Collapse',
+  'takeoff.expandAll': 'Expand All',
+  'takeoff.collapseAll': 'Collapse All',
 
   // Definition tree
   'takeoff.builtin': 'Built-in',

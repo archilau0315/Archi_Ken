@@ -249,6 +249,10 @@
 }
 
 .takeoff-result-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
   color: var(--muted);
 }
@@ -305,6 +309,41 @@
   background: #f4f6fa;
   font-weight: 600;
   font-size: 12px;
+}
+
+/* 父子层级：父行默认折叠，点 ▸ 展开子构件明细（子构件不计入小计 / 总合计） */
+.takeoff-name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+button.takeoff-expander {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2f6feb;
+  font-size: 10px;
+  line-height: 1;
+  flex: none;
+}
+
+.takeoff-expander-holder {
+  display: inline-block;
+  width: 16px;
+  flex: none;
+}
+
+.takeoff-child-count {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.takeoff-row-child td {
+  background: #fafbfd;
+  color: var(--muted);
 }
 
 .takeoff-total-row td {

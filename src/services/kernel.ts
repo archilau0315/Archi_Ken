@@ -697,6 +697,8 @@ export interface TakeoffRow {
   name: string | null
   ifc_type: string
   container: string | null
+  /** 有值时表示该行是父构件的子构件（幕墙面板 / 龙骨、复合墙构造层），仅作展开明细、不计入合计。 */
+  parent_guid?: string
   values: Record<string, unknown>
 }
 

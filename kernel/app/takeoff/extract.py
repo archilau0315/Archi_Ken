@@ -41,18 +41,25 @@ def run_takeoff(
     errors = 0
     numeric_keys = _numeric_columns(normalized)
     truncated = False
-    for element in model.by_type("IfcProduct"):
-        ifc_type = element.is_a()
-        if ifc_type in skipped:
-            continue
-        if type_filter and ifc_type not in type_filter:
-            continue
+    candidates = [
+        element
+        for element in model.by_type("IfcProduct")
+        if element.is_a() not in skipped
+        and (not type_filter or element.is_a() in type_filter)
+    ]
+    guids = {element.GlobalId for element in candidates}
+    for element in candidates:
         entry = _resolve_geometry(geometry, element)
         quantities = from_bbox(entry["bbox"]) if entry else {}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
+        parent_guid = _parent_guid_in(element, guids)
+        if parent_guid:
+            # 子构件（幕墙面板 / 龙骨 / 复合墙构造层）只作展开明细，不计入合计，避免父子重复
+            row["parent_guid"] = parent_guid
+        else:
+            _accumulate(totals, values, numeric_keys)
         rows.append(row)
-        _accumulate(totals, values, numeric_keys)
         if len(rows) >= limit:
             truncated = True
             break
@@ -116,6 +123,21 @@ def _merge_bbox(bboxes: list[list[float]]) -> list[float] | None:
     ]
 
 
+def _parent_guid_in(element, guids: set[str]) -> str | None:
+    """返回该构件的构件级父 guid；父必须也在本次结果集中才算。
+
+    只认 IfcElement 级父（幕墙 → 面板 / 龙骨、复合墙 → 构造层），
+    空间结构（楼层 / 空间）不算父，避免普通构件被误判为子构件。
+    """
+    for rel in getattr(element, "Decomposes", None) or []:
+        parent = getattr(rel, "RelatingObject", None)
+        if parent is None:
+            continue
+        if parent.is_a("IfcElement") and parent.GlobalId in guids:
+            return parent.GlobalId
+    return None
+
+
 def _numeric_columns(columns: list[dict[str, str]]) -> list[str]:
     """数值列参与合计；布尔 / 文本列只展示不累加。"""
     return [column["key"] for column in columns]
@@ -137,7 +159,8 @@ def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str]) -> lis
             groups[key] = {"key": key, "rows": [], "subtotals": {}}
             order.append(key)
         groups[key]["rows"].append(row)
-        _accumulate(groups[key]["subtotals"], row.get("values") or {}, numeric_keys)
+        if not row.get("parent_guid"):
+            _accumulate(groups[key]["subtotals"], row.get("values") or {}, numeric_keys)
     return [
         {
             "key": key,

@@ -34,6 +34,10 @@ export default {
   'takeoff.yes': '是',
   'takeoff.no': '否',
   'takeoff.ungrouped': '(未分组)',
+  'takeoff.expand': '展开',
+  'takeoff.collapse': '折叠',
+  'takeoff.expandAll': '展开全部',
+  'takeoff.collapseAll': '折叠全部',
 
   // 模板树
   'takeoff.builtin': '内置模板',

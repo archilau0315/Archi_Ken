@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useT } from '../i18n'
 import { takeoffDefinitions, takeoffExport, takeoffRun } from '../services/kernel'
-import type { TakeoffColumn, TakeoffDefinition, TakeoffRunResponse } from '../services/kernel'
+import type { TakeoffColumn, TakeoffDefinition, TakeoffRow, TakeoffRunResponse } from '../services/kernel'
 import {
   deleteMyDefinition,
   getMyDefinition,
@@ -60,6 +60,8 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [draftCol, setDraftCol] = useState({ key: '', name: '', expr: '' })
+  // 层级展开状态：默认折叠，只显示父构件汇总行（避免父子重复计量）
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   // 初次加载：并行拉内置 + 我的模板，默认选中「全部构件」
   useEffect(() => {
@@ -289,6 +291,26 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
 
   const valueKeys = result?.columns.map((col) => col.key) ?? []
   const hasGroups = Boolean(result?.groups?.length)
+  const parentGuids = useMemo(
+    () =>
+      new Set(
+        (result?.rows ?? []).map((row) => row.parent_guid).filter((guid): guid is string => Boolean(guid))
+      ),
+    [result]
+  )
+
+  const toggleExpand = useCallback((guid: string): void => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(guid)) next.delete(guid)
+      else next.add(guid)
+      return next
+    })
+  }, [])
+
+  function toggleAllRows(): void {
+    setExpanded((prev) => (prev.size ? new Set() : new Set(parentGuids)))
+  }
 
   return (
     <div className="editor-overlay">
@@ -466,12 +488,19 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                 {result && (
                   <div className="takeoff-result">
                     <div className="takeoff-result-meta">
-                      {t('takeoff.resultMeta', {
-                        total: result.total,
-                        truncated: result.truncated ? t('takeoff.truncated') : '',
-                        errors: result.expression_errors,
-                        cache: result.cache_hit ? t('takeoff.cacheHit') : t('takeoff.cacheMiss')
-                      })}
+                      <span>
+                        {t('takeoff.resultMeta', {
+                          total: result.total,
+                          truncated: result.truncated ? t('takeoff.truncated') : '',
+                          errors: result.expression_errors,
+                          cache: result.cache_hit ? t('takeoff.cacheHit') : t('takeoff.cacheMiss')
+                        })}
+                      </span>
+                      {parentGuids.size > 0 && (
+                        <button className="ghost small" onClick={toggleAllRows}>
+                          {expanded.size ? t('takeoff.collapseAll') : t('takeoff.expandAll')}
+                        </button>
+                      )}
                     </div>
                     {!result.rows.length && <p className="hint">{t('takeoff.empty')}</p>}
                     {result.rows.length > 0 && (
@@ -488,11 +517,26 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                             </tr>
                           </thead>
                           <tbody>
-                            {hasGroups
-                              ? result.groups!.map((group) => (
-                                  <GroupRows key={group.key || '__ungrouped'} group={group} valueKeys={valueKeys} t={t} />
-                                ))
-                              : result.rows.map((row) => <RowCells key={row.guid} row={row} valueKeys={valueKeys} t={t} />)}
+                            {hasGroups ? (
+                              result.groups!.map((group) => (
+                                <GroupRows
+                                  key={group.key || '__ungrouped'}
+                                  group={group}
+                                  valueKeys={valueKeys}
+                                  t={t}
+                                  expanded={expanded}
+                                  onToggle={toggleExpand}
+                                />
+                              ))
+                            ) : (
+                              <TreeRows
+                                rows={result.rows}
+                                valueKeys={valueKeys}
+                                t={t}
+                                expanded={expanded}
+                                onToggle={toggleExpand}
+                              />
+                            )}
                           </tbody>
                           <tfoot>
                             <tr className="takeoff-total-row">
@@ -530,48 +574,135 @@ function toDraft(def: TakeoffDefinition): Draft {
 }
 
 interface GroupProps {
-  group: { key: string; rows: TakeoffRunResponse['rows']; subtotals: Record<string, number> }
+  group: { key: string; rows: TakeoffRow[]; subtotals: Record<string, number> }
   valueKeys: string[]
   t: (key: string) => string
+  expanded: Set<string>
+  onToggle: (guid: string) => void
 }
 
-function GroupRows({ group, valueKeys, t }: GroupProps) {
+function GroupRows({ group, valueKeys, t, expanded, onToggle }: GroupProps) {
+  // 全为子构件的组不显示小计行（子构件不计入合计，避免出现空小计）
+  const hasSubtotal = Object.keys(group.subtotals).length > 0
   return (
     <>
       <tr className="takeoff-group-header">
         <td colSpan={3 + valueKeys.length}>▼ {group.key || t('takeoff.ungrouped')}</td>
       </tr>
-      {group.rows.map((row) => (
-        <RowCells key={row.guid} row={row} valueKeys={valueKeys} t={t} />
-      ))}
-      <tr className="takeoff-subtotal-row">
-        <td>{t('takeoff.subtotal')}</td>
-        <td />
-        <td />
-        {valueKeys.map((key) => (
-          <td key={key}>{formatCell(group.subtotals[key], t)}</td>
-        ))}
-      </tr>
+      <TreeRows rows={group.rows} valueKeys={valueKeys} t={t} expanded={expanded} onToggle={onToggle} />
+      {hasSubtotal && (
+        <tr className="takeoff-subtotal-row">
+          <td>{t('takeoff.subtotal')}</td>
+          <td />
+          <td />
+          {valueKeys.map((key) => (
+            <td key={key}>{formatCell(group.subtotals[key], t)}</td>
+          ))}
+        </tr>
+      )}
     </>
   )
 }
 
-interface RowProps {
-  row: TakeoffRunResponse['rows'][number]
+interface TreeProps {
+  rows: TakeoffRow[]
   valueKeys: string[]
   t: (key: string) => string
+  expanded: Set<string>
+  onToggle: (guid: string) => void
 }
 
-function RowCells({ row, valueKeys, t }: RowProps) {
+/** 按 parent_guid 把平铺行组成父子层级：父行默认折叠只显示汇总，点 ▸ 展开子构件明细。 */
+function TreeRows({ rows, valueKeys, t, expanded, onToggle }: TreeProps) {
+  const { roots, childrenOf } = useMemo(() => {
+    const guids = new Set(rows.map((row) => row.guid))
+    const map = new Map<string, TakeoffRow[]>()
+    const top: TakeoffRow[] = []
+    for (const row of rows) {
+      const parent = row.parent_guid
+      // 父不在本组行内（被过滤或截断）时按顶层处理，避免子行丢失
+      if (parent && parent !== row.guid && guids.has(parent)) {
+        const list = map.get(parent)
+        if (list) list.push(row)
+        else map.set(parent, [row])
+      } else {
+        top.push(row)
+      }
+    }
+    return { roots: top, childrenOf: map }
+  }, [rows])
+
   return (
-    <tr>
-      <td>{row.name || t('takeoff.unnamed')}</td>
-      <td>{row.ifc_type}</td>
-      <td>{row.container || '—'}</td>
-      {valueKeys.map((key) => (
-        <td key={key}>{formatCell(row.values[key], t)}</td>
+    <>
+      {roots.map((row) => (
+        <RowNode
+          key={row.guid}
+          row={row}
+          depth={0}
+          childrenOf={childrenOf}
+          valueKeys={valueKeys}
+          t={t}
+          expanded={expanded}
+          onToggle={onToggle}
+        />
       ))}
-    </tr>
+    </>
+  )
+}
+
+interface NodeProps {
+  row: TakeoffRow
+  depth: number
+  childrenOf: Map<string, TakeoffRow[]>
+  valueKeys: string[]
+  t: (key: string) => string
+  expanded: Set<string>
+  onToggle: (guid: string) => void
+}
+
+function RowNode({ row, depth, childrenOf, valueKeys, t, expanded, onToggle }: NodeProps) {
+  const kids = childrenOf.get(row.guid) ?? []
+  const open = expanded.has(row.guid)
+  return (
+    <>
+      <tr className={depth > 0 ? 'takeoff-row-child' : undefined}>
+        <td>
+          <span className="takeoff-name-cell" style={{ paddingLeft: depth * 18 }}>
+            {kids.length > 0 ? (
+              <button
+                className="takeoff-expander"
+                onClick={() => onToggle(row.guid)}
+                title={open ? t('takeoff.collapse') : t('takeoff.expand')}
+              >
+                {open ? '▾' : '▸'}
+              </button>
+            ) : (
+              depth > 0 && <span className="takeoff-expander-holder" />
+            )}
+            {row.name || t('takeoff.unnamed')}
+            {kids.length > 0 && <span className="takeoff-child-count">{kids.length}</span>}
+          </span>
+        </td>
+        <td>{row.ifc_type}</td>
+        <td>{row.container || '—'}</td>
+        {valueKeys.map((key) => (
+          <td key={key}>{formatCell(row.values[key], t)}</td>
+        ))}
+      </tr>
+      {open &&
+        kids.map((kid) => (
+          <RowNode
+            key={kid.guid}
+            row={kid}
+            depth={depth + 1}
+            childrenOf={childrenOf}
+            valueKeys={valueKeys}
+            t={t}
+            expanded={expanded}
+            onToggle={onToggle}
+          />
+        ))}
+    </>
   )
 }
 
