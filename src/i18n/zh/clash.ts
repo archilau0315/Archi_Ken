@@ -9,6 +9,7 @@ export default {
   'clash.ignoreSame': '忽略同专业',
   'clash.run': '运行矩阵',
   'clash.running': '检测中…',
+  'clash.restore': '恢复显示',
   'clash.hintSetup': '设置分类与容差后点击「运行矩阵」；矩阵以第一个模型源为输入。',
   'clash.totalItems': '共 {n} 项',
   'clash.chipHard': '硬碰撞 {n}',

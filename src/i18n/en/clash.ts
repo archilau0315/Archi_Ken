@@ -9,6 +9,7 @@ export default {
   'clash.ignoreSame': 'Ignore same discipline',
   'clash.run': 'Run matrix',
   'clash.running': 'Detecting…',
+  'clash.restore': 'Show all',
   'clash.hintSetup': 'Set categories and tolerances, then click "Run matrix". The matrix uses the first model source as input.',
   'clash.totalItems': '{n} total',
   'clash.chipHard': 'Hard {n}',

@@ -14,6 +14,8 @@ import type { PresetName, ViewMode, ViewState } from './views/viewpoints'
 export interface ViewerProps {
   items: BboxItem[] | ElementMesh[]
   selectedGuid: string | null
+  /** 外部指定的成对 / 多构件高亮（碰撞对定位）；非空时优先于 selectedGuid 单选框。 */
+  selectedGuids?: string[] | null
   onSelect: (guid: string | null) => void
   onMarkerPick?: (markerId: string | null) => void
   /** 为 true 时按三角网格构建真实模型；缺省按包围盒降级。 */
@@ -59,10 +61,14 @@ export interface ViewerHandle {
   focusMarker: (id: string) => void
   focusPosition: (position: [number, number, number]) => void
   getElementCenter: (guid: string) => [number, number, number] | null
+  /** 同时框选多个构件（碰撞对定位用）；传空数组清除全部高亮框。 */
+  setSelectedMany: (guids: string[]) => void
+  /** 只显示指定构件（碰撞对隔离查看），其余隐藏；传 null 恢复全部显示。 */
+  isolate: (guids: string[] | null) => void
 }
 
 const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
-  { items, selectedGuid, onSelect, onMarkerPick, useMesh = false, colorMode = 'discipline' },
+  { items, selectedGuid, selectedGuids = null, onSelect, onMarkerPick, useMesh = false, colorMode = 'discipline' },
   ref
 ) {
   const hostRef = useRef<HTMLDivElement>(null)
@@ -163,7 +169,9 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
         const layer = layerRef.current
         if (!layer) return null
         return layer.centerOf(guid)
-      }
+      },
+      setSelectedMany: (guids) => layerRef.current?.setSelectedMany(guids),
+      isolate: (guids) => layerRef.current?.isolate(guids)
     }),
     []
   )
@@ -247,10 +255,11 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
     }
   }, [items, useMesh, colorMode])
 
-  // 选中构件高亮。
+  // 选中构件高亮：外部指定成对高亮（碰撞对）时优先，否则按单选构件框选。
   useEffect(() => {
-    layerRef.current?.setSelected(selectedGuid)
-  }, [selectedGuid, items])
+    if (selectedGuids) layerRef.current?.setSelectedMany(selectedGuids)
+    else layerRef.current?.setSelected(selectedGuid)
+  }, [selectedGuid, selectedGuids, items])
 
   return <div className="viewer-canvas" ref={hostRef} />
 })

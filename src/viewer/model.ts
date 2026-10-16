@@ -81,11 +81,66 @@ function makeShellFade(
   }
 }
 
+/** 多材质拆分的子网格 guid 形如 `<父 guid>#mN`：匹配父 guid 或其任一分片子网格。 */
+function guidMatches(meshGuid: string, guid: string): boolean {
+  return meshGuid === guid || meshGuid.startsWith(`${guid}#`)
+}
+
+/** 选中高亮框池：支持同时框选多个构件（如碰撞对 A/B）；拆分构件的多片子网格合并成一个框。 */
+function makeSelection(group: THREE.Group, byGuid: Map<string, THREE.Mesh>, meshes: THREE.Mesh[]) {
+  const helpers: THREE.Box3Helper[] = []
+  const union = new THREE.Box3()
+  return (guids: string[]): void => {
+    while (helpers.length < guids.length) {
+      const helper = new THREE.Box3Helper(new THREE.Box3(), new THREE.Color(SELECT_COLOR))
+      helper.visible = false
+      group.add(helper)
+      helpers.push(helper)
+    }
+    helpers.forEach((helper, i) => {
+      const guid = i < guids.length ? guids[i] : null
+      if (!guid) {
+        helper.visible = false
+        return
+      }
+      // 优先整构件；多材质拆分时父 guid 无独立网格，合并各分片子网格的包围盒。
+      const direct = byGuid.get(guid)
+      union.makeEmpty()
+      if (direct) union.expandByObject(direct)
+      else for (const mesh of meshes) if (guidMatches(mesh.userData.guid as string, guid)) union.expandByObject(mesh)
+      if (union.isEmpty()) {
+        helper.visible = false
+        return
+      }
+      helper.box.copy(union)
+      helper.visible = true
+    })
+  }
+}
+
+/** 隔离显示：只保留指定构件（含其拆分子网格），其余隐藏；传 null 恢复全部。 */
+function makeIsolate(meshes: THREE.Mesh[]) {
+  return (guids: string[] | null): void => {
+    if (!guids) {
+      for (const mesh of meshes) mesh.visible = true
+      return
+    }
+    for (const mesh of meshes) {
+      const meshGuid = mesh.userData.guid as string
+      mesh.visible = guids.some((guid) => guidMatches(meshGuid, guid))
+    }
+  }
+}
+
 export interface ModelLayer {
   group: THREE.Group
   /** 可被射线拾取的构件网格。 */
   meshes: THREE.Mesh[]
   setSelected(guid: string | null): void
+  /** 同时框选多个构件（碰撞对定位用）；传空数组清除全部高亮框。 */
+  setSelectedMany(guids: string[]): void
+  /** 只显示指定构件（碰撞对隔离查看），其余隐藏；传 null 恢复全部显示。 */
+  isolate(guids: string[] | null): void
   /** 开关「淡化外壳」：建筑 / 结构 / 场地转半透明（透明度可调），露出内部机电管线。 */
   setShellFade(on: boolean, opacity: number): void
   /** 构件包围盒中心（无该构件时返回 null，M10 标记定位用）。 */
@@ -136,22 +191,17 @@ export function buildModelLayer(items: BboxItem[]): ModelLayer {
     geometries.push(geometry)
   }
 
-  const selectionBox = new THREE.Box3Helper(new THREE.Box3(), new THREE.Color(SELECT_COLOR))
-  selectionBox.visible = false
-  group.add(selectionBox)
+  const applySelection = makeSelection(group, byGuid, meshes)
+  const applyIsolate = makeIsolate(meshes)
 
   return {
     group,
     meshes,
     setSelected(guid) {
-      const mesh = guid ? byGuid.get(guid) : undefined
-      if (!mesh) {
-        selectionBox.visible = false
-        return
-      }
-      selectionBox.box.setFromObject(mesh)
-      selectionBox.visible = true
+      applySelection(guid ? [guid] : [])
     },
+    setSelectedMany: applySelection,
+    isolate: applyIsolate,
     setShellFade: makeShellFade(byDiscipline),
     centerOf(guid) {
       const mesh = byGuid.get(guid)
@@ -221,22 +271,17 @@ export function buildMeshLayer(items: ElementMesh[], mode: ColorMode = 'discipli
     geometries.push(geometry)
   }
 
-  const selectionBox = new THREE.Box3Helper(new THREE.Box3(), new THREE.Color(SELECT_COLOR))
-  selectionBox.visible = false
-  group.add(selectionBox)
+  const applySelection = makeSelection(group, byGuid, meshes)
+  const applyIsolate = makeIsolate(meshes)
 
   return {
     group,
     meshes,
     setSelected(guid) {
-      const mesh = guid ? byGuid.get(guid) : undefined
-      if (!mesh) {
-        selectionBox.visible = false
-        return
-      }
-      selectionBox.box.setFromObject(mesh)
-      selectionBox.visible = true
+      applySelection(guid ? [guid] : [])
     },
+    setSelectedMany: applySelection,
+    isolate: applyIsolate,
     setShellFade: makeShellFade(byDiscipline),
     centerOf(guid) {
       const mesh = byGuid.get(guid)

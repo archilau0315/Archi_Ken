@@ -1,0 +1,25 @@
+/* 碰撞面板专属布局：双类提高优先级，覆盖 styles.css 中 .editor-overlay/.editor-dialog 的居中弹窗样式
+   （导入顺序晚于 styles.css）。
+   面板停靠右侧、遮罩层不拦截鼠标：点击碰撞项后可直接在左侧 3D 视图中查看定位结果。 */
+
+.editor-overlay.clash-overlay {
+  background: transparent;
+  align-items: stretch;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.editor-dialog.clash-dialog {
+  pointer-events: auto;
+  width: 460px;
+  max-width: 94vw;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.18);
+}
+
+/* 当前定位中的碰撞项高亮。 */
+.clash-body .issue.active {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 1px #1d4ed8;
+}

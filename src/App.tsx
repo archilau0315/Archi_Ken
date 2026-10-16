@@ -115,6 +115,8 @@ export default function App() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
   }, [items, useMesh])
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
+  // 碰撞对高亮（视图 uid，带源序号前缀）：非空时 3D 视图同时框选碰撞双方。
+  const [pairGuids, setPairGuids] = useState<string[] | null>(null)
   const [detail, setDetail] = useState<ElementDetail | null>(null)
   const [report, setReport] = useState<Report | null>(null)
   const [busy, setBusy] = useState<'' | 'fed' | 'mesh' | 'check' | 'report'>('')
@@ -205,6 +207,7 @@ export default function App() {
     setSelectedUid(uid)
     setDetail(null)
     setSelectedMaterial(null)
+    setPairGuids(null)
     if (!uid || !fed) return
     const element = fed.elements.items.find((item) => item.uid === uid)
     const model = element ? fed.models[element.model] : undefined
@@ -368,6 +371,7 @@ export default function App() {
         ref={viewerRef}
         items={visibleItems}
         selectedGuid={selectedUid}
+        selectedGuids={pairGuids}
         onSelect={selectElement}
         onMarkerPick={(id) => id && setMarkerPick({ id, nonce: Date.now() })}
         useMesh={useMesh}
@@ -451,8 +455,13 @@ export default function App() {
       {clashOpen && (
         <ClashMatrix
           modelPath={primaryPath}
+          viewerRef={viewerRef}
           onSelect={(guid) => void selectElement(`0:${guid}`)}
-          onClose={() => setClashOpen(false)}
+          onPairSelect={setPairGuids}
+          onClose={() => {
+            setPairGuids(null)
+            setClashOpen(false)
+          }}
         />
       )}
       {idsOpen && (
