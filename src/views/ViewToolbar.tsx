@@ -37,7 +37,7 @@ export function makeClipStates(range: ClipRangeValue | null): Record<ClipAxis, C
   return result
 }
 
-const PRESETS: PresetName[] = ['iso', 'top', 'bottom', 'front', 'back', 'left', 'right']
+const PRESETS: PresetName[] = ['iso', 'top', 'front', 'back', 'left', 'right']
 
 interface Props {
   viewerRef: RefObject<ViewerHandle>
@@ -50,7 +50,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
   const [clips, setClips] = useState<Record<ClipAxis, ClipAxisState>>(() => makeClipStates(null))
   const [range, setRange] = useState<ClipRangeValue | null>(null)
   const [selectedAxis, setSelectedAxis] = useState<ClipAxis | null>(null)
-  const [dragAxis, setDragAxis] = useState<ClipAxis | null>(null)
   const [faded, setFaded] = useState(false)
   const [fadeOpacity, setFadeOpacity] = useState(DEFAULT_SHELL_OPACITY)
 
@@ -75,25 +74,25 @@ export default function ViewToolbar({ viewerRef }: Props) {
   const sliderAxis: ClipAxis | null =
     selectedAxis !== null && enabledAxes.includes(selectedAxis) ? selectedAxis : enabledAxes[0] ?? null
 
-  // 关注轴被关闭后，已锁定的拖拽轴也要跟着解除。
-  useEffect(() => {
-    if (dragAxis && dragAxis !== sliderAxis) stopDrag()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragAxis, sliderAxis])
-
   function changeMode(next: ViewMode): void {
     viewerRef.current?.setViewMode(next)
     setMode(next)
   }
 
   function applyPreset(preset: PresetName): void {
+    // 顶 / 前 / 后 / 左右视角自动切正投影：正交相机正对轴线，看不到其它侧面；
+    // 等轴测回透视。状态与相机模式保持同步。
+    const nextMode: ViewMode = preset === 'iso' ? 'perspective' : 'orthographic'
+    if (viewerRef.current?.getViewMode() !== nextMode) {
+      viewerRef.current?.setViewMode(nextMode)
+      setMode(nextMode)
+    }
     viewerRef.current?.applyPreset(preset)
     setActivePreset(preset)
   }
 
   function stopDrag(): void {
     viewerRef.current?.setSectionDrag(null)
-    setDragAxis(null)
   }
 
   function toggleAxis(axis: ClipAxis, on: boolean): void {
@@ -105,7 +104,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
     const current = clips[axis]
     const position = current.on ? current.position : axisMidPoint(fresh, axis)
     viewer?.setClip(axis, on, current.side, on ? position : undefined)
-    if (!on && dragAxis === axis) stopDrag()
   }
 
   function setAxisPosition(axis: ClipAxis, position: number): void {
@@ -115,16 +113,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
   function flipAxis(axis: ClipAxis): void {
     const nextSide: ClipSide = clips[axis].side === 'plus' ? 'minus' : 'plus'
     viewerRef.current?.setClip(axis, true, nextSide, clips[axis].position)
-  }
-
-  function toggleDrag(axis: ClipAxis): void {
-    // 再次点击同一轴即取消拖拽锁定（切换语义）。
-    if (dragAxis === axis) {
-      stopDrag()
-      return
-    }
-    viewerRef.current?.setSectionDrag(axis)
-    setDragAxis(axis)
   }
 
   function clearAllClips(): void {
@@ -154,18 +142,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
     <div className="view-toolbar" aria-label={t('views.toolbar')}>
       <div className="vt-group">
         <button
-          className={mode === 'perspective' ? 'view-active vt-btn' : 'ghost vt-btn'}
-          onClick={() => changeMode('perspective')}
-        >
-          {t('views.perspective')}
-        </button>
-        <button
-          className={mode === 'orthographic' ? 'view-active vt-btn' : 'ghost vt-btn'}
-          onClick={() => changeMode('orthographic')}
-        >
-          {t('views.orthographicShort')}
-        </button>
-        <button
           className={faded ? 'view-active vt-btn' : 'ghost vt-btn'}
           onClick={toggleShellFade}
           title={t('views.shellFadeHint')}
@@ -187,6 +163,12 @@ export default function ViewToolbar({ viewerRef }: Props) {
             <span className="vt-value">{Math.round(fadeOpacity * 100)}%</span>
           </>
         )}
+        <button
+          className={mode === 'perspective' ? 'view-active vt-btn' : 'ghost vt-btn'}
+          onClick={() => changeMode('perspective')}
+        >
+          {t('views.perspective')}
+        </button>
       </div>
 
       <span className="vt-sep" />
@@ -236,14 +218,6 @@ export default function ViewToolbar({ viewerRef }: Props) {
           title={t('views.clipFlip')}
         >
           {sliderAxis && clips[sliderAxis].side === 'minus' ? '−→+' : '+→−'}
-        </button>
-        <button
-          className={dragAxis ? 'view-active vt-btn' : 'ghost vt-btn'}
-          disabled={!sliderAxis}
-          onClick={() => sliderAxis && toggleDrag(sliderAxis)}
-          title={t('views.dragHint')}
-        >
-          {t('views.drag')}
         </button>
         <button className="ghost vt-btn" disabled={!enabledAxes.length} onClick={clearAllClips}>
           {t('views.clearAll')}

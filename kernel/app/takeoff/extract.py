@@ -32,6 +32,9 @@ _CURTAIN_KEEP = {"area", "length", "width", "height"}
 # 门 / 窗：宽度 / 高度优先读 IFC 实体属性（几何包围盒的最小维是墙厚方向，不是宽度）。
 _OPENING_TYPES = {"IfcDoor", "IfcWindow"}
 
+# 净面积缓存的「未计算」哨兵（None 表示已计算且无洞口，与未计算区分开）。
+_UNCACHED = object()
+
 
 def _opening_sizes(model, element, entry: dict, quantities: dict, unit_scale: float | None) -> dict:
     """修正门 / 窗的宽度与高度：属性优先，几何推导兜底。
@@ -94,6 +97,8 @@ def run_takeoff(
     guids = {element.GlobalId for element in candidates}
     # 幕墙本体 guid：其面板 / 龙骨子构件随之走幕墙口径（只作明细、不计体积 / 表面积、不拆层）
     curtain_guids = {element.GlobalId for element in candidates if element.is_a() in _CURTAIN_TYPES}
+    # 净面积缓存：<guid> → 净投影面积（毛面积 − 洞口投影面积）；None 表示无洞口不干预
+    net_face_cache: dict[str, float | None] = {}
     for element in candidates:
         entry = _resolve_geometry(geometry, element)
         quantities = from_geometry(entry) if entry else {}
@@ -105,6 +110,23 @@ def run_takeoff(
         is_curtain = element.is_a() in _CURTAIN_TYPES or parent_guid in curtain_guids
         if is_curtain:
             quantities = {k: v for k, v in quantities.items() if k in _CURTAIN_KEEP}
+        # 有门窗洞口的构件：面积口径封顶为净面积（毛面积 − 洞口投影面积）。
+        # 网格被洞口剪断的层本就 ≤ 净面积不受影响；包裹洞口反边的抹灰 / 找平层被压回净墙面面积。
+        net_face = net_face_cache.get(element.GlobalId, _UNCACHED)
+        if net_face is _UNCACHED:
+            net_face = None if is_curtain else _net_face_area(element, geometry)
+            net_face_cache[element.GlobalId] = net_face
+        if net_face is not None and quantities.get("area") is not None:
+            quantities["area"] = min(quantities["area"], net_face)
+        # 子构件（构造层）的面积另按所属父墙的净面积封顶：父墙的门窗洞口同样要从层面积里减掉。
+        if parent_guid and not is_curtain:
+            parent_net = net_face_cache.get(parent_guid, _UNCACHED)
+            if parent_net is _UNCACHED:
+                parent_element = _element_parent(element, guids)
+                parent_net = _net_face_area(parent_element, geometry) if parent_element is not None else None
+                net_face_cache[parent_guid] = parent_net
+            if parent_net is not None and quantities.get("area") is not None:
+                quantities["area"] = min(quantities["area"], parent_net)
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
         if not is_curtain:
@@ -123,7 +145,7 @@ def run_takeoff(
         rows.append(row)
         # 多材质构件（复合墙）：按材质拆开的几何组另出子行明细；幕墙不拆层，整幕墙按洞口面积计。
         if not is_curtain:
-            layer_rows, layer_errors = _material_rows(element, split_parts.get(element.GlobalId) or [], normalized)
+            layer_rows, layer_errors = _material_rows(element, split_parts.get(element.GlobalId) or [], normalized, net_face)
             errors += layer_errors
             for layer_row in layer_rows:
                 layer_row["parent_guid"] = element.GlobalId
@@ -178,24 +200,46 @@ def _resolve_geometry(geometry: dict, element) -> dict | None:
     if areas:
         if _layers_overlap(merged, parts):
             gross = from_bbox(merged)["area"]
-            holes = _openings_face_area(element, geometry)
+            holes = sum(from_bbox(b)["area"] for b in _openings_boxes(element, geometry))
             result["area"] = _round6(gross - holes) if holes > 0 and gross - holes > 0 else max(areas)
         else:
             result["area"] = sum(areas)
     return result
 
 
-def _openings_face_area(element, geometry: dict) -> float:
-    """构件全部洞口的投影面积之和（洞口包围盒最大投影面 = 洞口宽 × 高）。"""
-    total = 0.0
+def _openings_boxes(element, geometry: dict) -> list[list[float]]:
+    """构件全部洞口的包围盒（IfcRelVoidsElement；IFC4 与 IFC2x3 字段名都兼容）。"""
+    boxes: list[list[float]] = []
     for rel in getattr(element, "HasOpenings", []) or []:
         opening = getattr(rel, "RelatedOpeningElement", None) or getattr(rel, "RelatingOpeningElement", None)
         if opening is None:
             continue
         entry = geometry.get(opening.GlobalId)
         if entry and entry.get("bbox"):
-            total += from_bbox(entry["bbox"])["area"]
-    return total
+            boxes.append(entry["bbox"])
+    return boxes
+
+
+def _net_face_area(element, geometry: dict) -> float | None:
+    """带门窗洞口构件的净投影面积（毛面积 − Σ洞口投影面积）；无洞口返回 None（不干预）。
+
+    毛面积取构件外包包围盒的最大投影面（与 from_bbox 同口径），洞口投影面同理；
+    负值（异常重叠）钳为 0。构件自身无几何条目时按材质拆分 / 分解子条目合并包围盒兜底。
+    """
+    boxes = _openings_boxes(element, geometry)
+    if not boxes:
+        return None
+    own = geometry.get(element.GlobalId)
+    bbox = own.get("bbox") if own else None
+    if not bbox:
+        parts = [v for k, v in geometry.items() if k.startswith(f"{element.GlobalId}#")]
+        if not parts:
+            parts = _decomposition_entries(geometry, element)
+        parts = [p for p in parts if p.get("bbox")]
+        bbox = _merge_bbox([p["bbox"] for p in parts])
+    if not bbox:
+        return None
+    return max(from_bbox(bbox)["area"] - sum(from_bbox(b)["area"] for b in boxes), 0.0)
 
 
 def _round6(value: float) -> float:
@@ -260,12 +304,18 @@ def _material_of(entry: dict | None) -> str | None:
     return name
 
 
-def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) -> tuple[list[dict], int]:
+def _material_rows(
+    element, parts: list[dict], columns: list[dict[str, str]], net_face: float | None = None
+) -> tuple[list[dict], int]:
     """把「按材质拆开的几何组」展开为子行明细。
 
     部分导出件把同一构件（复合墙 / 幕墙）按材质拆成 `<guid>#m0..#mN` 多个几何组，
     每组带真实材质名（如「粘土砖」「普通玻璃」）。这些组此前被合并成一个外包包围盒，
     无法分层统计；此处按组各出一行，挂在父构件下（父行仍代表整体并计入合计）。
+
+    net_face 为所属墙的净投影面积（毛面积 − 洞口投影面积）：包裹洞口反边的抹灰 / 找平层
+    面积被压回净墙面面积，等效「按面积记取的构造层减洞口面积」；被洞口剪断的层本就
+    ≤ 净面积，封顶不改变其值。
 
     材质名缺失、或是 IFC 样式名（如窗的 IfcSurfaceStyleRendering）时不算真实构造层，跳过。
     """
@@ -277,7 +327,11 @@ def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) ->
         bbox = entry.get("bbox")
         if not material or material.startswith("Ifc") or not bbox:
             continue
-        row, _, failed = _build_row(element, from_geometry(entry), columns)
+        quantities = from_geometry(entry)
+        # 带洞口墙的构造层明细行：面积同步封顶为墙面净面积（毛面积 − 洞口投影面积）
+        if net_face is not None and quantities.get("area") is not None:
+            quantities["area"] = min(quantities["area"], net_face)
+        row, _, failed = _build_row(element, quantities, columns)
         errors += failed
         row["name"] = f"{name} - {material}" if name else material
         row["layer_role"] = classify_layer(material)
@@ -286,8 +340,8 @@ def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) ->
     return rows, errors
 
 
-def _parent_guid_in(element, guids: set[str]) -> str | None:
-    """返回该构件的构件级父 guid；父必须也在本次结果集中才算。
+def _element_parent(element, guids: set[str]):
+    """返回该构件的构件级父实体；父必须为 IfcElement 且也在本次结果集中，否则 None。
 
     只认 IfcElement 级父（幕墙 → 面板 / 龙骨、复合墙 → 构造层），
     空间结构（楼层 / 空间）不算父，避免普通构件被误判为子构件。
@@ -297,8 +351,14 @@ def _parent_guid_in(element, guids: set[str]) -> str | None:
         if parent is None:
             continue
         if parent.is_a("IfcElement") and parent.GlobalId in guids:
-            return parent.GlobalId
+            return parent
     return None
+
+
+def _parent_guid_in(element, guids: set[str]) -> str | None:
+    """返回该构件的构件级父 guid（见 _element_parent）。"""
+    parent = _element_parent(element, guids)
+    return parent.GlobalId if parent is not None else None
 
 
 def _numeric_columns(columns: list[dict[str, str]]) -> list[str]:
