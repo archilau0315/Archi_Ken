@@ -3,6 +3,12 @@
 按 X 轴 min 排序后扫描；一旦后者的 minx 超过前者的 maxx 即跳出，
 复杂度由 O(n²) 降为接近 O(n·k)（k 为单构件在 X 上的重叠数）。
 `near_pairs` 支持把包围盒按 expand 膨胀，用于间隙/净空这类邻近判定。
+`bbox_gap` 给出两包围盒表面间距（实际距离下界），供窄相位前的廉价预筛。
+
+注：曾实现 3D 均匀网格哈希并与本扫描基准对比（2k / 17k / 38k 构件、
+疏散与致密两种分布、expand 0 / 0.5），纯 Python 下网格因字典 / 元组
+常数因子全面慢于扫描（0.6~0.9x），故保留扫描实现；真实大模型若成为
+瓶颈，优先评估 numpy 向量化或 scipy cKDTree 方案。
 """
 
 from __future__ import annotations
@@ -30,6 +36,17 @@ def bbox_overlap_expanded(a: list[float], b: list[float], expand: float) -> bool
         and a[2] <= b[5] + expand
         and b[2] <= a[5] + expand
     )
+
+
+def bbox_gap(a: list[float], b: list[float]) -> float:
+    """两包围盒表面间距：重叠为 0，否则取三轴分离距离的最大值。
+
+    包围盒间距是构件实际最小距离的下界，可用作三角形求交前的廉价预筛。
+    """
+    sep_x = max(a[0] - b[3], b[0] - a[3])
+    sep_y = max(a[1] - b[4], b[1] - a[4])
+    sep_z = max(a[2] - b[5], b[2] - a[5])
+    return max(0.0, sep_x, sep_y, sep_z)
 
 
 def candidate_pairs(entries: dict[str, dict]) -> list[tuple[str, str]]:

@@ -151,6 +151,17 @@ def run(
         if not cell_hard and cell_gap is None and cell_clear is None:
             continue
 
+        # 包围盒间距预筛：间距是构件实际距离的下界，仅当所有开启模式都
+        # 不可能触发时才跳过，避免无谓的三角形加载与求交
+        # （硬碰撞需间距为 0；间隙 / 净空需间距不超过对应阈值；
+        #   各专业对阈值不同时，比宽相位的全局 expand 更精确）。
+        sep = broadphase.bbox_gap(entries[guid_a]["bbox"], entries[guid_b]["bbox"])
+        hard_possible = not cell_hard or sep <= 0.0
+        gap_possible = cell_gap is None or sep <= cell_gap
+        clear_possible = cell_clear is None or sep <= cell_clear
+        if not (hard_possible or gap_possible or clear_possible):
+            continue
+
         result = classify.classify_pair(tris(guid_a), tris(guid_b), cell_gap, cell_clear)
         tests += result["tests"]
         mode = result["mode"]
