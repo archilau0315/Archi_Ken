@@ -26,7 +26,7 @@ class TakeoffRunRequest(BaseModel):
     limit: int = Field(500, ge=1, le=5000, description="最多返回的行数")
     lang: str = Field("zh", description="语言：zh | en")
     ifc_types: list[str] | None = Field(None, description="按 IFC 类型过滤；空或缺省 = 全部")
-    group_by: str | None = Field(None, description="分组字段：container | ifc_type；空 = 不分组")
+    group_by: str | None = Field(None, description="分组字段：container | ifc_type | layer_role；空 = 不分组")
 
 
 class TakeoffExportRequest(BaseModel):
@@ -36,7 +36,7 @@ class TakeoffExportRequest(BaseModel):
     columns: list[dict[str, Any]] | None = Field(None, description="自定义计算列 [{key,name,expr}]")
     lang: str = Field("zh", description="语言：zh | en")
     ifc_types: list[str] | None = Field(None, description="按 IFC 类型过滤；空或缺省 = 全部")
-    group_by: str | None = Field(None, description="分组字段：container | ifc_type；空 = 不分组")
+    group_by: str | None = Field(None, description="分组字段：container | ifc_type | layer_role；空 = 不分组")
 
 
 @router.get("/columns")
@@ -81,6 +81,7 @@ def takeoff_run(payload: TakeoffRunRequest) -> dict[str, Any]:
             payload.limit,
             ifc_types=payload.ifc_types,
             group_by=payload.group_by,
+            lang=payload.lang,
         )
         locale = i18n.pick_lang(payload.lang)
         result["columns"] = localize_columns(result["columns"], locale)
@@ -101,6 +102,7 @@ def takeoff_export(payload: TakeoffExportRequest) -> dict[str, Any]:
             payload.columns,
             ifc_types=payload.ifc_types,
             group_by=payload.group_by,
+            lang=payload.lang,
         )
         result["columns"] = localize_columns(result["columns"], locale)
         stamp = time.strftime("%Y%m%d-%H%M%S")

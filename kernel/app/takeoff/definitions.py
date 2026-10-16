@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-# group_by 取值：container（按楼层）/ ifc_type（按类型）；空串 = 不分组
+# group_by 取值：container（按楼层）/ ifc_type（按类型）/ layer_role（按构造层角色）；空串 = 不分组
 DEFINITIONS: list[dict] = [
     # ---------- 建筑 ----------
     {
@@ -32,7 +32,7 @@ DEFINITIONS: list[dict] = [
         "description": "按构造层统计复合墙各层（砖 / 保温 / 砂浆等）的长度、面积、体积",
         "description_en": "Composite wall layers (masonry / insulation / mortar) length, area and volume",
         "ifc_types": ["IfcWall", "IfcWallStandardCase", "IfcBuildingElementPart"],
-        "group_by": "container",
+        "group_by": "layer_role",
         "columns": [
             {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
             {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},

@@ -1,6 +1,6 @@
 """信息提取主流程：逐构件求值自定义列，产出 ITO 行数据与合计。
 
-支持按 ifc_types 过滤（Solibri Definition 模式）、按 container/ifc_type 分组小计。
+支持按 ifc_types 过滤（Solibri Definition 模式）、按 container / ifc_type / layer_role 分组小计。
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from ifcopenshell.util.element import get_container, get_decomposition
 from app.geometry.extract import load_or_extract
 from app.takeoff.columns import normalize_columns
 from app.takeoff.expr import ExprError, evaluate
+from app.takeoff.layers import ROLE_QUANTITIES, classify_layer, role_name
 from app.takeoff.quantities import from_bbox
 
 # 默认跳过的非物理构件：空间结构 + 洞口虚体，均不进入提取表。
@@ -20,8 +21,9 @@ _SKIPPED_TYPES = {
     "IfcOpeningElement",
 }
 
-# 分组字段白名单：仅允许容器（楼层）或 IFC 类型，避免任意表达式注入
-_GROUP_KEYS = {"container", "ifc_type"}
+# 分组字段白名单：仅允许容器（楼层）、IFC 类型或构造层角色，避免任意表达式注入
+_GROUP_KEYS = {"container", "ifc_type", "layer_role"}
+
 
 def run_takeoff(
     model: ifcopenshell.file,
@@ -30,6 +32,7 @@ def run_takeoff(
     limit: int = 500,
     ifc_types: list[str] | None = None,
     group_by: str | None = None,
+    lang: str = "zh",
 ) -> dict:
     """对模型执行信息提取：固定字段 + 自定义列求值，可选按类型过滤与分组小计。"""
     normalized = normalize_columns(columns)
@@ -65,6 +68,8 @@ def run_takeoff(
         if parent_guid:
             # 子构件（幕墙面板 / 龙骨 / 复合墙构造层）只作展开明细，不计入合计，避免父子重复
             row["parent_guid"] = parent_guid
+            # 构造层角色：供 group_by=layer_role 时按角色分组、各组只汇总自洽的口径
+            row["layer_role"] = classify_layer(getattr(element, "Name", None))
         else:
             _accumulate(totals, values, numeric_keys)
         rows.append(row)
@@ -91,7 +96,7 @@ def run_takeoff(
     }
     if group_by:
         result["group_by"] = group_by
-        result["groups"] = _group_rows(rows, group_by, numeric_keys)
+        result["groups"] = _group_rows(rows, group_by, numeric_keys, lang)
     return result
 
 def _resolve_geometry(geometry: dict, element) -> dict | None:
@@ -158,6 +163,7 @@ def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) ->
         row, _, failed = _build_row(element, from_bbox(bbox), columns)
         errors += failed
         row["name"] = f"{name} - {material}" if name else material
+        row["layer_role"] = classify_layer(material)
         rows.append(row)
     return rows, errors
 
@@ -188,21 +194,43 @@ def _accumulate(totals: dict[str, float], values: dict, keys: list[str]) -> None
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             totals[key] = totals.get(key, 0.0) + value
 
-def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str]) -> list[dict]:
-    """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。"""
+def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str], lang: str = "zh") -> list[dict]:
+    """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。
+
+    按 layer_role 分组时只收纳构造层明细行（父构件没有层角色，整墙口径由总计行体现），
+    且每个角色只累加它自洽的口径（结构层算体积、保温层算面积 + 体积、抹灰 / 防水 / 饰面算面积），
+    避免把体积与面积混加成一个没有工程意义的数。其余分组沿用「子构件只作明细、不计小计」的规则。
+    """
     groups: dict[str, dict] = {}
     order: list[str] = []
     for row in rows:
-        key = row.get(group_by) or ""
+        allowed: tuple[str, ...] | None = None
+        if group_by == "layer_role":
+            role = row.get("layer_role") or ""
+            if not role:
+                continue
+            key = role
+            allowed = ROLE_QUANTITIES.get(role)
+        else:
+            key = row.get(group_by) or ""
         if key not in groups:
-            groups[key] = {"key": key, "rows": [], "subtotals": {}}
+            groups[key] = {
+                "key": role_name(key, lang) if group_by == "layer_role" else key,
+                "rows": [],
+                "subtotals": {},
+            }
             order.append(key)
         groups[key]["rows"].append(row)
-        if not row.get("parent_guid"):
-            _accumulate(groups[key]["subtotals"], row.get("values") or {}, numeric_keys)
+        # 非角色分组时子构件只作明细、不计入小计，避免父子重复计量
+        if group_by != "layer_role" and row.get("parent_guid"):
+            continue
+        values = row.get("values") or {}
+        if allowed is not None:
+            values = {k: v for k, v in values.items() if k in allowed}
+        _accumulate(groups[key]["subtotals"], values, numeric_keys)
     return [
         {
-            "key": key,
+            "key": groups[key]["key"],
             "rows": groups[key]["rows"],
             "subtotals": {k: round(v, 6) for k, v in groups[key]["subtotals"].items()},
         }

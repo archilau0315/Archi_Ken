@@ -5,7 +5,7 @@
 import { tr, type Lang } from '../i18n'
 
 // 与内核 extract.py 的 _GROUP_KEYS 保持一致。
-export const GROUP_KEYS = ['container', 'ifc_type'] as const
+export const GROUP_KEYS = ['container', 'ifc_type', 'layer_role'] as const
 export type GroupKey = (typeof GROUP_KEYS)[number]
 
 /** 自定义计算列（与内核 columns 规格一致）。 */

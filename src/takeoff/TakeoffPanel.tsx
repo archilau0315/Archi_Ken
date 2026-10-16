@@ -423,6 +423,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                       <option value="">{t('takeoff.group.none')}</option>
                       <option value="container">{t('takeoff.group.container')}</option>
                       <option value="ifc_type">{t('takeoff.group.ifc_type')}</option>
+                      <option value="layer_role">{t('takeoff.group.layer_role')}</option>
                     </select>
                   </label>
                 </div>

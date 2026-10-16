@@ -65,6 +65,7 @@ export default {
   'takeoff.group.none': 'None',
   'takeoff.group.container': 'By Storey',
   'takeoff.group.ifc_type': 'By Type',
+  'takeoff.group.layer_role': 'By Layer Role',
   'takeoff.fieldTypes': 'IFC Type Filter',
   'takeoff.fieldTypesPh': 'IfcWall, IfcDoor… (comma-separated; empty = all)',
   'takeoff.editColumns': 'Edit Columns…',
