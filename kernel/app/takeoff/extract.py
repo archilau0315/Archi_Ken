@@ -150,16 +150,24 @@ def _accumulate(totals: dict[str, float], values: dict, keys: list[str]) -> None
             totals[key] = totals.get(key, 0.0) + value
 
 def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str]) -> list[dict]:
-    """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。"""
+    """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。
+
+    父子去重只在「父与本行落在同一组」时才生效：
+    按容器（楼层）分组时父子同层，子构件不计入小计，避免与父重复；
+    按 IFC 类型分组时父子分属不同组，子构件（幕墙面板 / 龙骨 / 复合墙构造层）
+    必须计入本组小计，否则该组只剩明细行、没有任何量。
+    """
     groups: dict[str, dict] = {}
     order: list[str] = []
+    row_group = {row["guid"]: (row.get(group_by) or "") for row in rows}
     for row in rows:
         key = row.get(group_by) or ""
         if key not in groups:
             groups[key] = {"key": key, "rows": [], "subtotals": {}}
             order.append(key)
         groups[key]["rows"].append(row)
-        if not row.get("parent_guid"):
+        parent = row.get("parent_guid")
+        if not parent or row_group.get(parent) != key:
             _accumulate(groups[key]["subtotals"], row.get("values") or {}, numeric_keys)
     return [
         {
