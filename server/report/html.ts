@@ -82,7 +82,8 @@ export function renderReportHtml(report: Report, lang: string = 'zh'): string {
 <style>
   :root { --line: #e4e7ec; --muted: #6b7280; --error: #d92d20; --warning: #dc6803; --info: #1570ef; }
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; margin: 0; padding: 32px; color: #1f2937; background: #fff; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; margin: 0; padding: 32px 16px; color: #1f2937; background: #f3f4f6; }
+  .page { max-width: 1200px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 1px 3px rgba(16,24,40,.08); }
   h1 { font-size: 22px; margin: 0 0 4px; }
   .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
   .stats { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -100,6 +101,7 @@ export function renderReportHtml(report: Report, lang: string = 'zh'): string {
 </style>
 </head>
 <body>
+  <div class="page">
   <h1>${esc(txt.title)}</h1>
   <div class="meta">${esc(txt.model)}：${esc(report.model_path)}<br />${esc(txt.generatedAt)}：${esc(report.generated_at)}</div>
   <div class="stats">
@@ -116,6 +118,7 @@ export function renderReportHtml(report: Report, lang: string = 'zh'): string {
 ${rows}
     </tbody>
   </table>
+  </div>
 </body>
 </html>`
 }
