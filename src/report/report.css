@@ -1,13 +1,22 @@
 /* 报告面板（M9）：摘要统计 + 问题清单预览表。 */
 
 /* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw（导入顺序晚于本文件）。
-   两侧留白与基础弹窗一致（92vw），仅在宽屏下放宽到 1100px。 */
+   两侧留白与基础弹窗一致（92vw），仅在宽屏下放宽到 1100px；
+   内容区横向 padding 16px，对齐 IDS 等其它弹窗的 .ids-tools/.ids-body 内边距。 */
 .editor-dialog.report-dialog {
   width: min(1100px, 92vw);
   height: auto;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+/* 头部与错误条贯通弹窗宽度（抵消父级横向 padding），保持通栏横幅样式 */
+.editor-dialog.report-dialog > .editor-top,
+.editor-dialog.report-dialog > .error-bar {
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 .report-toolbar {

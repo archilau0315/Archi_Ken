@@ -1,7 +1,8 @@
 /* ===== M8 沟通与 BCF 面板 ===== */
 
 /* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw/86vh（导入顺序晚于本文件）。
-   两侧留白与基础弹窗一致（92vw），仅在宽屏下放宽到 860px。 */
+   两侧留白与基础弹窗一致（92vw），仅在宽屏下放宽到 860px；
+   内容区横向 padding 16px，对齐 IDS 等其它弹窗的 .ids-tools/.ids-body 内边距。 */
 .editor-dialog.comm-dialog {
   width: min(860px, 92vw);
   height: auto;
@@ -9,6 +10,14 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  padding: 0 16px 16px;
+}
+
+/* 头部与错误条贯通弹窗宽度（抵消父级横向 padding），保持通栏横幅样式 */
+.editor-dialog.comm-dialog > .editor-top,
+.editor-dialog.comm-dialog > .error-bar {
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 .comm-toolbar {
