@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import ifcopenshell
-from ifcopenshell.util.element import get_container
+from ifcopenshell.util.element import get_container, get_decomposition
 
 from app.geometry.extract import load_or_extract
 from app.takeoff.columns import normalize_columns
@@ -47,7 +47,7 @@ def run_takeoff(
             continue
         if type_filter and ifc_type not in type_filter:
             continue
-        entry = geometry.get(element.GlobalId)
+        entry = _resolve_geometry(geometry, element)
         quantities = from_bbox(entry["bbox"]) if entry else {}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
@@ -71,6 +71,50 @@ def run_takeoff(
         result["group_by"] = group_by
         result["groups"] = _group_rows(rows, group_by, numeric_keys)
     return result
+
+def _resolve_geometry(geometry: dict, element) -> dict | None:
+    """取构件几何；自身无实体时按包围盒回退合并，避免算量整列为空。
+
+    真实模型里「父构件无几何」有两种常见情况：
+    ① 多材质构件（如窗）被几何提取拆成 `<guid>#m0/#m1`，父 guid 键消失；
+    ② 复合墙只有 2D 轴线，实体几何挂在 IfcBuildingElementPart 构造层下。
+    """
+    guid = element.GlobalId
+    if guid in geometry:
+        return geometry[guid]
+    parts = [value for key, value in geometry.items() if key.startswith(f"{guid}#")]
+    if not parts:
+        parts = _decomposition_entries(geometry, element)
+    merged = _merge_bbox([p["bbox"] for p in parts if p.get("bbox")])
+    return {"bbox": merged} if merged else None
+
+
+def _decomposition_entries(geometry: dict, element) -> list[dict]:
+    """递归收集分解子构件的几何条目（含子构件自身的多材质拆分）。"""
+    out: list[dict] = []
+    for child in get_decomposition(element) or []:
+        child_guid = child.GlobalId
+        if child_guid in geometry:
+            out.append(geometry[child_guid])
+            continue
+        subs = [value for key, value in geometry.items() if key.startswith(f"{child_guid}#")]
+        out.extend(subs if subs else _decomposition_entries(geometry, child))
+    return out
+
+
+def _merge_bbox(bboxes: list[list[float]]) -> list[float] | None:
+    """合并多个包围盒为一个外包包围盒。"""
+    if not bboxes:
+        return None
+    return [
+        min(b[0] for b in bboxes),
+        min(b[1] for b in bboxes),
+        min(b[2] for b in bboxes),
+        max(b[3] for b in bboxes),
+        max(b[4] for b in bboxes),
+        max(b[5] for b in bboxes),
+    ]
+
 
 def _numeric_columns(columns: list[dict[str, str]]) -> list[str]:
     """数值列参与合计；布尔 / 文本列只展示不累加。"""
