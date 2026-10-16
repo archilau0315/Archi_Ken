@@ -22,6 +22,7 @@ DEFINITIONS: list[dict] = [
             {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
             {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
             {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
+            {"key": "surface_area", "name": "表面积", "name_en": "Surface area", "unit": "m²", "expr": "qty('surface_area')"},
         ],
     },
     {
@@ -37,6 +38,7 @@ DEFINITIONS: list[dict] = [
             {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
             {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
             {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
+            {"key": "surface_area", "name": "表面积", "name_en": "Surface area", "unit": "m²", "expr": "qty('surface_area')"},
         ],
     },
     {

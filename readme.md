@@ -141,7 +141,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | 规则集 | 规则集编辑器：新建 / 编辑 / 保存 / 复用，内置模板快速添加，合规预设一键添加（无障碍 / 净高 / 消防），支持「校验」「运行」与 JSON 导入 / 导出（团队分享） |
 | 碰撞矩阵 | 勾选硬碰撞 / 间隙 / 净空并设容差，可忽略同专业；运行后查看专业矩阵与问题清单，点击问题联动 3D 选中 |
 | IDS 校验 | IDS 编辑器：载入示例或粘贴 IDS XML、解析预览结构、导出 XML，对模型运行校验并逐规范 / 逐要求查看通过情况与失败构件（点击联动 3D） |
-| 信息提取 | ITO / QTO 面板（Solibri 风格）：左树按类挑选内置 Definition 模板（墙 / 墙体构造层 / 幕墙 / 门 / 窗 / 空间 / 结构 / 机电等 14 个），点选自动运行；复合墙与幕墙按构造层 / 材质展开子行明细（父行代表整体并计入合计，子行只作明细）；支持 IFC 类型过滤、按楼层 / 类型分组小计与总合计、自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数）、「另存为我的模板」复用、重命名 / 删除，一键导出 Excel（含分组小计行） |
+| 信息提取 | ITO / QTO 面板（Solibri 风格）：左树按类挑选内置 Definition 模板（墙 / 墙体构造层 / 幕墙 / 门 / 窗 / 空间 / 结构 / 机电等 14 个），点选自动运行；复合墙与幕墙按构造层 / 材质展开子行明细（父行代表整体并计入合计，子行只作明细，父行体积 / 表面积按各构造层净量累加）；工程量按真实三角网格取净体积 / 总表面积（洞口、凹口已扣除；网格不闭合时回退包围盒口径）；支持 IFC 类型过滤、按楼层 / 类型分组小计与总合计、自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数）、「另存为我的模板」复用、重命名 / 删除，一键导出 Excel（含分组小计行） |
 | 沟通 | 沟通与 BCF 面板：「导入检查结果」一键生成问题清单（按标题+构件去重）；状态（待处理 / 已确认 / 已解决）与级别调整、评论、附加 3D 视角快照、定位构件、按状态 / 级别过滤；「导出 BCF」产出 BCF 2.1 zip 到 `.data/exports/` |
 | EN / 中 | 界面语言切换（默认中文，本机 localStorage 记忆） |
 
@@ -155,7 +155,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | Rulesets | Ruleset editor: create / edit / save / reuse, quick-add from built-in templates, one-click compliance presets (accessibility / headroom / fire safety / evacuation / MEP / structure / openings), validate & run |
 | Clash Matrix | Enable hard / gap / clearance with tolerances, optionally ignore same discipline; run to see the discipline matrix and issue list, click an issue to select in 3D |
 | IDS Check | IDS editor: load example or paste IDS XML, parse & preview structure, export XML, validate against the model and review per-specification / per-requirement results with failing elements (click to select in 3D) |
-| Takeoff | ITO / QTO panel: fixed fields and suggested columns, custom computed columns (`qty('volume')`, `attr('Name')`, `prop(pset, property)` and more), per-element results with totals, one-click Excel export |
+| Takeoff | ITO / QTO panel: fixed fields and suggested columns, custom computed columns (`qty('volume')`, `attr('Name')`, `prop(pset, property)` and more), quantities derived from the real triangle mesh (net volume / total surface area, with opening / recess deducted; bbox fallback for non-closed meshes; parent rows sum their layer net quantities), per-element results with totals, one-click Excel export |
 | Communicate | Communication & BCF panel: "Import check results" builds the issue list (deduplicated by title+element); status (open / acknowledged / resolved) & severity, comments, 3D view snapshots, locate element, filters; "Export BCF" writes a BCF 2.1 zip to `.data/exports/` |
 | EN / 中 | UI language switch (Chinese default, remembered in localStorage) |
 

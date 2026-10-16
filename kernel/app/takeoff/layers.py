@@ -46,14 +46,15 @@ ROLE_RULES: list[tuple[str, tuple[str, ...]]] = [
 ]
 
 # 各角色的汇总口径：小计只累加该角色真正需要的量，避免体积与面积混加。
+# area = 最大投影面（轮廓展开面积）；surface_area = 真实网格总表面积（模板接触面积 / 粉刷面积）。
 ROLE_QUANTITIES: dict[str, tuple[str, ...]] = {
-    "structural": ("volume",),
-    "insulation": ("area", "volume"),
-    "waterproof": ("area",),
-    "plaster": ("area",),
-    "finish": ("area",),
+    "structural": ("volume", "surface_area"),
+    "insulation": ("area", "volume", "surface_area"),
+    "waterproof": ("area", "surface_area"),
+    "plaster": ("area", "surface_area"),
+    "finish": ("area", "surface_area"),
     "air": (),
-    "other": ("area", "volume"),
+    "other": ("area", "volume", "surface_area"),
 }
 
 

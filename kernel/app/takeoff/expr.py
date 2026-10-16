@@ -32,7 +32,7 @@ _LITERALS = {"true": True, "false": False, "null": None, "undefined": None}
 FUNCTIONS_DOC: list[dict[str, str]] = [
     {"name": "attr(名称)", "desc": "读取构件 IFC 属性，如 attr('Name')、attr('ObjectType')"},
     {"name": "prop(属性集, 属性)", "desc": "读取属性集条目，如 prop('Pset_WallCommon', 'IsExternal')"},
-    {"name": "qty(工程量)", "desc": "读取工程量：volume / area / length / width / height"},
+    {"name": "qty(工程量)", "desc": "读取工程量：volume / area / surface_area / length / width / height"},
     {"name": "val(列key)", "desc": "引用同列序中先计算的自定义列"},
     {"name": "round(x, n)", "desc": "四舍五入到 n 位小数"},
     {"name": "abs(x)", "desc": "绝对值"},

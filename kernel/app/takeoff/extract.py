@@ -12,7 +12,7 @@ from app.geometry.extract import load_or_extract
 from app.takeoff.columns import normalize_columns
 from app.takeoff.expr import ExprError, evaluate
 from app.takeoff.layers import ROLE_QUANTITIES, classify_layer, role_name
-from app.takeoff.quantities import from_bbox
+from app.takeoff.quantities import from_geometry
 
 # 默认跳过的非物理构件：空间结构 + 洞口虚体，均不进入提取表。
 # 若调用方显式把对应类型放进 ifc_types，则按豁免处理（如「空间面积」模板用 IfcSpace）。
@@ -61,7 +61,7 @@ def run_takeoff(
     guids = {element.GlobalId for element in candidates}
     for element in candidates:
         entry = _resolve_geometry(geometry, element)
-        quantities = from_bbox(entry["bbox"]) if entry else {}
+        quantities = from_geometry(entry) if entry else {}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
         parent_guid = _parent_guid_in(element, guids)
@@ -112,8 +112,18 @@ def _resolve_geometry(geometry: dict, element) -> dict | None:
     parts = [value for key, value in geometry.items() if key.startswith(f"{guid}#")]
     if not parts:
         parts = _decomposition_entries(geometry, element)
-    merged = _merge_bbox([p["bbox"] for p in parts if p.get("bbox")])
-    return {"bbox": merged} if merged else None
+    parts = [p for p in parts if p.get("bbox")]
+    merged = _merge_bbox([p["bbox"] for p in parts])
+    if not merged:
+        return None
+    # 父构件自身没有网格（几何挂在各子条目下）：体积 / 表面积按子条目的真实几何累加，
+    # 避免用外包包围盒算"毛体积"（多块拼合的包围盒会虚高数倍，与实际工程量对不上）；
+    # 面积仍是合并包围盒的最大投影面（轮廓展开面积），对整墙来说正投影是准的。
+    quantities = [from_geometry(p) for p in parts]
+    result: dict = {"bbox": merged, "volume": sum(q.get("volume") or 0.0 for q in quantities)}
+    if quantities and all("surface_area" in q for q in quantities):
+        result["surface_area"] = sum(q["surface_area"] for q in quantities)
+    return result
 
 
 def _decomposition_entries(geometry: dict, element) -> list[dict]:
@@ -160,7 +170,7 @@ def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) ->
         bbox = entry.get("bbox")
         if not material or material.startswith("Ifc") or not bbox:
             continue
-        row, _, failed = _build_row(element, from_bbox(bbox), columns)
+        row, _, failed = _build_row(element, from_geometry(entry), columns)
         errors += failed
         row["name"] = f"{name} - {material}" if name else material
         row["layer_role"] = classify_layer(material)
