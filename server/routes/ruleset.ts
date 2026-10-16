@@ -1,6 +1,7 @@
 import type { Context } from 'koa'
 
-import { runClash, runRules } from '../kernel-client'
+import { getStatuses } from '../clash/store'
+import { runClashMatrix, runRules } from '../kernel-client'
 import { langOf } from '../i18n'
 import { buildReport } from '../report/aggregate'
 import { readJsonBody, type Handler } from '../router'
@@ -66,6 +67,7 @@ export const rulesetRun: Handler = async (ctx) => {
   if (!ruleset) throw httpError(404, `规则集不存在：${id}`)
 
   const rules = await runRules(path, undefined, ruleset.rules, lang)
-  const clash = includeClash ? await runClash(path) : null
-  ctx.body = buildReport(path, rules, clash)
+  // 碰撞采用冲突矩阵口径（与碰撞面板一致），用户标记「已忽略」的碰撞不进结果。
+  const [clash, statuses] = includeClash ? await Promise.all([runClashMatrix(path), getStatuses(path)]) : [null, {}]
+  ctx.body = buildReport(path, rules, clash, statuses, lang)
 }

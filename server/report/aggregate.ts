@@ -1,4 +1,5 @@
-import type { ClashResponse, ElementRef, RulesResponse } from '../kernel-client'
+import { clashKeyOf } from '../clash/store'
+import type { ClashMatrixItem, ClashMatrixResponse, ElementRef, RulesResponse } from '../kernel-client'
 
 // 结果汇总（L3）：把内核的规则违规与碰撞结果统一成「问题清单（issues）」，
 // 附带严重度、分类、原因链与统计，供报告渲染与 BCF 导出复用。
@@ -40,21 +41,37 @@ export interface Report {
 
 const SEVERITY_RANK: Record<string, number> = { error: 0, warning: 1, info: 2 }
 
-/** 碰撞问题的双语文案。 */
+/** 碰撞问题的双语文案（按碰撞模式分标题）。 */
 const CLASH_I18N = {
   zh: {
     category: '碰撞检查',
-    title: '硬碰撞',
-    reason: (a: string, b: string) => `${a} 与 ${b} 发生几何相交`,
+    titles: { hard: '硬碰撞', gap: '间隙不足', clearance: '净空不足', duplicate: '重复构件' } as Record<string, string>,
+    reason: {
+      hard: (a: string, b: string) => `${a} 与 ${b} 发生几何相交`,
+      gap: (a: string, b: string) => `${a} 与 ${b} 间距小于间隙容差`,
+      clearance: (a: string, b: string) => `${a} 与 ${b} 净距不满足净空要求`,
+      duplicate: (a: string, b: string) => `${a} 与 ${b} 为同类型重复放置`
+    } as Record<string, (a: string, b: string) => string>,
     stepPairs: (n: number) => `三角形相交对数 = ${n}`,
-    stepVerdict: '构件表面存在交集 → 判定为硬碰撞'
+    stepDistance: (d: number) => `实测间距 = ${Number(d.toFixed(3))}`,
+    stepOverlap: (d: number) => `包围盒重合度 = ${Math.round(d * 100)}%`,
+    stepVerdict: '构件表面存在交集 → 判定为硬碰撞',
+    elementId: '构件 ID'
   },
   en: {
     category: 'Clash Detection',
-    title: 'Hard Clash',
-    reason: (a: string, b: string) => `${a} geometrically intersects with ${b}`,
+    titles: { hard: 'Hard Clash', gap: 'Insufficient Gap', clearance: 'Clearance Violation', duplicate: 'Duplicate Element' } as Record<string, string>,
+    reason: {
+      hard: (a: string, b: string) => `${a} geometrically intersects with ${b}`,
+      gap: (a: string, b: string) => `Gap between ${a} and ${b} is below tolerance`,
+      clearance: (a: string, b: string) => `Clearance between ${a} and ${b} is not satisfied`,
+      duplicate: (a: string, b: string) => `${a} and ${b} are duplicated elements of the same type`
+    } as Record<string, (a: string, b: string) => string>,
     stepPairs: (n: number) => `Intersecting triangle pairs = ${n}`,
-    stepVerdict: 'Element surfaces overlap → classified as hard clash'
+    stepDistance: (d: number) => `Measured distance = ${Number(d.toFixed(3))}`,
+    stepOverlap: (d: number) => `BBox overlap = ${Math.round(d * 100)}%`,
+    stepVerdict: 'Element surfaces overlap → classified as hard clash',
+    elementId: 'Element ID'
   }
 }
 
@@ -90,36 +107,52 @@ function fromRules(rules: RulesResponse): Issue[] {
   return issues
 }
 
-function fromClash(clash: ClashResponse, lang: string): Issue[] {
+function fromClash(clash: ClashMatrixResponse, statuses: Record<string, { status: string }>, lang: string): Issue[] {
   const txt = CLASH_I18N[lang === 'en' ? 'en' : 'zh']
-  return clash.items.map((item) => {
-    const pair = [item.a.guid, item.b.guid].sort()
-    return {
-      id: `clash|${pair[0]}|${pair[1]}`,
-      source: 'clash',
-      severity: 'error',
-      category: txt.category,
-      title: txt.title,
-      reference: null,
-      element: item.a,
-      related: item.b,
-      location: item.contact_point,
-      actual: item.triangle_pairs,
-      expected: 0,
-      reason: txt.reason(item.a.name ?? item.a.guid, item.b.name ?? item.b.guid),
-      steps: [txt.stepPairs(item.triangle_pairs), txt.stepVerdict]
-    }
-  })
+  const issues: Issue[] = []
+  for (const item of clash.items) {
+    // 用户已忽略的碰撞（已知可接受）不进入报告。
+    const statusKey = clashKeyOf(item.mode, item.a.guid, item.b.guid)
+    if (statuses[statusKey]?.status === 'ignored') continue
+    issues.push(fromClashItem(item, txt))
+  }
+  return issues
+}
+
+function fromClashItem(item: ClashMatrixItem, txt: (typeof CLASH_I18N)['zh']): Issue {
+  const pair = [item.a.guid, item.b.guid].sort()
+  const reasonFn = txt.reason[item.mode] ?? txt.reason.hard
+  const steps: string[] = []
+  if (item.mode === 'hard') steps.push(txt.stepPairs(item.triangle_pairs), txt.stepVerdict)
+  if (item.distance !== null && item.mode !== 'hard') steps.push(txt.stepDistance(item.distance))
+  if (item.overlap !== null) steps.push(txt.stepOverlap(item.overlap))
+  return {
+    id: `clash|${item.mode}|${pair[0]}|${pair[1]}`,
+    source: 'clash',
+    severity: item.mode === 'hard' ? 'error' : 'warning',
+    category: txt.category,
+    title: txt.titles[item.mode] ?? txt.titles.hard,
+    reference: null,
+    element: item.a,
+    related: item.b,
+    location: item.contact_point,
+    actual: item.mode === 'duplicate' ? item.overlap : (item.distance ?? item.triangle_pairs),
+    expected: item.mode === 'duplicate' ? null : 0,
+    reason: reasonFn(item.a.name ?? item.a.guid, item.b.name ?? item.b.guid),
+    steps
+  }
 }
 
 export function buildReport(
   modelPath: string,
   rules: RulesResponse,
-  clash: ClashResponse | null,
+  clash: ClashMatrixResponse | null,
+  statuses: Record<string, { status: string }> = {},
   lang: string = 'zh'
 ): Report {
   const locale = lang === 'en' ? 'en' : 'zh'
-  const issues = [...fromRules(rules), ...(clash ? fromClash(clash, locale) : [])]
+  const clashIssues = clash ? fromClash(clash, statuses, locale) : []
+  const issues = [...fromRules(rules), ...clashIssues]
   issues.sort((a, b) => {
     const rank = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]
     return rank !== 0 ? rank : a.title.localeCompare(b.title, locale)
@@ -144,7 +177,7 @@ export function buildReport(
       by_source: bySource,
       rules_run: rules.rules_run,
       rules_failed: rules.rules_failed,
-      clashes: clash?.total ?? 0
+      clashes: clashIssues.length
     },
     issues
   }

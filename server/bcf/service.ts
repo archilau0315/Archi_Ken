@@ -16,7 +16,8 @@ import {
 import { DATA_DIR, deleteIssue, getIssue, listIssues, readSnapshot, saveIssue, saveSnapshotFile } from './store'
 import { buildReport } from '../report/aggregate'
 import { tr, type Lang } from '../i18n'
-import { runClash, runRules } from '../kernel-client'
+import { getStatuses } from '../clash/store'
+import { runClashMatrix, runRules } from '../kernel-client'
 
 const EXPORT_DIR = join(DATA_DIR, 'exports')
 
@@ -98,8 +99,11 @@ export async function importFromModel(
   lang?: string
 ): Promise<ImportSummary> {
   const rules = await runRules(path, ruleIds, undefined, lang)
-  const clash = includeClash ? await runClash(path) : null
-  const report = buildReport(path, rules, clash, lang)
+  // 碰撞采用冲突矩阵口径（与碰撞面板一致），用户标记「已忽略」的碰撞不导入。
+  const [clash, statuses] = includeClash
+    ? await Promise.all([runClashMatrix(path), getStatuses(path)])
+    : [null, {}]
+  const report = buildReport(path, rules, clash, statuses, lang)
 
   const existing = await listIssues()
   const seen = new Set(existing.map((item) => `${item.title}|${item.element?.guid ?? ''}`))

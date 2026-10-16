@@ -44,7 +44,7 @@
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
 | 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、幕墙按洞口面积计量、受控表达式自定义列、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
-| 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出 |
+| 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出；碰撞接入冲突矩阵口径，每条碰撞带碰撞点坐标与构件 GUID（HTML 构件名下小字 / Excel 独立列 / PDF 名下小字），已标「已忽略」的碰撞不进报告 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
 | 视图系统 | 透视 / 平面（2D）切换、七标准视角、三向剖切（含 3D 内拖拽实时调节）、3D 标记、演示视角播放 |
 | 3D 真实化 | 逐构件三角网格真实显示（批量网格端点），包围盒降级兜底 |
@@ -59,7 +59,7 @@
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
 | Takeoff | ITO / QTO: quantity derivation, custom columns via controlled expressions, Excel export |
 | Communication | Issue lifecycle / comments / view snapshots; BCF 2.1 export (importable into Solibri / Navisworks) |
-| Reports | Unified issue list (with rule code references) → HTML preview / PDF / Excel export |
+| Reports | Unified issue list (with rule code references) → HTML preview / PDF / Excel export; clashes come from the clash-matrix pipeline, each carrying contact-point coordinates and element GUIDs (small print under names in HTML/PDF, dedicated columns in Excel); clashes marked "Ignored" are excluded from reports |
 | Batch automation | Autorun unattended batch checking with report artifacts and distribution-folder copy |
 | View system | Perspective / plan (2D) toggle, seven standard views, 3-axis section clipping, 3D markers, presentation viewpoints |
 | 3D real mesh | Per-element real triangle-mesh display (batch mesh endpoint), bbox fallback |
@@ -311,7 +311,7 @@ Requires the kernel online; kernel URL can be overridden via `ARCHIKEN_KERNEL_UR
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/health` | 服务健康检查 |
-| GET | `/report/run?path=&rule_ids=&include_clash=` | 运行内核规则（默认全部模板）+ 硬碰撞，返回统一问题清单与统计 |
+| GET | `/report/run?path=&rule_ids=&include_clash=` | 运行内核规则（默认全部模板）+ 冲突矩阵碰撞（已忽略的碰撞不进报告），返回统一问题清单与统计 |
 | POST | `/report/run` | 同上；请求体 `{path, rule_ids?, include_clash?}`，`rule_ids` 为数组 |
 | GET | `/report/html?path=&rule_ids=&include_clash=` | 渲染自包含 HTML 检查报告（内联 CSS，无外部依赖） |
 | POST | `/report/export` | 生成报告并导出为 PDF / Excel 文件；请求体 `{path, format: pdf\|xlsx, rule_ids?, include_clash?, title?}`，返回文件路径 / 大小 / 问题数 |
@@ -342,7 +342,7 @@ Requires the kernel online; kernel URL can be overridden via `ARCHIKEN_KERNEL_UR
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Health check |
-| GET | `/report/run?path=&rule_ids=&include_clash=` | Run kernel rules (default all templates) + hard clash → unified issue list & stats |
+| GET | `/report/run?path=&rule_ids=&include_clash=` | Run kernel rules (default all templates) + clash-matrix clashes ("Ignored" clashes excluded) → unified issue list & stats |
 | POST | `/report/run` | Same; body `{path, rule_ids?, include_clash?}`, `rule_ids` as array |
 | GET | `/report/html?path=&rule_ids=&include_clash=` | Self-contained HTML check report (inline CSS, no external deps) |
 | POST | `/report/export` | Generate & export report as PDF / Excel; body `{path, format: pdf\|xlsx, rule_ids?, include_clash?, title?}` → file path / size / issue count |

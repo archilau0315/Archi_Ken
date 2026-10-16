@@ -44,21 +44,6 @@ export interface RulesResponse {
   rules: RuleResult[]
 }
 
-export interface ClashItem {
-  a: ElementRef
-  b: ElementRef
-  contact_point: number[] | null
-  triangle_pairs: number
-}
-
-export interface ClashResponse {
-  total: number
-  candidate_pairs: number
-  triangle_tests: number
-  truncated: boolean
-  items: ClashItem[]
-}
-
 export interface KernelHealth {
   status: string
   service: string
@@ -121,9 +106,41 @@ export function validateRules(rules: unknown[]): Promise<ValidateResponse> {
   })
 }
 
-export function runClash(path: string, maxClashes = 200): Promise<ClashResponse> {
-  const query = new URLSearchParams({ path, max_clashes: String(maxClashes) })
-  return request<ClashResponse>(`/clash/run?${query.toString()}`)
+export interface ClashMatrixRef {
+  guid: string
+  parent_guid?: string | null
+  name: string | null
+  ifc_type: string
+  discipline: string
+  discipline_name: string
+}
+
+export interface ClashMatrixItem {
+  mode: 'hard' | 'gap' | 'clearance' | 'duplicate'
+  cell: string
+  a: ClashMatrixRef
+  b: ClashMatrixRef
+  distance: number | null
+  contact_point: number[] | null
+  triangle_pairs: number
+  overlap: number | null
+  merged: number
+  related_guids: string[] | null
+}
+
+export interface ClashMatrixResponse {
+  path: string
+  totals: { hard: number; gap: number; clearance: number; duplicate: number; total: number }
+  items: ClashMatrixItem[]
+}
+
+/** 冲突矩阵检测（报告口径：仅硬碰撞、忽略同专业，保持逐条清单）。 */
+export function runClashMatrix(path: string, maxClashes = 500): Promise<ClashMatrixResponse> {
+  return request<ClashMatrixResponse>('/clash/matrix', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, hard: true, ignore_same_discipline: true, max_clashes: maxClashes })
+  })
 }
 
 export interface ReportExportResponse {

@@ -86,11 +86,16 @@ def _fmt(value: Any) -> str:
 
 
 def _element_text(ref: dict | None) -> str:
+    """构件单元格：名称（类型）+ 第二行小字 GUID（供报告溯源）。"""
     if not ref:
         return "—"
     name = ref.get("name") or ref.get("guid") or "—"
     ifc_type = ref.get("ifc_type") or ""
-    return f"{name}（{ifc_type}）" if ifc_type else str(name)
+    main = f"{name}（{ifc_type}）" if ifc_type else str(name)
+    guid = ref.get("guid") or ""
+    if guid:
+        main += f'<br/><font size="7" color="#6b7280">{_esc(guid)}</font>'
+    return main
 
 
 def _location_text(location: Any) -> str:
@@ -164,8 +169,8 @@ def _issue_table(issues: list[dict], styles: dict[str, ParagraphStyle], lang: st
         rows.append(
             [
                 Paragraph(rule_cell, styles["cell"]),
-                Paragraph(_esc(_element_text(issue.get("element"))), styles["cell"]),
-                Paragraph(_esc(_element_text(issue.get("related"))), styles["cell"]),
+                Paragraph(_element_text(issue.get("element")), styles["cell"]),
+                Paragraph(_element_text(issue.get("related")), styles["cell"]),
                 _reason_cell(issue, styles),
                 Paragraph(f'<font face="{FONT}" size="8">{_esc(_location_text(issue.get("location")))}</font>', styles["cell"]),
                 Paragraph(_esc(txt["source"].get(issue.get("source") or "", issue.get("source") or "—")), styles["cell"]),

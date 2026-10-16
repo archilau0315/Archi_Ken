@@ -52,14 +52,14 @@ function fmt(value: unknown): string {
 
 function issueRow(issue: Issue, txt: typeof I18N.zh): string {
   const related = issue.related
-    ? `${issue.related.name ?? issue.related.guid}<span class="muted">（${esc(issue.related.ifc_type)}）</span>`
+    ? `${issue.related.name ?? issue.related.guid}<span class="muted">（${esc(issue.related.ifc_type)}）</span><div class="mono muted">${esc(issue.related.guid)}</div>`
     : '—'
   const location = issue.location ? issue.location.map((v) => Number(v.toFixed(3))).join(', ') : '—'
   const steps = issue.steps.map((step) => `<li>${esc(step)}</li>`).join('')
   return `<tr>
     <td><span class="badge ${esc(issue.severity)}">${esc(txt.severity[issue.severity] ?? issue.severity)}</span></td>
     <td>${esc(issue.category)}<div class="muted">${esc(issue.title)}</div>${issue.reference ? `<div class="muted">${esc(txt.reference)}：${esc(issue.reference)}</div>` : ''}</td>
-    <td>${esc(issue.element.name ?? issue.element.guid)}<span class="muted">（${esc(issue.element.ifc_type)}）</span></td>
+    <td>${esc(issue.element.name ?? issue.element.guid)}<span class="muted">（${esc(issue.element.ifc_type)}）</span><div class="mono muted">${esc(issue.element.guid)}</div></td>
     <td>${related}</td>
     <td>${esc(issue.reason)}<ul class="steps">${steps}</ul></td>
     <td class="mono">${esc(location)}</td>

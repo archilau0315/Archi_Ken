@@ -1,6 +1,7 @@
 import type { Context } from 'koa'
 
-import { runClash, runRules } from '../kernel-client'
+import { getStatuses } from '../clash/store'
+import { runClashMatrix, runRules } from '../kernel-client'
 import { buildReport, type Report } from '../report/aggregate'
 import { exportReportFile, type ExportFormat } from '../report/export'
 import { renderReportHtml } from '../report/html'
@@ -58,8 +59,12 @@ async function parseOptions(ctx: Context): Promise<RunOptions> {
 async function build(ctx: Context): Promise<Report> {
   const options = await parseOptions(ctx)
   const rules = await runRules(options.path, options.ruleIds, undefined, options.lang)
-  const clash = options.includeClash ? await runClash(options.path) : null
-  return buildReport(options.path, rules, clash, options.lang)
+  if (!options.includeClash) {
+    return buildReport(options.path, rules, null, {}, options.lang)
+  }
+  // 碰撞采用冲突矩阵口径（与碰撞面板一致），用户标记「已忽略」的碰撞不进报告。
+  const [clash, statuses] = await Promise.all([runClashMatrix(options.path), getStatuses(options.path)])
+  return buildReport(options.path, rules, clash, statuses, options.lang)
 }
 
 export const reportRunGet: Handler = async (ctx) => {

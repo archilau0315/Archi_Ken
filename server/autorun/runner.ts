@@ -5,7 +5,8 @@
 import { promises as fs } from 'fs'
 import { basename, join } from 'path'
 
-import { exportReport, runClash, runRules } from '../kernel-client'
+import { exportReport, runClashMatrix, runRules } from '../kernel-client'
+import { getStatuses } from '../clash/store'
 import { buildReport, type Report } from '../report/aggregate'
 import { renderReportHtml } from '../report/html'
 import { getRuleset } from '../ruleset/store'
@@ -35,8 +36,11 @@ async function runOne(
   dir: string
 ): Promise<RunItem> {
   const results = await runRules(model, undefined, rules)
-  const clash = task.include_clash ? await runClash(model) : null
-  const report: Report = buildReport(model, results, clash)
+  // 碰撞采用冲突矩阵口径（与碰撞面板一致），用户标记「已忽略」的碰撞不进报告。
+  const [clash, statuses] = task.include_clash
+    ? await Promise.all([runClashMatrix(model), getStatuses(model)])
+    : [null, {}]
+  const report: Report = buildReport(model, results, clash, statuses)
   const base = modelBase(model)
   const title = `${task.name} - ${base}`
 
