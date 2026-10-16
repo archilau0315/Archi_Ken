@@ -42,7 +42,7 @@
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检） |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
-| 信息提取 | ITO / QTO：12 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型分组小计、受控表达式自定义列、Excel 导出 |
+| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型分组小计、复合墙与幕墙按构造层展开明细、受控表达式自定义列、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
 | 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
@@ -141,7 +141,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | 规则集 | 规则集编辑器：新建 / 编辑 / 保存 / 复用，内置模板快速添加，合规预设一键添加（无障碍 / 净高 / 消防），支持「校验」「运行」与 JSON 导入 / 导出（团队分享） |
 | 碰撞矩阵 | 勾选硬碰撞 / 间隙 / 净空并设容差，可忽略同专业；运行后查看专业矩阵与问题清单，点击问题联动 3D 选中 |
 | IDS 校验 | IDS 编辑器：载入示例或粘贴 IDS XML、解析预览结构、导出 XML，对模型运行校验并逐规范 / 逐要求查看通过情况与失败构件（点击联动 3D） |
-| 信息提取 | ITO / QTO 面板（Solibri 风格）：左树按类挑选内置 Definition 模板（墙 / 门 / 窗 / 空间 / 结构 / 机电等 12 个），点选自动运行；支持 IFC 类型过滤、按楼层 / 类型分组小计与总合计、自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数）、「另存为我的模板」复用、重命名 / 删除，一键导出 Excel（含分组小计行） |
+| 信息提取 | ITO / QTO 面板（Solibri 风格）：左树按类挑选内置 Definition 模板（墙 / 墙体构造层 / 幕墙 / 门 / 窗 / 空间 / 结构 / 机电等 14 个），点选自动运行；复合墙与幕墙按构造层 / 材质展开子行明细（父行代表整体并计入合计，子行只作明细）；支持 IFC 类型过滤、按楼层 / 类型分组小计与总合计、自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数）、「另存为我的模板」复用、重命名 / 删除，一键导出 Excel（含分组小计行） |
 | 沟通 | 沟通与 BCF 面板：「导入检查结果」一键生成问题清单（按标题+构件去重）；状态（待处理 / 已确认 / 已解决）与级别调整、评论、附加 3D 视角快照、定位构件、按状态 / 级别过滤；「导出 BCF」产出 BCF 2.1 zip 到 `.data/exports/` |
 | EN / 中 | 界面语言切换（默认中文，本机 localStorage 记忆） |
 
@@ -262,7 +262,7 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | POST | `/ids/parse` | 解析 IDS XML；请求体 `{xml}`，返回规范化 XML 与结构预览（供编辑器导入） |
 | POST | `/ids/validate` | 对模型执行 IDS 校验；请求体 `{path, xml?, ids_path?, hide_skipped?, entity_limit?}`，返回逐规范 / 逐要求的通过情况与失败构件 |
 | GET | `/takeoff/columns` | 信息提取列说明：固定字段、内置建议列、受控表达式可用函数 |
-| GET | `/takeoff/definitions` | 内置 Definition 模板库（12 个，按建筑 / 结构 / 机电 / 通用分类，中英双语按 `lang` 下发） |
+| GET | `/takeoff/definitions` | 内置 Definition 模板库（14 个，按建筑 / 结构 / 机电 / 通用分类，中英双语按 `lang` 下发） |
 | POST | `/takeoff/run` | 执行信息提取；请求体 `{path, columns?, limit?, ifc_types?, group_by?}`，`columns` 为 `[{key, name, expr}]` 自定义计算列，`ifc_types` 过滤 IFC 类型（含 IfcSpace 显式豁免），`group_by` 支持 `container` / `ifc_type` 分组小计，返回逐构件行、数值合计与表达式错误计数 |
 | POST | `/takeoff/export` | 执行信息提取并导出 Excel；请求体 `{path, columns?, ifc_types?, group_by?}`，分组时含组标题 / 小计 / 总合计行，写入 `.data/exports/takeoff-<时间戳>.xlsx`（原子写入），返回文件路径与行数 |
 | GET | `/takeoff/exports` | 列出已导出的 Excel 文件 |
@@ -295,7 +295,7 @@ Detailed module breakdown: [docs/模块清单.md](docs/模块清单.md) (Chinese
 | POST | `/ids/parse` | Parse IDS XML; body `{xml}` → normalized XML + structure preview (for editor import) |
 | POST | `/ids/validate` | Validate a model against IDS; body `{path, xml?, ids_path?, hide_skipped?, entity_limit?}` → per-spec / per-requirement results with failing elements |
 | GET | `/takeoff/columns` | Takeoff column reference: fixed fields, suggested columns, available expression functions |
-| GET | `/takeoff/definitions` | Built-in definition templates (12, grouped by architecture / structure / MEP / general, localized via `lang`) |
+| GET | `/takeoff/definitions` | Built-in definition templates (14, grouped by architecture / structure / MEP / general, localized via `lang`) |
 | POST | `/takeoff/run` | Run takeoff; body `{path, columns?, limit?, ifc_types?, group_by?}` where `columns` is `[{key, name, expr}]` custom computed columns, `ifc_types` filters IFC types (IfcSpace explicit opt-in), `group_by` supports `container` / `ifc_type` subtotal grouping → per-element rows, numeric totals, expression error count |
 | POST | `/takeoff/export` | Run takeoff and export Excel; body `{path, columns?, ifc_types?, group_by?}` — grouped mode emits group header / subtotal / grand total rows → `.data/exports/takeoff-<timestamp>.xlsx` (atomic write), returns file path & row count |
 | GET | `/takeoff/exports` | List exported Excel files |
@@ -456,9 +456,9 @@ Results include per-rule violations with reason chains (`steps`). Built-in templ
 
 ### 信息提取（M6）/ Takeoff (M6)
 
-工程量（QTO v1）由几何包围盒推导——`volume / area / length / width / height`（模型单位，跳过空间结构类型）；自定义列表达式为受控 JS 风格子集（**不使用 eval**），可用函数 `attr / prop / qty / val / round / abs / min / max / if / concat / len / upper / lower / trim / number / int / contains`，支持算术、比较与逻辑运算；空值传播：算术得 null、比较得 false；单列求值失败降级为 null 并计入 `expression_errors`。面板为 Solibri ITO 风格：12 个内置 Definition 模板按建筑 / 结构 / 机电 / 通用分类（`kernel/app/takeoff/definitions.py`，中英双语），支持 IFC 类型过滤与按楼层（`container`）/ 类型（`ifc_type`）分组小计；用户可调列后「另存为我的模板」持久化复用（L3 `.data/takeoff-definitions/`，复刻规则集存储模式）。
+工程量（QTO v1）由几何包围盒推导——`volume / area / length / width / height`（模型单位，跳过空间结构类型）；自定义列表达式为受控 JS 风格子集（**不使用 eval**），可用函数 `attr / prop / qty / val / round / abs / min / max / if / concat / len / upper / lower / trim / number / int / contains`，支持算术、比较与逻辑运算；空值传播：算术得 null、比较得 false；单列求值失败降级为 null 并计入 `expression_errors`。面板为 Solibri ITO 风格：14 个内置 Definition 模板按建筑 / 结构 / 机电 / 通用分类（`kernel/app/takeoff/definitions.py`，中英双语），支持 IFC 类型过滤与按楼层（`container`）/ 类型（`ifc_type`）分组小计；复合墙（`IfcBuildingElementPart` 构造层）与多材质构件（几何按材质拆成 `<guid>#mN` 组）按构造层 / 材质展开子行明细，父行代表整体并计入合计、子行只作明细，避免重复计量；用户可调列后「另存为我的模板」持久化复用（L3 `.data/takeoff-definitions/`，复刻规则集存储模式）。
 
-Quantities (QTO v1) derive from geometry bounding boxes — `volume / area / length / width / height` (model units, spatial structure types skipped); custom column expressions are a controlled JS-style subset (**no eval**) with functions `attr / prop / qty / val / round / abs / min / max / if / concat / len / upper / lower / trim / number / int / contains`, supporting arithmetic, comparison and logic; null propagation: arithmetic → null, comparison → false; a failing column degrades to null and counts into `expression_errors`. The panel follows Solibri's ITO style: 12 built-in definition templates grouped by architecture / structure / MEP / general (`kernel/app/takeoff/definitions.py`, bilingual), with IFC type filtering and subtotal grouping by storey (`container`) / type (`ifc_type`); users can adjust columns and "Save as My Template" for reuse (L3 `.data/takeoff-definitions/`, mirroring the ruleset storage pattern).
+Quantities (QTO v1) derive from geometry bounding boxes — `volume / area / length / width / height` (model units, spatial structure types skipped); custom column expressions are a controlled JS-style subset (**no eval**) with functions `attr / prop / qty / val / round / abs / min / max / if / concat / len / upper / lower / trim / number / int / contains`, supporting arithmetic, comparison and logic; null propagation: arithmetic → null, comparison → false; a failing column degrades to null and counts into `expression_errors`. The panel follows Solibri's ITO style: 14 built-in definition templates grouped by architecture / structure / MEP / general (`kernel/app/takeoff/definitions.py`, bilingual), with IFC type filtering and subtotal grouping by storey (`container`) / type (`ifc_type`); composite walls (`IfcBuildingElementPart` layers) and multi-material elements (geometry split into `<guid>#mN` groups) expand into child detail rows by layer / material, where the parent row keeps the whole-element quantities and counts into totals while children are detail only; users can adjust columns and "Save as My Template" for reuse (L3 `.data/takeoff-definitions/`, mirroring the ruleset storage pattern).
 
 ### 报告渲染（M9）/ Report rendering (M9)
 

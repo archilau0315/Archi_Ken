@@ -36,6 +36,11 @@ def run_takeoff(
     if group_by is not None and group_by not in _GROUP_KEYS:
         group_by = None
     geometry, cache_hit = load_or_extract(model, path)
+    # 多材质构件的几何拆分索引：<父 guid> → 各材质组条目，供分层明细行使用（一次遍历，避免逐构件扫描）。
+    split_parts: dict[str, list[dict]] = {}
+    for key, entry in geometry.items():
+        if "#m" in key:
+            split_parts.setdefault(key.split("#", 1)[0], []).append(entry)
     type_filter = {t.strip() for t in (ifc_types or []) if t and t.strip()}
     skipped = _SKIPPED_TYPES - type_filter  # 显式请求的类型（如 IfcSpace）不再跳过
 
@@ -63,6 +68,13 @@ def run_takeoff(
         else:
             _accumulate(totals, values, numeric_keys)
         rows.append(row)
+        # 多材质构件（复合墙 / 幕墙）：按材质拆开的几何组另出子行明细，
+        # 父行仍代表整体并计入合计，子行只作展开明细，避免重复计量。
+        layer_rows, layer_errors = _material_rows(element, split_parts.get(element.GlobalId) or [], normalized)
+        errors += layer_errors
+        for layer_row in layer_rows:
+            layer_row["parent_guid"] = element.GlobalId
+            rows.append(layer_row)
         if len(rows) >= limit:
             truncated = True
             break
@@ -124,6 +136,30 @@ def _merge_bbox(bboxes: list[list[float]]) -> list[float] | None:
         max(b[4] for b in bboxes),
         max(b[5] for b in bboxes),
     ]
+
+
+def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) -> tuple[list[dict], int]:
+    """把「按材质拆开的几何组」展开为子行明细。
+
+    部分导出件把同一构件（复合墙 / 幕墙）按材质拆成 `<guid>#m0..#mN` 多个几何组，
+    每组带真实材质名（如「粘土砖」「普通玻璃」）。这些组此前被合并成一个外包包围盒，
+    无法分层统计；此处按组各出一行，挂在父构件下（父行仍代表整体并计入合计）。
+
+    材质名缺失、或是 IFC 样式名（如窗的 IfcSurfaceStyleRendering）时不算真实构造层，跳过。
+    """
+    rows: list[dict] = []
+    errors = 0
+    name = getattr(element, "Name", None)
+    for entry in parts:
+        material = (entry.get("material") or "").strip()
+        bbox = entry.get("bbox")
+        if not material or material.startswith("Ifc") or not bbox:
+            continue
+        row, _, failed = _build_row(element, from_bbox(bbox), columns)
+        errors += failed
+        row["name"] = f"{name} - {material}" if name else material
+        rows.append(row)
+    return rows, errors
 
 
 def _parent_guid_in(element, guids: set[str]) -> str | None:

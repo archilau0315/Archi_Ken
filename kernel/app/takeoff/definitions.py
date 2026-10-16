@@ -25,6 +25,21 @@ DEFINITIONS: list[dict] = [
         ],
     },
     {
+        "id": "wall-layers",
+        "category": "arch",
+        "name": "墙体构造层",
+        "name_en": "Wall Layers",
+        "description": "按构造层统计复合墙各层（砖 / 保温 / 砂浆等）的长度、面积、体积",
+        "description_en": "Composite wall layers (masonry / insulation / mortar) length, area and volume",
+        "ifc_types": ["IfcWall", "IfcWallStandardCase", "IfcBuildingElementPart"],
+        "group_by": "container",
+        "columns": [
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
+            {"key": "area", "name": "面积", "name_en": "Area", "unit": "m²", "expr": "qty('area')"},
+            {"key": "volume", "name": "体积", "name_en": "Volume", "unit": "m³", "expr": "qty('volume')"},
+        ],
+    },
+    {
         "id": "curtain-walls",
         "category": "arch",
         "name": "幕墙",
