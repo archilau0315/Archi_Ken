@@ -1,69 +1,158 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useT } from '../i18n'
-import { takeoffColumns, takeoffExport, takeoffRun } from '../services/kernel'
-import type { TakeoffColumn, TakeoffColumnsResponse, TakeoffRunResponse } from '../services/kernel'
+import { takeoffDefinitions, takeoffExport, takeoffRun } from '../services/kernel'
+import type { TakeoffColumn, TakeoffDefinition, TakeoffRunResponse } from '../services/kernel'
+import {
+  deleteMyDefinition,
+  getMyDefinition,
+  listMyDefinitions,
+  saveMyDefinition
+} from '../services/takeoff-definitions'
+import type { MyTakeoffDefinitionSummary, TakeoffGroupKey } from '../services/takeoff-definitions'
 
-// 信息提取面板（L4，M6）：编辑自定义计算列（受控表达式），运行 ITO 提取查看
-// 逐构件结果与合计，并可导出 Excel。提取与求值由 L2 内核完成。
-
-function makeError(err: unknown): string {
-  return err instanceof Error ? err.message : String(err)
-}
+// 信息提取面板（L4，M6）：Solibri 风格 Definition 模板库 + 左树右表 + 分组小计。
+// 内置模板由内核提供，用户模板由 L3 持久化。
 
 interface Props {
   modelPath: string
   onClose: () => void
 }
 
-let nextDraftId = 1
+interface Draft {
+  name: string
+  description: string
+  category: string
+  ifc_types: string[]
+  columns: TakeoffColumn[]
+  group_by: TakeoffGroupKey
+}
+
+interface Selected {
+  source: 'builtin' | 'mine'
+  id: string
+}
+
+const EMPTY_DRAFT: Draft = {
+  name: '',
+  description: '',
+  category: 'mine',
+  ifc_types: [],
+  columns: [],
+  group_by: 'container'
+}
+
+function makeError(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
 
 export default function TakeoffPanel({ modelPath, onClose }: Props) {
   const { t, lang } = useT()
-  const [info, setInfo] = useState<TakeoffColumnsResponse | null>(null)
-  const [columns, setColumns] = useState<TakeoffColumn[]>([])
-  const [draft, setDraft] = useState({ key: '', name: '', expr: '' })
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+  const [builtin, setBuiltin] = useState<TakeoffDefinition[]>([])
+  const [mine, setMine] = useState<MyTakeoffDefinitionSummary[]>([])
+  const [selected, setSelected] = useState<Selected | null>(null)
+  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
+  const [editMode, setEditMode] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [result, setResult] = useState<TakeoffRunResponse | null>(null)
-  const [exportedFile, setExportedFile] = useState('')
-  const [busy, setBusy] = useState<'' | 'run' | 'export'>('')
+  const [busy, setBusy] = useState<'' | 'run' | 'export' | 'save'>('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [draftCol, setDraftCol] = useState({ key: '', name: '', expr: '' })
 
+  // 初次加载：并行拉内置 + 我的模板，默认选中「全部构件」
   useEffect(() => {
-    takeoffColumns(lang)
-      .then(setInfo)
-      .catch((err) => setError(makeError(err)))
+    let cancelled = false
+    Promise.all([takeoffDefinitions(lang), listMyDefinitions()])
+      .then(([defs, my]) => {
+        if (cancelled) return
+        setCategories(defs.categories)
+        setBuiltin(defs.items)
+        setMine(my.items)
+        const all = defs.items.find((item) => item.id === 'all') ?? defs.items[0]
+        if (all) {
+          setSelected({ source: 'builtin', id: all.id })
+          setDraft(toDraft(all))
+        }
+      })
+      .catch((err) => !cancelled && setError(makeError(err)))
+    return () => {
+      cancelled = true
+    }
   }, [lang])
 
-  function addColumn(column: TakeoffColumn): void {
-    if (columns.some((item) => item.key === column.key)) {
-      setError(t('takeoff.keyExists', { key: column.key }))
-      return
-    }
-    setColumns([...columns, column])
+  // 选中变化时自动运行
+  useEffect(() => {
+    if (!selected || !modelPath) return
+    void run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, modelPath])
+
+  const refreshMine = useCallback(async (): Promise<void> => {
+    const list = await listMyDefinitions()
+    setMine(list.items)
+  }, [])
+
+  async function selectBuiltin(def: TakeoffDefinition): Promise<void> {
+    setSelected({ source: 'builtin', id: def.id })
+    setDraft(toDraft(def))
+    setDirty(false)
+    setEditMode(false)
     setError('')
+    setMessage('')
   }
 
-  function removeColumn(key: string): void {
-    setColumns(columns.filter((item) => item.key !== key))
-  }
-
-  function addDraft(): void {
-    const key = draft.key.trim()
-    const expr = draft.expr.trim()
-    if (!key || !expr) {
-      setError(t('takeoff.keyExprRequired'))
-      return
+  async function selectMine(item: MyTakeoffDefinitionSummary): Promise<void> {
+    setError('')
+    setMessage('')
+    try {
+      const full = await getMyDefinition(item.id)
+      setSelected({ source: 'mine', id: full.id })
+      setDraft({
+        name: full.name,
+        description: full.description,
+        category: full.category,
+        ifc_types: full.ifc_types,
+        columns: full.columns,
+        group_by: full.group_by
+      })
+      setDirty(false)
+      setEditMode(false)
+    } catch (err) {
+      setError(makeError(err))
     }
-    addColumn({ key, name: draft.name.trim() || key, expr })
-    setDraft({ key: '', name: '', expr: '' })
+  }
+
+  function startNew(): void {
+    setSelected(null)
+    setDraft(EMPTY_DRAFT)
+    setDirty(false)
+    setEditMode(true)
+    setResult(null)
+    setError('')
+    setMessage('')
+  }
+
+  function updateDraft(patch: Partial<Draft>): void {
+    setDraft((prev) => ({ ...prev, ...patch }))
+    setDirty(true)
   }
 
   async function run(): Promise<void> {
+    if (!modelPath || !draft.columns.length) {
+      if (!draft.columns.length) setError(t('takeoff.keyExprRequired'))
+      return
+    }
     setBusy('run')
     setError('')
-    setExportedFile('')
     try {
-      setResult(await takeoffRun(modelPath, columns.length ? columns : undefined, 500, lang))
+      const res = await takeoffRun(modelPath, draft.columns, {
+        lang,
+        ifcTypes: draft.ifc_types.length ? draft.ifc_types : undefined,
+        groupBy: draft.group_by
+      })
+      setResult(res)
     } catch (err) {
       setError(makeError(err))
     } finally {
@@ -72,12 +161,17 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
   }
 
   async function exportXlsx(): Promise<void> {
+    if (!modelPath || !draft.columns.length) return
     setBusy('export')
     setError('')
+    setMessage('')
     try {
-      const data = await takeoffExport(modelPath, columns.length ? columns : undefined, lang)
-      setExportedFile(data.file)
-      if (result === null) setResult(await takeoffRun(modelPath, columns.length ? columns : undefined, 500, lang))
+      const res = await takeoffExport(modelPath, draft.columns, {
+        lang,
+        ifcTypes: draft.ifc_types.length ? draft.ifc_types : undefined,
+        groupBy: draft.group_by
+      })
+      setMessage(t('takeoff.exported', { file: res.file }))
     } catch (err) {
       setError(makeError(err))
     } finally {
@@ -85,7 +179,116 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
     }
   }
 
-  const valueKeys = result?.columns.map((item) => item.key) ?? []
+  async function saveMine(): Promise<void> {
+    if (!draft.name.trim() || !draft.columns.length) {
+      setError(t('takeoff.keyExprRequired'))
+      return
+    }
+    setBusy('save')
+    setError('')
+    setMessage('')
+    try {
+      // 从内置克隆的 draft 没带 id，后端会生成新 id；已加载的我的模板带 id = 覆盖
+      const input = {
+        id: selected?.source === 'mine' ? selected.id : undefined,
+        name: draft.name,
+        description: draft.description,
+        category: draft.category || 'mine',
+        ifc_types: draft.ifc_types,
+        columns: draft.columns,
+        group_by: draft.group_by
+      }
+      const saved = await saveMyDefinition(input, lang)
+      await refreshMine()
+      setSelected({ source: 'mine', id: saved.id })
+      setDirty(false)
+      setMessage(t('takeoff.saved', { name: saved.name }))
+    } catch (err) {
+      setError(makeError(err))
+    } finally {
+      setBusy('')
+    }
+  }
+
+  async function removeMine(item: MyTakeoffDefinitionSummary): Promise<void> {
+    if (!window.confirm(t('takeoff.confirmDelete', { name: item.name }))) return
+    setError('')
+    setMessage('')
+    try {
+      await deleteMyDefinition(item.id)
+      await refreshMine()
+      if (selected?.source === 'mine' && selected.id === item.id) {
+        setSelected(null)
+        setDraft(EMPTY_DRAFT)
+        setResult(null)
+      }
+      setMessage(t('takeoff.deleted', { name: item.name }))
+    } catch (err) {
+      setError(makeError(err))
+    }
+  }
+
+  async function renameMine(item: MyTakeoffDefinitionSummary): Promise<void> {
+    const name = window.prompt(t('takeoff.renamePrompt'), item.name)
+    if (!name || !name.trim() || name.trim() === item.name) return
+    setError('')
+    setMessage('')
+    try {
+      const full = await getMyDefinition(item.id)
+      await saveMyDefinition(
+        {
+          id: full.id,
+          name: name.trim(),
+          description: full.description,
+          category: full.category,
+          ifc_types: full.ifc_types,
+          columns: full.columns,
+          group_by: full.group_by
+        },
+        lang
+      )
+      await refreshMine()
+      if (selected?.source === 'mine' && selected.id === item.id) {
+        setDraft((prev) => ({ ...prev, name: name.trim() }))
+      }
+      setMessage(t('takeoff.renamed', { name: name.trim() }))
+    } catch (err) {
+      setError(makeError(err))
+    }
+  }
+
+  function addDraftColumn(): void {
+    const key = draftCol.key.trim()
+    const expr = draftCol.expr.trim()
+    if (!key || !expr) {
+      setError(t('takeoff.keyExprRequired'))
+      return
+    }
+    if (draft.columns.some((col) => col.key === key)) {
+      setError(t('takeoff.keyExists', { key }))
+      return
+    }
+    updateDraft({ columns: [...draft.columns, { key, name: draftCol.name.trim() || key, expr }] })
+    setDraftCol({ key: '', name: '', expr: '' })
+    setError('')
+  }
+
+  function removeColumn(key: string): void {
+    updateDraft({ columns: draft.columns.filter((col) => col.key !== key) })
+  }
+
+  const builtinByCat = useMemo(() => {
+    const map = new Map<string, TakeoffDefinition[]>()
+    for (const def of builtin) {
+      const list = map.get(def.category) ?? []
+      list.push(def)
+      map.set(def.category, list)
+    }
+    return map
+  }, [builtin])
+
+  const valueKeys = result?.columns.map((col) => col.key) ?? []
+  const hasGroups = Boolean(result?.groups?.length)
 
   return (
     <div className="editor-overlay">
@@ -100,132 +303,275 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
 
         {error && <div className="error-bar">{error}</div>}
 
-        <section className="takeoff-section">
-          <h3>{t('takeoff.fixedFields')}</h3>
-          <p className="hint small">
-            {(info?.fixed ?? []).map((item) => `${item.name}(${item.key})`).join(' · ') || '—'}
-          </p>
-
-          <h3>{t('takeoff.customColumns')}</h3>
-          <ul className="takeoff-columns">
-            {columns.map((item) => (
-              <li key={item.key}>
-                <span className="col-name">{item.name}</span>
-                <code>{item.expr}</code>
-                <button className="ghost small" onClick={() => removeColumn(item.key)}>
-                  {t('takeoff.remove')}
-                </button>
-              </li>
-            ))}
-            {!columns.length && <li className="hint small">{t('takeoff.noCustomColumns')}</li>}
-          </ul>
-
-          <div className="takeoff-add">
-            <input
-              placeholder={t('takeoff.phKey')}
-              value={draft.key}
-              onChange={(event) => setDraft({ ...draft, key: event.target.value })}
-            />
-            <input
-              placeholder={t('takeoff.phName')}
-              value={draft.name}
-              onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-            />
-            <input
-              className="expr"
-              placeholder={t('takeoff.phExpr')}
-              value={draft.expr}
-              onChange={(event) => setDraft({ ...draft, expr: event.target.value })}
-            />
-            <button className="ghost" onClick={addDraft}>
-              {t('takeoff.add')}
-            </button>
-          </div>
-
-          <div className="takeoff-suggested">
-            {(info?.suggested ?? []).map((item) => (
-              <button key={item.key} className="chip-btn" onClick={() => addColumn(item)}>
-                + {item.name}
-              </button>
-            ))}
-          </div>
-
-          <details className="takeoff-functions">
-            <summary>{t('takeoff.functionsSyntax')}</summary>
-            <ul>
-              {(info?.functions ?? []).map((item) => (
-                <li key={item.name}>
-                  <code>{item.name}</code>
-                  <span>{item.desc}</span>
-                </li>
-              ))}
-            </ul>
-          </details>
-        </section>
-
-        <div className="editor-actions">
-          <button onClick={run} disabled={busy !== '' || !modelPath}>
-            {busy === 'run' ? t('takeoff.running') : t('takeoff.run')}
-          </button>
-          <button className="ghost" onClick={exportXlsx} disabled={busy !== '' || !modelPath}>
-            {busy === 'export' ? t('takeoff.exporting') : t('takeoff.export')}
-          </button>
-          {exportedFile && <span className="hint small">{t('takeoff.exported', { file: exportedFile })}</span>}
-        </div>
-
-        {result && (
-          <section className="takeoff-section">
-            <h3>
-              {t('takeoff.results')}
-              <span className="hint small">
-                {t('takeoff.resultMeta', {
-                  total: result.total,
-                  truncated: result.truncated ? t('takeoff.truncated') : '',
-                  errors: result.expression_errors,
-                  cache: result.cache_hit ? t('takeoff.cacheHit') : t('takeoff.cacheMiss'),
-                })}
-              </span>
-            </h3>
-            <div className="takeoff-table-wrap">
-              <table className="takeoff-table">
-                <thead>
-                  <tr>
-                    <th>{t('takeoff.thName')}</th>
-                    <th>{t('takeoff.thIfcType')}</th>
-                    <th>{t('takeoff.thContainer')}</th>
-                    {result.columns.map((item) => (
-                      <th key={item.key}>{item.name}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.rows.map((row) => (
-                    <tr key={row.guid}>
-                      <td>{row.name || t('takeoff.unnamed')}</td>
-                      <td>{row.ifc_type}</td>
-                      <td>{row.container || '—'}</td>
-                      {valueKeys.map((key) => (
-                        <td key={key}>{formatCell(row.values[key], t)}</td>
+        <div className="takeoff-body">
+          <aside className="takeoff-tree">
+            <div className="takeoff-tree-section">
+              <div className="takeoff-tree-title">{t('takeoff.builtin')}</div>
+              {categories.map((cat) => {
+                const items = builtinByCat.get(cat.id) ?? []
+                if (!items.length) return null
+                return (
+                  <div key={cat.id} className="takeoff-tree-cat">
+                    <div className="takeoff-tree-cat-name">{cat.name}</div>
+                    <ul>
+                      {items.map((def) => (
+                        <li
+                          key={def.id}
+                          className={`takeoff-tree-item ${selected?.source === 'builtin' && selected.id === def.id ? 'active' : ''}`}
+                          onClick={() => void selectBuiltin(def)}
+                        >
+                          <span className="takeoff-tree-item-name">{def.name}</span>
+                        </li>
                       ))}
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td>{t('takeoff.total')}</td>
-                    <td />
-                    <td />
-                    {valueKeys.map((key) => (
-                      <td key={key}>{formatCell(result.totals[key], t)}</td>
-                    ))}
-                  </tr>
-                </tfoot>
-              </table>
+                    </ul>
+                  </div>
+                )
+              })}
             </div>
+
+            <div className="takeoff-tree-section">
+              <div className="takeoff-tree-title">
+                {t('takeoff.mine')}
+                <button className="ghost tiny" onClick={startNew} title={t('takeoff.newTemplate')}>
+                  +
+                </button>
+              </div>
+              {!mine.length && <p className="hint small">{t('takeoff.emptyMine')}</p>}
+              <ul>
+                {mine.map((item) => (
+                  <li
+                    key={item.id}
+                    className={`takeoff-tree-item mine ${selected?.source === 'mine' && selected.id === item.id ? 'active' : ''}`}
+                    onClick={() => void selectMine(item)}
+                  >
+                    <span className="takeoff-tree-item-name">{item.name}</span>
+                    <span className="takeoff-tree-item-actions">
+                      <button
+                        className="ghost tiny"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void renameMine(item)
+                        }}
+                        title={t('takeoff.rename')}
+                      >
+                        ✎
+                      </button>
+                      <button
+                        className="ghost tiny danger"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void removeMine(item)
+                        }}
+                        title={t('takeoff.delete')}
+                      >
+                        🗑
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+
+          <section className="takeoff-main">
+            {!selected && !editMode && <p className="hint">{t('takeoff.selectHint')}</p>}
+
+            {(selected || editMode) && (
+              <>
+                <div className="takeoff-fields">
+                  <label>
+                    {t('takeoff.fieldName')}
+                    <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} />
+                  </label>
+                  <label className="takeoff-field-desc">
+                    {t('takeoff.fieldDesc')}
+                    <input
+                      placeholder={t('takeoff.fieldDescPh')}
+                      value={draft.description}
+                      onChange={(e) => updateDraft({ description: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    {t('takeoff.fieldGroup')}
+                    <select value={draft.group_by} onChange={(e) => updateDraft({ group_by: e.target.value as TakeoffGroupKey })}>
+                      <option value="">{t('takeoff.group.none')}</option>
+                      <option value="container">{t('takeoff.group.container')}</option>
+                      <option value="ifc_type">{t('takeoff.group.ifc_type')}</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="takeoff-fields">
+                  <label className="takeoff-field-types">
+                    {t('takeoff.fieldTypes')}
+                    <input
+                      placeholder={t('takeoff.fieldTypesPh')}
+                      value={draft.ifc_types.join(', ')}
+                      onChange={(e) =>
+                        updateDraft({
+                          ifc_types: e.target.value
+                            .split(',')
+                            .map((item) => item.trim())
+                            .filter(Boolean)
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className="takeoff-toolbar">
+                  <button onClick={() => void run()} disabled={busy !== '' || !modelPath || !draft.columns.length}>
+                    {busy === 'run' ? t('takeoff.running') : t('takeoff.run')}
+                  </button>
+                  <button className="ghost" onClick={() => void exportXlsx()} disabled={busy !== '' || !modelPath || !draft.columns.length}>
+                    {busy === 'export' ? t('takeoff.exporting') : t('takeoff.export')}
+                  </button>
+                  <button className="ghost" onClick={() => setEditMode(!editMode)}>
+                    {editMode ? t('takeoff.applyColumns') : t('takeoff.editColumns')}
+                  </button>
+                  <button className="ghost" onClick={() => void saveMine()} disabled={busy !== '' || !draft.name.trim() || !draft.columns.length}>
+                    {busy === 'save' ? t('takeoff.saving') : t('takeoff.saveAsMine')}
+                  </button>
+                  {dirty && <span className="hint small">{t('takeoff.dirty')}</span>}
+                  {selected?.source === 'builtin' && <span className="badge">{t('takeoff.builtinBadge')}</span>}
+                </div>
+
+                {message && <p className="takeoff-message">{message}</p>}
+
+                {editMode && (
+                  <div className="takeoff-columns-editor">
+                    <ul className="takeoff-columns">
+                      {draft.columns.map((col) => (
+                        <li key={col.key}>
+                          <span className="col-name">{col.name}</span>
+                          <code>{col.expr}</code>
+                          <button className="ghost small" onClick={() => removeColumn(col.key)}>
+                            {t('takeoff.remove')}
+                          </button>
+                        </li>
+                      ))}
+                      {!draft.columns.length && <li className="hint small">{t('takeoff.noCustomColumns')}</li>}
+                    </ul>
+                    <div className="takeoff-add">
+                      <input placeholder={t('takeoff.phKey')} value={draftCol.key} onChange={(e) => setDraftCol({ ...draftCol, key: e.target.value })} />
+                      <input placeholder={t('takeoff.phName')} value={draftCol.name} onChange={(e) => setDraftCol({ ...draftCol, name: e.target.value })} />
+                      <input className="expr" placeholder={t('takeoff.phExpr')} value={draftCol.expr} onChange={(e) => setDraftCol({ ...draftCol, expr: e.target.value })} />
+                      <button className="ghost" onClick={addDraftColumn}>
+                        {t('takeoff.add')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {result && (
+                  <div className="takeoff-result">
+                    <div className="takeoff-result-meta">
+                      {t('takeoff.resultMeta', {
+                        total: result.total,
+                        truncated: result.truncated ? t('takeoff.truncated') : '',
+                        errors: result.expression_errors,
+                        cache: result.cache_hit ? t('takeoff.cacheHit') : t('takeoff.cacheMiss')
+                      })}
+                    </div>
+                    {!result.rows.length && <p className="hint">{t('takeoff.empty')}</p>}
+                    {result.rows.length > 0 && (
+                      <div className="takeoff-table-wrap">
+                        <table className="takeoff-table">
+                          <thead>
+                            <tr>
+                              <th>{t('takeoff.thName')}</th>
+                              <th>{t('takeoff.thIfcType')}</th>
+                              <th>{t('takeoff.thContainer')}</th>
+                              {result.columns.map((col) => (
+                                <th key={col.key}>{col.name}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {hasGroups
+                              ? result.groups!.map((group) => (
+                                  <GroupRows key={group.key || '__ungrouped'} group={group} valueKeys={valueKeys} t={t} />
+                                ))
+                              : result.rows.map((row) => <RowCells key={row.guid} row={row} valueKeys={valueKeys} t={t} />)}
+                          </tbody>
+                          <tfoot>
+                            <tr className="takeoff-total-row">
+                              <td>{t('takeoff.grandTotal')}</td>
+                              <td />
+                              <td />
+                              {valueKeys.map((key) => (
+                                <td key={key}>{formatCell(result.totals[key], t)}</td>
+                              ))}
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </section>
-        )}
+        </div>
       </div>
     </div>
+  )
+}
+
+function toDraft(def: TakeoffDefinition): Draft {
+  return {
+    name: def.name,
+    description: def.description,
+    category: def.category,
+    ifc_types: def.ifc_types,
+    columns: def.columns,
+    group_by: def.group_by
+  }
+}
+
+interface GroupProps {
+  group: { key: string; rows: TakeoffRunResponse['rows']; subtotals: Record<string, number> }
+  valueKeys: string[]
+  t: (key: string) => string
+}
+
+function GroupRows({ group, valueKeys, t }: GroupProps) {
+  return (
+    <>
+      <tr className="takeoff-group-header">
+        <td colSpan={3 + valueKeys.length}>▼ {group.key || t('takeoff.ungrouped')}</td>
+      </tr>
+      {group.rows.map((row) => (
+        <RowCells key={row.guid} row={row} valueKeys={valueKeys} t={t} />
+      ))}
+      <tr className="takeoff-subtotal-row">
+        <td>{t('takeoff.subtotal')}</td>
+        <td />
+        <td />
+        {valueKeys.map((key) => (
+          <td key={key}>{formatCell(group.subtotals[key], t)}</td>
+        ))}
+      </tr>
+    </>
+  )
+}
+
+interface RowProps {
+  row: TakeoffRunResponse['rows'][number]
+  valueKeys: string[]
+  t: (key: string) => string
+}
+
+function RowCells({ row, valueKeys, t }: RowProps) {
+  return (
+    <tr>
+      <td>{row.name || t('takeoff.unnamed')}</td>
+      <td>{row.ifc_type}</td>
+      <td>{row.container || '—'}</td>
+      {valueKeys.map((key) => (
+        <td key={key}>{formatCell(row.values[key], t)}</td>
+      ))}
+    </tr>
   )
 }
 

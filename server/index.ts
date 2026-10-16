@@ -5,6 +5,7 @@ import { autorunDelete, autorunGet, autorunList, autorunRun, autorunRunGet, auto
 import { issueBcfExport, issueComment, issueCreate, issueDelete, issueGet, issueImport, issueList, issueSnapshot, issueUpdate } from './routes/issue'
 import { reportExportPost, reportHtmlGet, reportRunGet, reportRunPost } from './routes/report'
 import { rulesetDelete, rulesetGet, rulesetList, rulesetRun, rulesetSave } from './routes/ruleset'
+import { takeoffDefinitionDelete, takeoffDefinitionGet, takeoffDefinitionList, takeoffDefinitionSave } from './routes/takeoff-definition'
 import { uploadPost } from './routes/upload'
 
 // 业务逻辑层（L3）服务：编排内核（L2）结果并产出检查报告。
@@ -55,6 +56,10 @@ router.get('/ruleset/get', rulesetGet)
 router.post('/ruleset/save', rulesetSave)
 router.post('/ruleset/delete', rulesetDelete)
 router.post('/ruleset/run', rulesetRun)
+router.get('/takeoff-definitions/list', takeoffDefinitionList)
+router.get('/takeoff-definitions/get', takeoffDefinitionGet)
+router.post('/takeoff-definitions/save', takeoffDefinitionSave)
+router.post('/takeoff-definitions/delete', takeoffDefinitionDelete)
 router.get('/issues/list', issueList)
 router.get('/issues/get', issueGet)
 router.post('/issues/create', issueCreate)

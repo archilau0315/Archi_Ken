@@ -1,4 +1,7 @@
-"""信息提取主流程：逐构件求值自定义列，产出 ITO 行数据与合计。"""
+"""信息提取主流程：逐构件求值自定义列，产出 ITO 行数据与合计。
+
+支持按 ifc_types 过滤（Solibri Definition 模式）、按 container/ifc_type 分组小计。
+"""
 
 from __future__ import annotations
 
@@ -10,50 +13,95 @@ from app.takeoff.columns import normalize_columns
 from app.takeoff.expr import ExprError, evaluate
 from app.takeoff.quantities import from_bbox
 
-# 跳过的空间结构类型（非物理构件，不进入提取表）。
+# 跳过的空间结构类型（非物理构件，默认不进入提取表）。
+# 若调用方显式把 IfcSpace 放进 ifc_types，则按豁免处理（用于「空间面积」模板）。
 _SPATIAL_TYPES = {"IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace"}
+
+# 分组字段白名单：仅允许容器（楼层）或 IFC 类型，避免任意表达式注入
+_GROUP_KEYS = {"container", "ifc_type"}
 
 def run_takeoff(
     model: ifcopenshell.file,
     path: str,
     columns: list[dict] | None,
     limit: int = 500,
+    ifc_types: list[str] | None = None,
+    group_by: str | None = None,
 ) -> dict:
-    """对模型执行信息提取：固定字段 + 自定义列求值，返回行、合计与统计。"""
+    """对模型执行信息提取：固定字段 + 自定义列求值，可选按类型过滤与分组小计。"""
     normalized = normalize_columns(columns)
+    if group_by is not None and group_by not in _GROUP_KEYS:
+        group_by = None
     geometry, cache_hit = load_or_extract(model, path)
+    type_filter = {t.strip() for t in (ifc_types or []) if t and t.strip()}
+    skipped = _SPATIAL_TYPES - type_filter  # 显式请求的类型（如 IfcSpace）不再跳过
+
     rows: list[dict] = []
     totals: dict[str, float] = {}
     errors = 0
     numeric_keys = _numeric_columns(normalized)
+    truncated = False
     for element in model.by_type("IfcProduct"):
-        if element.is_a() in _SPATIAL_TYPES:
+        ifc_type = element.is_a()
+        if ifc_type in skipped:
+            continue
+        if type_filter and ifc_type not in type_filter:
             continue
         entry = geometry.get(element.GlobalId)
         quantities = from_bbox(entry["bbox"]) if entry else {}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
         rows.append(row)
-        for key in numeric_keys:
-            value = values.get(key)
-            if isinstance(value, (int, float)) and not isinstance(value, bool):
-                totals[key] = totals.get(key, 0.0) + value
+        _accumulate(totals, values, numeric_keys)
         if len(rows) >= limit:
+            truncated = True
             break
-    return {
+
+    result = {
         "path": path,
         "total": len(rows),
-        "truncated": len(rows) >= limit,
+        "truncated": truncated,
         "cache_hit": cache_hit,
         "expression_errors": errors,
         "columns": normalized,
         "totals": {key: round(value, 6) for key, value in totals.items()},
         "rows": rows,
     }
+    if group_by:
+        result["group_by"] = group_by
+        result["groups"] = _group_rows(rows, group_by, numeric_keys)
+    return result
 
 def _numeric_columns(columns: list[dict[str, str]]) -> list[str]:
     """数值列参与合计；布尔 / 文本列只展示不累加。"""
     return [column["key"] for column in columns]
+
+def _accumulate(totals: dict[str, float], values: dict, keys: list[str]) -> None:
+    """把一行 values 中可累加的数值列加进 totals。"""
+    for key in keys:
+        value = values.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            totals[key] = totals.get(key, 0.0) + value
+
+def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str]) -> list[dict]:
+    """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。"""
+    groups: dict[str, dict] = {}
+    order: list[str] = []
+    for row in rows:
+        key = row.get(group_by) or ""
+        if key not in groups:
+            groups[key] = {"key": key, "rows": [], "subtotals": {}}
+            order.append(key)
+        groups[key]["rows"].append(row)
+        _accumulate(groups[key]["subtotals"], row.get("values") or {}, numeric_keys)
+    return [
+        {
+            "key": key,
+            "rows": groups[key]["rows"],
+            "subtotals": {k: round(v, 6) for k, v in groups[key]["subtotals"].items()},
+        }
+        for key in order
+    ]
 
 def _build_row(
     element,

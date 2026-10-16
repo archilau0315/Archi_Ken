@@ -1,4 +1,4 @@
-"""信息提取端点（M6）：默认列说明、提取运行与 Excel 导出。"""
+"""信息提取端点（M6）：默认列说明、内置 Definition 模板、提取运行与 Excel 导出。"""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from app.config import exports_dir
 from app.routes.deps import open_model
 from app.takeoff import export, extract
 from app.takeoff.columns import ColumnError, FIXED_FIELDS, SUGGESTED_COLUMNS, localize_columns
+from app.takeoff.definitions import CATEGORIES, DEFINITIONS, localize_definitions
 
 router = APIRouter(prefix="/takeoff", tags=["takeoff"])
 
@@ -24,6 +25,8 @@ class TakeoffRunRequest(BaseModel):
     columns: list[dict[str, Any]] | None = Field(None, description="自定义计算列 [{key,name,expr}]")
     limit: int = Field(500, ge=1, le=5000, description="最多返回的行数")
     lang: str = Field("zh", description="语言：zh | en")
+    ifc_types: list[str] | None = Field(None, description="按 IFC 类型过滤；空或缺省 = 全部")
+    group_by: str | None = Field(None, description="分组字段：container | ifc_type；空 = 不分组")
 
 
 class TakeoffExportRequest(BaseModel):
@@ -32,6 +35,8 @@ class TakeoffExportRequest(BaseModel):
     path: str = Field(..., description="IFC 文件绝对路径")
     columns: list[dict[str, Any]] | None = Field(None, description="自定义计算列 [{key,name,expr}]")
     lang: str = Field("zh", description="语言：zh | en")
+    ifc_types: list[str] | None = Field(None, description="按 IFC 类型过滤；空或缺省 = 全部")
+    group_by: str | None = Field(None, description="分组字段：container | ifc_type；空 = 不分组")
 
 
 @router.get("/columns")
@@ -47,12 +52,36 @@ def takeoff_columns(lang: str = Query("zh")) -> dict[str, Any]:
     }
 
 
+@router.get("/definitions")
+def takeoff_definitions(lang: str = Query("zh")) -> dict[str, Any]:
+    """列出内置信息提取模板（Solibri Definition 模式）。"""
+    locale = i18n.pick_lang(lang)
+    categories = [
+        {
+            "id": c["id"],
+            "name": c["name_en"] if locale == "en" else c["name"],
+        }
+        for c in CATEGORIES
+    ]
+    return {
+        "categories": categories,
+        "items": localize_definitions(DEFINITIONS, locale),
+    }
+
+
 @router.post("/run")
 def takeoff_run(payload: TakeoffRunRequest) -> dict[str, Any]:
-    """对模型执行信息提取（固定字段 + 自定义列求值）。"""
+    """对模型执行信息提取（固定字段 + 自定义列求值 + 可选过滤与分组）。"""
     model = open_model(payload.path)
     try:
-        result = extract.run_takeoff(model, payload.path, payload.columns, payload.limit)
+        result = extract.run_takeoff(
+            model,
+            payload.path,
+            payload.columns,
+            payload.limit,
+            ifc_types=payload.ifc_types,
+            group_by=payload.group_by,
+        )
         locale = i18n.pick_lang(payload.lang)
         result["columns"] = localize_columns(result["columns"], locale)
         return result
@@ -66,7 +95,13 @@ def takeoff_export(payload: TakeoffExportRequest) -> dict[str, Any]:
     model = open_model(payload.path)
     try:
         locale = i18n.pick_lang(payload.lang)
-        result = extract.run_takeoff(model, payload.path, payload.columns)
+        result = extract.run_takeoff(
+            model,
+            payload.path,
+            payload.columns,
+            ifc_types=payload.ifc_types,
+            group_by=payload.group_by,
+        )
         result["columns"] = localize_columns(result["columns"], locale)
         stamp = time.strftime("%Y%m%d-%H%M%S")
         target = exports_dir() / f"takeoff-{stamp}.xlsx"

@@ -25,6 +25,7 @@ import ViewPanel from './views/ViewPanel'
 import ViewToolbar from './views/ViewToolbar'
 import './communication/communication.css'
 import './report/report.css'
+import './takeoff/takeoff.css'
 import './views/view.css'
 
 // 应用主界面（L4）：模型源与融合树 | 3D 视图 | 属性与问题 三栏布局。

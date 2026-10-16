@@ -1,0 +1,325 @@
+/* 信息提取面板（M6）：Solibri 风格 Definition 模板库 + 左树右表 + 分组小计。 */
+
+/* 双类提高优先级：覆盖 styles.css 中 .editor-dialog 的 92vw/86vh（导入顺序晚于本文件）。
+   两侧留白与基础弹窗一致（92vw），宽屏放宽到 1280px；
+   内容区横向 padding 16px，对齐 IDS 等其它弹窗。 */
+.editor-dialog.takeoff-dialog {
+  width: min(1280px, 92vw);
+  height: 86vh;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+/* 头部与错误条贯通弹窗宽度（抵消父级横向 padding），保持通栏横幅样式 */
+.editor-dialog.takeoff-dialog > .editor-top,
+.editor-dialog.takeoff-dialog > .error-bar {
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+/* ===== 主体：左树 + 右表 ===== */
+.takeoff-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 14px;
+  min-height: 0;
+  padding-top: 12px;
+}
+
+/* ===== 左侧 Definition 树 ===== */
+.takeoff-tree {
+  border-right: 1px solid var(--border);
+  padding-right: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.takeoff-tree-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.takeoff-tree-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 4px;
+}
+
+.takeoff-tree-cat {
+  margin-top: 2px;
+}
+
+.takeoff-tree-cat-name {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 2px 4px;
+}
+
+.takeoff-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.takeoff-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  margin: 1px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.takeoff-tree-item:hover {
+  background: #eef2fb;
+}
+
+.takeoff-tree-item.active {
+  background: #e6edfb;
+  color: #2f6feb;
+  font-weight: 600;
+  border-left-color: #2f6feb;
+}
+
+.takeoff-tree-item.mine {
+  border-left-color: #d0d5dd;
+}
+
+.takeoff-tree-item.mine.active {
+  border-left-color: #2f6feb;
+}
+
+.takeoff-tree-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.takeoff-tree-item-actions {
+  display: none;
+  gap: 2px;
+}
+
+.takeoff-tree-item:hover .takeoff-tree-item-actions {
+  display: flex;
+}
+
+.takeoff-tree-item-actions .ghost.tiny {
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+/* ===== 右侧主区 ===== */
+.takeoff-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.takeoff-fields {
+  display: grid;
+  grid-template-columns: 180px 1fr 140px;
+  gap: 10px;
+  align-items: end;
+}
+
+.takeoff-fields:has(.takeoff-field-types) {
+  grid-template-columns: 1fr;
+}
+
+.takeoff-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.takeoff-fields input,
+.takeoff-fields select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.takeoff-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.takeoff-message {
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid #b2ddff;
+  background: #eff8ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #175cd3;
+  word-break: break-all;
+}
+
+/* ===== 列编辑器 ===== */
+.takeoff-columns-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.takeoff-columns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.takeoff-columns > li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.takeoff-columns .col-name {
+  min-width: 90px;
+  font-weight: 600;
+}
+
+.takeoff-columns code {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.takeoff-add {
+  display: grid;
+  grid-template-columns: 140px 140px 1fr auto;
+  gap: 8px;
+}
+
+.takeoff-add input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.takeoff-add .expr {
+  font-family: Consolas, 'Courier New', monospace;
+}
+
+/* ===== 结果表 ===== */
+.takeoff-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.takeoff-result-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.takeoff-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 0;
+}
+
+.takeoff-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+}
+
+.takeoff-table th,
+.takeoff-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: left;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.takeoff-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 600;
+  z-index: 1;
+}
+
+.takeoff-table tfoot td {
+  font-weight: 700;
+  background: #f4f6fa;
+}
+
+/* 分组行：跨列标题 + 小计 */
+.takeoff-group-header td {
+  background: #e6edfb;
+  color: #1f3f8c;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.takeoff-subtotal-row td {
+  background: #f4f6fa;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.takeoff-total-row td {
+  background: #e9ebef;
+  font-weight: 700;
+}
+
+/* 内置模板徽标：样式独立，不依赖 communication.css 的全局 .badge */
+.takeoff-toolbar .badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #1a56c4;
+  white-space: nowrap;
+}

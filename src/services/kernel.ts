@@ -709,12 +709,43 @@ export interface TakeoffRunResponse {
   columns: TakeoffColumn[]
   totals: Record<string, number>
   rows: TakeoffRow[]
+  group_by?: 'container' | 'ifc_type'
+  groups?: TakeoffGroup[]
 }
 
 export interface TakeoffExportResponse {
   file: string
   total: number
   expression_errors: number
+}
+
+/** 内置信息提取模板（Solibri Definition 模式）。 */
+export interface TakeoffDefinition {
+  id: string
+  category: string
+  name: string
+  description: string
+  ifc_types: string[]
+  columns: TakeoffColumn[]
+  group_by: 'container' | 'ifc_type' | ''
+}
+
+export interface TakeoffDefinitionsResponse {
+  categories: { id: string; name: string }[]
+  items: TakeoffDefinition[]
+}
+
+export interface TakeoffGroup {
+  key: string
+  rows: TakeoffRow[]
+  subtotals: Record<string, number>
+}
+
+export interface TakeoffRunOptions {
+  limit?: number
+  lang?: 'zh' | 'en'
+  ifcTypes?: string[]
+  groupBy?: 'container' | 'ifc_type' | ''
 }
 
 /** 把模型文件上传到服务端（浏览器开发期），返回保存后的绝对路径。 */
@@ -749,22 +780,34 @@ export function takeoffColumns(lang?: 'zh' | 'en'): Promise<TakeoffColumnsRespon
   })
 }
 
-/** 执行信息提取（固定字段 + 自定义列求值）。 */
-export function takeoffRun(path: string, columns?: TakeoffColumn[], limit = 500, lang?: 'zh' | 'en'): Promise<TakeoffRunResponse> {
+/** 内置信息提取模板（Solibri Definition 模式）。 */
+export function takeoffDefinitions(lang?: 'zh' | 'en'): Promise<TakeoffDefinitionsResponse> {
+  return apiRequest<TakeoffDefinitionsResponse>({
+    target: 'kernel',
+    method: 'GET',
+    path: '/takeoff/definitions',
+    query: lang ? { lang } : {}
+  })
+}
+
+/** 执行信息提取（固定字段 + 自定义列求值 + 可选过滤与分组）。 */
+export function takeoffRun(path: string, columns?: TakeoffColumn[], options: TakeoffRunOptions = {}): Promise<TakeoffRunResponse> {
+  const { limit = 500, lang, ifcTypes, groupBy } = options
   return apiRequest<TakeoffRunResponse>({
     target: 'kernel',
     method: 'POST',
     path: '/takeoff/run',
-    body: { path, columns, limit, lang }
+    body: { path, columns, limit, lang, ifc_types: ifcTypes, group_by: groupBy || undefined }
   })
 }
 
 /** 执行信息提取并导出 Excel，返回文件路径。 */
-export function takeoffExport(path: string, columns?: TakeoffColumn[], lang?: 'zh' | 'en'): Promise<TakeoffExportResponse> {
+export function takeoffExport(path: string, columns?: TakeoffColumn[], options: TakeoffRunOptions = {}): Promise<TakeoffExportResponse> {
+  const { lang, ifcTypes, groupBy } = options
   return apiRequest<TakeoffExportResponse>({
     target: 'kernel',
     method: 'POST',
     path: '/takeoff/export',
-    body: { path, columns, lang }
+    body: { path, columns, lang, ifc_types: ifcTypes, group_by: groupBy || undefined }
   })
 }
