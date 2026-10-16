@@ -3,7 +3,7 @@
 import type { TakeoffColumn } from './kernel'
 import { apiRequest } from './transport'
 
-export type TakeoffGroupKey = 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | ''
+export type TakeoffGroupKey = 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | `column:${string}` | ''
 
 export interface MyTakeoffDefinitionSummary {
   id: string

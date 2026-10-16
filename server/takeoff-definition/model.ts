@@ -4,9 +4,9 @@
 
 import { tr, type Lang } from '../i18n'
 
-// 与内核 extract.py 的 _GROUP_KEYS 保持一致。
+// 与内核 extract.py 的 _GROUP_KEYS 保持一致；column:<列 key> 表示按自定义列的值分组。
 export const GROUP_KEYS = ['container', 'ifc_type', 'layer_role', 'layer_material'] as const
-export type GroupKey = (typeof GROUP_KEYS)[number]
+export type GroupKey = (typeof GROUP_KEYS)[number] | `column:${string}`
 
 /** 自定义计算列（与内核 columns 规格一致）。 */
 export interface TakeoffColumn {
@@ -85,8 +85,9 @@ export function normalizeTakeoffDefinition(raw: unknown, lang?: Lang): TakeoffDe
   if (new Set(keys).size !== keys.length) fail(tr(lang, '列 key 不能重复', 'Column keys must be unique'))
   let groupBy: GroupKey | '' = ''
   if (typeof body.group_by === 'string' && body.group_by) {
-    if (!GROUP_KEYS.includes(body.group_by as GroupKey)) {
-      fail(tr(lang, `group_by 不合法：${body.group_by}（可选 ${GROUP_KEYS.join('/')}）`, `Invalid group_by: ${body.group_by} (allowed: ${GROUP_KEYS.join('/')})`))
+    const valid = GROUP_KEYS.includes(body.group_by as (typeof GROUP_KEYS)[number]) || body.group_by.startsWith('column:')
+    if (!valid) {
+      fail(tr(lang, `group_by 不合法：${body.group_by}（可选 ${GROUP_KEYS.join('/')}/column:<列key>）`, `Invalid group_by: ${body.group_by} (allowed: ${GROUP_KEYS.join('/')}/column:<key>)`))
     }
     groupBy = body.group_by as GroupKey
   }

@@ -70,7 +70,8 @@ def run_takeoff(
 ) -> dict:
     """对模型执行信息提取：固定字段 + 自定义列求值，可选按类型过滤与分组小计。"""
     normalized = normalize_columns(columns)
-    if group_by is not None and group_by not in _GROUP_KEYS:
+    # column:<key> = 按自定义列的值分组（对齐 Solibri 按任意属性分组，属性经自定义列 prop() 求值）
+    if group_by is not None and group_by not in _GROUP_KEYS and not group_by.startswith("column:"):
         group_by = None
     geometry, cache_hit = load_or_extract(model, path)
     # 门窗宽度 / 高度优先取 IFC 实体属性（OverallWidth / OverallHeight，文件单位换算为米），按需惰性计算换算系数
@@ -385,9 +386,13 @@ def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str], lang: 
     """
     groups: dict[str, dict] = {}
     order: list[str] = []
+    column_key = group_by[len("column:"):] if group_by.startswith("column:") else None
     for row in rows:
         allowed: tuple[str, ...] | None = None
-        if group_by in ("layer_role", "layer_material"):
+        if column_key is not None:
+            # 按自定义列的值分组：数值 / 布尔转文本，空值归「(未分组)」
+            key = _group_value_text((row.get("values") or {}).get(column_key), lang)
+        elif group_by in ("layer_role", "layer_material"):
             value = row.get(group_by) or ""
             if not value:
                 continue
@@ -419,6 +424,19 @@ def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str], lang: 
         }
         for key in order
     ]
+
+def _group_value_text(value: object, lang: str) -> str:
+    """把自定义列的值转成稳定的分组键文本：空值归空串（未分组），数值保留 6 位精度。"""
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        if lang == "zh":
+            return "是" if value else "否"
+        return "Yes" if value else "No"
+    if isinstance(value, (int, float)):
+        return str(round(float(value), 6))
+    return str(value).strip()
+
 
 def _build_row(
     element,

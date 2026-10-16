@@ -476,6 +476,11 @@ export default function TakeoffPanel({ modelPath, onSelect, onClose }: Props) {
                       <option value="ifc_type">{t('takeoff.group.ifc_type')}</option>
                       <option value="layer_role">{t('takeoff.group.layer_role')}</option>
                       <option value="layer_material">{t('takeoff.group.layer_material')}</option>
+                      {draft.columns.map((col) => (
+                        <option key={col.key} value={`column:${col.key}`}>
+                          {t('takeoff.group.column', { name: col.name })}
+                        </option>
+                      ))}
                     </select>
                   </label>
                 </div>

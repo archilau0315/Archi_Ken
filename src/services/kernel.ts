@@ -787,7 +787,7 @@ export interface TakeoffRunOptions {
   limit?: number
   lang?: 'zh' | 'en'
   ifcTypes?: string[]
-  groupBy?: 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | ''
+  groupBy?: 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | `column:${string}` | ''
 }
 
 /** 把模型文件上传到服务端（浏览器开发期），返回保存后的绝对路径。 */
