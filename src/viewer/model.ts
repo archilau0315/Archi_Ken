@@ -39,7 +39,24 @@ export type ColorMode = 'discipline' | 'ifc'
  * 缺省回退几何接口按专业映射的标准配色（与左栏色卡 / 碰撞矩阵表头同源，保证一致）。
  */
 function modeColor(item: BboxItem, mode: ColorMode): string | undefined {
-  return mode === 'ifc' ? item.ifc_color : (item.color ?? item.discipline_color)
+  const raw = mode === 'ifc' ? item.ifc_color : (item.color ?? item.discipline_color)
+  // 玻璃样式颜色过暗时兜底为浅玻璃色：不少导出件把玻璃写成近黑（如 #181918），
+  // 加透明度后仍是一块黑板，毫无玻璃质感；浅色玻璃样式不受影响。
+  if (raw && isGlass(item) && hexLuminance(raw) < 0.3) return GLASS_TINT_COLOR
+  return raw
+}
+
+/** 兜底浅玻璃色（淡青蓝，接近实际玻璃观感）。 */
+const GLASS_TINT_COLOR = '#b8d9ea'
+
+/** sRGB 十六进制颜色的感知亮度（0 黑 ~ 1 白）。 */
+function hexLuminance(hex: string): number {
+  const m = hex.replace('#', '')
+  if (m.length < 6) return 1
+  const r = parseInt(m.slice(0, 2), 16) / 255
+  const g = parseInt(m.slice(2, 4), 16) / 255
+  const b = parseInt(m.slice(4, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 /**
