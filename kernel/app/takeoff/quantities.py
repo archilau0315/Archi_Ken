@@ -16,7 +16,9 @@ def from_bbox(bbox: list[float]) -> dict[str, float]:
         "length": _round(max(dx, dy, dz)),
         "width": _round(min(dx, dy, dz)),
         "height": _round(dz),
-        "area": _round(2 * (dx * dy + dy * dz + dx * dz)),
+        # 面积取最大投影面（轮廓展开面积），不是包围盒表面积；
+        # 墙 / 幕墙 / 板 / 门窗 这类扁平构件的工程量都按正面算。
+        "area": _round(max(dx * dy, dy * dz, dx * dz)),
         "volume": _round(dx * dy * dz),
     }
 
