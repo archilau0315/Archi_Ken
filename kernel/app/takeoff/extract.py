@@ -13,9 +13,12 @@ from app.takeoff.columns import normalize_columns
 from app.takeoff.expr import ExprError, evaluate
 from app.takeoff.quantities import from_bbox
 
-# 跳过的空间结构类型（非物理构件，默认不进入提取表）。
-# 若调用方显式把 IfcSpace 放进 ifc_types，则按豁免处理（用于「空间面积」模板）。
-_SPATIAL_TYPES = {"IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace"}
+# 默认跳过的非物理构件：空间结构 + 洞口虚体，均不进入提取表。
+# 若调用方显式把对应类型放进 ifc_types，则按豁免处理（如「空间面积」模板用 IfcSpace）。
+_SKIPPED_TYPES = {
+    "IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace",
+    "IfcOpeningElement",
+}
 
 # 分组字段白名单：仅允许容器（楼层）或 IFC 类型，避免任意表达式注入
 _GROUP_KEYS = {"container", "ifc_type"}
@@ -34,7 +37,7 @@ def run_takeoff(
         group_by = None
     geometry, cache_hit = load_or_extract(model, path)
     type_filter = {t.strip() for t in (ifc_types or []) if t and t.strip()}
-    skipped = _SPATIAL_TYPES - type_filter  # 显式请求的类型（如 IfcSpace）不再跳过
+    skipped = _SKIPPED_TYPES - type_filter  # 显式请求的类型（如 IfcSpace）不再跳过
 
     rows: list[dict] = []
     totals: dict[str, float] = {}
