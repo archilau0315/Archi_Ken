@@ -8,6 +8,7 @@ export default {
   'clash.clearanceRequirement': '净空要求',
   'clash.ignoreSame': '忽略同专业',
   'clash.duplicateToggle': '重复构件 ≥',
+  'clash.mergeToggle': '邻近碰撞合并 ≤',
   'clash.customPair': '自定义构件对',
   'clash.pairAPlaceholder': 'A 侧类型，如 IfcDuct（留空=全部）',
   'clash.pairBPlaceholder': 'B 侧类型，如 IfcBeam（留空=全部）',
@@ -43,4 +44,5 @@ export default {
   'clash.mode.gap': '间隙',
   'clash.mode.clearance': '净空',
   'clash.mode.duplicate': '重复构件',
+  'clash.mergedCount': '合并 {n} 处',
 } as Record<string, string>

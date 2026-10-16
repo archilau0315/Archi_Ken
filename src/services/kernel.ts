@@ -253,6 +253,7 @@ export type ClashMode = 'hard' | 'gap' | 'clearance' | 'duplicate'
 export interface ClashMatrixRef extends ElementRef {
   discipline: string
   discipline_name: string
+  parent_guid?: string | null
 }
 
 export interface ClashMatrixItem {
@@ -264,6 +265,10 @@ export interface ClashMatrixItem {
   contact_point: number[] | null
   triangle_pairs: number
   overlap: number | null
+  /** 合并进本条 issue 的原始碰撞数；未合并恒为 1 */
+  merged: number
+  /** 本条涉及的全部构件 GUID（合并后的定位/隔离用）；未合并为 [a.guid, b.guid] */
+  related_guids: string[] | null
 }
 
 export interface ClashMatrixCell {
@@ -320,6 +325,8 @@ export interface ClashMatrixOptions {
   clearanceMm?: number | null
   /** 重复构件重合度阈值（0~1）；null/缺省表示关闭 */
   duplicateOverlap?: number | null
+  /** 邻近碰撞合并半径，单位 mm；null/缺省表示不合并 */
+  mergeMm?: number | null
   ignoreSameDiscipline?: boolean
   ignore?: ClashIgnoreRule[]
   selectionA?: ClashPairSelection | null
@@ -340,6 +347,7 @@ export function clashMatrix(path: string, options: ClashMatrixOptions = {}): Pro
       gap_mm: options.gapMm ?? null,
       clearance_mm: options.clearanceMm ?? null,
       duplicate_overlap: options.duplicateOverlap ?? null,
+      merge_mm: options.mergeMm ?? null,
       ignore_same_discipline: options.ignoreSameDiscipline ?? true,
       ignore: options.ignore,
       selection_a: options.selectionA

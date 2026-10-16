@@ -14,7 +14,7 @@ import ifcopenshell
 import ifcopenshell.util.element
 
 from app import i18n
-from app.clash import broadphase, classify, duplicates, engine, ignore
+from app.clash import broadphase, classify, duplicates, engine, ignore, merge
 from app.federation import discipline
 from app.ifc import summary as ifc_summary
 
@@ -51,9 +51,10 @@ def _cell_key(a: str, b: str) -> str:
 
 
 def _ref(meta: dict, lang: str) -> dict:
-    """构件引用（含专业显示名，按语言本地化）。"""
+    """构件引用（含专业显示名，按语言本地化；parent_guid 供拆分构造层归一）。"""
     return {
         "guid": meta["guid"],
+        "parent_guid": meta.get("parent_guid"),
         "name": meta["name"],
         "ifc_type": meta["ifc_type"],
         "discipline": meta["discipline"],
@@ -104,6 +105,7 @@ def run(
     cells = options.get("cells") or {}
     max_clashes = int(options.get("max_clashes", 200))
     duplicate_overlap = options.get("duplicate_overlap")  # 0~1，None 表示关闭重复检测
+    merge_dist = options.get("merge_dist")  # 模型单位；None 表示不合并邻近碰撞
 
     # 自定义构件对：宽相位前先按选择集收窄范围，减少候选对。
     scope = entries
@@ -126,7 +128,6 @@ def run(
         return tri_cache[guid]
 
     items: list[dict] = []
-    cell_stats: dict[str, dict] = {}
     ignored = 0
     tests = 0
     truncated = False
@@ -162,14 +163,6 @@ def run(
         if mode == "clearance" and cell_clear is None:
             continue
 
-        cell_a, cell_b = key.split("|")
-        stat = cell_stats.setdefault(
-            key,
-            {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "duplicate": 0, "total": 0},
-        )
-        stat[mode] += 1
-        stat["total"] += 1
-
         contact = result["contact_point"]
         items.append(
             {
@@ -194,18 +187,10 @@ def run(
             if ignore.should_ignore(meta_a, meta_b, rules, False):
                 ignored += 1
                 continue
-            key = _cell_key(meta_a["discipline"], meta_b["discipline"])
-            cell_a, cell_b = key.split("|")
-            stat = cell_stats.setdefault(
-                key,
-                {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "duplicate": 0, "total": 0},
-            )
-            stat["duplicate"] += 1
-            stat["total"] += 1
             items.append(
                 {
                     "mode": "duplicate",
-                    "cell": key,
+                    "cell": _cell_key(meta_a["discipline"], meta_b["discipline"]),
                     "a": _ref(meta_a, lang),
                     "b": _ref(meta_b, lang),
                     "distance": None,
@@ -217,6 +202,19 @@ def run(
             if len(items) >= max_clashes:
                 truncated = True
                 break
+
+    # 邻近碰撞合并（硬碰撞专属；无接触点的间隙 / 净空 / 重复保持单条），再按最终清单统计单元格。
+    items = merge.apply(items, merge_dist)
+    cell_stats: dict[str, dict] = {}
+    for item in items:
+        key = item["cell"]
+        cell_a, cell_b = key.split("|")
+        stat = cell_stats.setdefault(
+            key,
+            {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "duplicate": 0, "total": 0},
+        )
+        stat[item["mode"]] += 1
+        stat["total"] += 1
 
     disciplines = [
         {

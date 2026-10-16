@@ -58,6 +58,8 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
   const [clearanceMm, setClearanceMm] = useState(100)
   const [dupOn, setDupOn] = useState(false)
   const [dupPct, setDupPct] = useState(80)
+  const [mergeOn, setMergeOn] = useState(true)
+  const [mergeMm, setMergeMm] = useState(200)
   const [ignoreSame, setIgnoreSame] = useState(true)
   const [pairOn, setPairOn] = useState(false)
   const [pairATypes, setPairATypes] = useState('')
@@ -89,19 +91,21 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
     clearClashMarkers()
   }
 
-  /** 点击碰撞项：定位碰撞点、框选碰撞对、隔离其余构件。 */
+  /** 点击碰撞项：定位碰撞点、框选碰撞对（合并项含全部关联构件）、隔离其余构件。 */
   function locate(item: ClashMatrixItem, key: string, index: number): void {
     setActiveKey(key)
     onSelect?.(item.a.guid)
     // 视图 uid 带模型源序号前缀（碰撞检测以第一个模型源为输入，序号恒为 0）。
-    const uidA = `0:${item.a.guid}`
-    const uidB = `0:${item.b.guid}`
-    onPairSelect?.([uidA, uidB])
+    // 合并后的 issue 需框选全部关联构件，related_guids 缺省时退化为碰撞对双方。
+    const guids = item.related_guids?.length ? item.related_guids : [item.a.guid, item.b.guid]
+    const uids = guids.map((guid) => `0:${guid}`)
+    onPairSelect?.(uids)
     const viewer = viewerRef.current
     if (!viewer) return
-    viewer.isolate([uidA, uidB])
+    viewer.isolate(uids)
     clearClashMarkers()
     const point = item.contact_point
+    const uidA = `0:${item.a.guid}`
     if (point && point.length >= 3) {
       const markerId = `clash-${key}`
       viewer.addMarker({
@@ -150,6 +154,7 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
           gapMm: gapOn ? gapMm : null,
           clearanceMm: clearanceOn ? clearanceMm : null,
           duplicateOverlap: dupOn ? Math.min(Math.max(dupPct, 0), 100) / 100 : null,
+          mergeMm: mergeOn ? Math.max(mergeMm, 0) : null,
           ignoreSameDiscipline: ignoreSame,
           ignore: ignoreRules.length ? ignoreRules : undefined,
           selectionA: pairOn ? { ifcTypes: parseTypes(pairATypes) ?? undefined } : null,
@@ -228,6 +233,19 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
               onChange={(e) => setDupPct(Number(e.target.value))}
             />
             %
+          </label>
+          <label className="clash-toggle">
+            <input type="checkbox" checked={mergeOn} onChange={(e) => setMergeOn(e.target.checked)} />
+            {t('clash.mergeToggle')}
+            <input
+              type="number"
+              className="clash-num"
+              value={mergeMm}
+              min={0}
+              disabled={!mergeOn}
+              onChange={(e) => setMergeMm(Number(e.target.value))}
+            />
+            mm
           </label>
           <label className="clash-toggle">
             <input type="checkbox" checked={ignoreSame} onChange={(e) => setIgnoreSame(e.target.checked)} />
@@ -416,7 +434,10 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                     >
                       <div className="issue-head">
                         <span className={`dot ${item.mode}`} />
-                        <span className="issue-title">{modeLabel(item.mode)}</span>
+                        <span className="issue-title">
+                          {modeLabel(item.mode)}
+                          {item.merged > 1 ? ` · ${t('clash.mergedCount', { n: item.merged })}` : ''}
+                        </span>
                         <span className="issue-cat">
                           {item.a.discipline_name} × {item.b.discipline_name}
                         </span>

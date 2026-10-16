@@ -37,6 +37,7 @@ class MatrixRequest(BaseModel):
     cells: dict[str, dict[str, bool]] | None = Field(None, description="按单元格启停，键为 discipline_a|discipline_b")
     selection_a: PairSelection | None = Field(None, description="自定义构件对 A 侧选择集；与 selection_b 至少给一个才生效")
     selection_b: PairSelection | None = Field(None, description="自定义构件对 B 侧选择集；缺省表示对侧为全集")
+    merge_mm: float | None = Field(None, ge=0, description="邻近碰撞合并半径，单位 mm；None 表示不合并")
     max_clashes: int = Field(200, ge=1, le=5000, description="最多返回的问题条数")
     lang: str | None = Field(None, description="返回语言：zh（默认）/ en")
 
@@ -77,6 +78,11 @@ def clash_matrix(payload: MatrixRequest) -> dict[str, Any]:
         "duplicate_overlap": payload.duplicate_overlap,
         "selection_a": payload.selection_a.model_dump() if payload.selection_a else None,
         "selection_b": payload.selection_b.model_dump() if payload.selection_b else None,
+        "merge_dist": (
+            operators.to_model_units(payload.merge_mm, "mm", unit_to_meter)
+            if payload.merge_mm is not None
+            else None
+        ),
         "max_clashes": payload.max_clashes,
     }
     result = matrix.run(model, entries, options, payload.path, i18n.pick_lang(payload.lang))

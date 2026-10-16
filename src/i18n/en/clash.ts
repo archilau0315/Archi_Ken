@@ -8,6 +8,7 @@ export default {
   'clash.clearanceRequirement': 'Clearance',
   'clash.ignoreSame': 'Ignore same discipline',
   'clash.duplicateToggle': 'Duplicates ≥',
+  'clash.mergeToggle': 'Merge nearby ≤',
   'clash.customPair': 'Custom pair',
   'clash.pairAPlaceholder': 'Side A types, e.g. IfcDuct (empty = all)',
   'clash.pairBPlaceholder': 'Side B types, e.g. IfcBeam (empty = all)',
@@ -43,4 +44,5 @@ export default {
   'clash.mode.gap': 'Gap',
   'clash.mode.clearance': 'Clearance',
   'clash.mode.duplicate': 'Duplicate',
+  'clash.mergedCount': 'merged {n}',
 } as Record<string, string>
