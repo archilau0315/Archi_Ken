@@ -43,3 +43,50 @@
   color: #888;
   font-size: 14px;
 }
+
+/* 忽略规则：折叠区与规则条目。 */
+.clash-ignore {
+  width: 100%;
+}
+
+.clash-ignore-head {
+  padding: 0;
+  font-size: 12px;
+}
+
+.clash-ignore-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid var(--border, #e2e5ea);
+  border-radius: 6px;
+}
+
+.clash-ignore-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.clash-ignore-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clash-ignore-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clash-ignore-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}

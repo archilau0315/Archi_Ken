@@ -87,6 +87,7 @@ def run(
         key = discipline.classify_element(element, model_hint)["key"]
         meta[guid] = {
             "guid": guid,
+            "parent_guid": entry.get("parent_guid"),
             "ifc_type": entry["ifc_type"],
             "discipline": key,
             "name": getattr(element, "Name", None),

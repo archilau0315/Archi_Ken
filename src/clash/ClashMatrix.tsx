@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 
 import { useT } from '../i18n'
 import { clashMatrix } from '../services/kernel'
-import type { ClashMatrixItem, ClashMatrixResponse, ClashMode } from '../services/kernel'
+import type { ClashIgnoreRule, ClashMatrixItem, ClashMatrixResponse, ClashMode } from '../services/kernel'
 import type { ViewerHandle } from '../viewer/Viewer'
 import './clash.css'
 
@@ -21,6 +21,13 @@ const MODE_COLORS: Record<ClashMode, string> = {
   gap: '#e08a00',
   clearance: '#1f7a4d',
   duplicate: '#7c3aed'
+}
+
+/** 解析单个类型输入：自动补 Ifc 前缀，空串返回 null。 */
+function parseType(raw: string): string | null {
+  const value = raw.trim()
+  if (!value) return null
+  return /^ifc/i.test(value) ? `Ifc${value.slice(3)}` : `Ifc${value}`
 }
 
 /** 解析逗号分隔的类型输入：自动补 Ifc 前缀，空输入返回 null（表示该侧不过滤）。 */
@@ -55,6 +62,11 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
   const [pairOn, setPairOn] = useState(false)
   const [pairATypes, setPairATypes] = useState('')
   const [pairBTypes, setPairBTypes] = useState('')
+  const [ignoreRules, setIgnoreRules] = useState<ClashIgnoreRule[]>([])
+  const [ignoreOpen, setIgnoreOpen] = useState(false)
+  const [ignTypeA, setIgnTypeA] = useState('')
+  const [ignTypeB, setIgnTypeB] = useState('')
+  const [ignGuid, setIgnGuid] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<ClashMatrixResponse | null>(null)
@@ -139,6 +151,7 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
           clearanceMm: clearanceOn ? clearanceMm : null,
           duplicateOverlap: dupOn ? Math.min(Math.max(dupPct, 0), 100) / 100 : null,
           ignoreSameDiscipline: ignoreSame,
+          ignore: ignoreRules.length ? ignoreRules : undefined,
           selectionA: pairOn ? { ifcTypes: parseTypes(pairATypes) ?? undefined } : null,
           selectionB: pairOn ? { ifcTypes: parseTypes(pairBTypes) ?? undefined } : null,
           maxClashes: 300,
@@ -241,6 +254,81 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
               />
             </div>
           )}
+
+          <div className="clash-ignore">
+            <button className="ghost tiny clash-ignore-head" onClick={() => setIgnoreOpen((open) => !open)}>
+              {ignoreOpen ? '▾' : '▸'} {t('clash.ignoreRules')}（{ignoreRules.length}）
+            </button>
+            {ignoreOpen && (
+              <div className="clash-ignore-body">
+                {ignoreRules.map((rule, index) => (
+                  <div className="clash-ignore-item" key={index}>
+                    <span className="clash-ignore-label">
+                      {rule.guids
+                        ? `GUID ${rule.guids.join(' × ')}`
+                        : `${rule.type_a} × ${rule.type_b}`}
+                    </span>
+                    <button
+                      className="ghost tiny"
+                      onClick={() => setIgnoreRules((rules) => rules.filter((_, i) => i !== index))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="clash-ignore-add">
+                  <input
+                    type="text"
+                    value={ignTypeA}
+                    placeholder={t('clash.ignoreTypeAPlaceholder')}
+                    onChange={(e) => setIgnTypeA(e.target.value)}
+                  />
+                  <span className="clash-pair-x">×</span>
+                  <input
+                    type="text"
+                    value={ignTypeB}
+                    placeholder={t('clash.ignoreTypeBPlaceholder')}
+                    onChange={(e) => setIgnTypeB(e.target.value)}
+                  />
+                  <button
+                    className="ghost tiny"
+                    disabled={!parseType(ignTypeA) || !parseType(ignTypeB)}
+                    onClick={() => {
+                      const typeA = parseType(ignTypeA)
+                      const typeB = parseType(ignTypeB)
+                      if (!typeA || !typeB) return
+                      setIgnoreRules((rules) => [...rules, { type_a: typeA, type_b: typeB }])
+                      setIgnTypeA('')
+                      setIgnTypeB('')
+                    }}
+                  >
+                    {t('clash.addRule')}
+                  </button>
+                </div>
+                <div className="clash-ignore-add">
+                  <input
+                    type="text"
+                    value={ignGuid}
+                    placeholder={t('clash.ignoreGuidPlaceholder')}
+                    onChange={(e) => setIgnGuid(e.target.value)}
+                  />
+                  <button
+                    className="ghost tiny"
+                    disabled={!ignGuid.trim()}
+                    onClick={() => {
+                      const guid = ignGuid.trim()
+                      if (!guid) return
+                      setIgnoreRules((rules) => [...rules, { guids: [guid] }])
+                      setIgnGuid('')
+                    }}
+                  >
+                    {t('clash.addRule')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button onClick={() => void run()} disabled={busy}>
             {busy ? t('clash.running') : t('clash.run')}
           </button>

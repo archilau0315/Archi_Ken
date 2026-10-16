@@ -305,6 +305,15 @@ export interface ClashPairSelection {
   storeys?: string[]
 }
 
+/** 忽略规则：类型对 / 专业对 / GUID（单个=白名单，两个=仅该对）。 */
+export interface ClashIgnoreRule {
+  type_a?: string
+  type_b?: string
+  discipline_a?: string
+  discipline_b?: string
+  guids?: string[]
+}
+
 export interface ClashMatrixOptions {
   hard?: boolean
   gapMm?: number | null
@@ -312,7 +321,7 @@ export interface ClashMatrixOptions {
   /** 重复构件重合度阈值（0~1）；null/缺省表示关闭 */
   duplicateOverlap?: number | null
   ignoreSameDiscipline?: boolean
-  ignore?: unknown[]
+  ignore?: ClashIgnoreRule[]
   selectionA?: ClashPairSelection | null
   selectionB?: ClashPairSelection | null
   maxClashes?: number
