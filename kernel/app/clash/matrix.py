@@ -14,7 +14,7 @@ import ifcopenshell
 import ifcopenshell.util.element
 
 from app import i18n
-from app.clash import broadphase, classify, engine, ignore
+from app.clash import broadphase, classify, duplicates, engine, ignore
 from app.federation import discipline
 from app.ifc import summary as ifc_summary
 
@@ -102,6 +102,7 @@ def run(
     ignore_same = bool(options.get("ignore_same_discipline", True))
     cells = options.get("cells") or {}
     max_clashes = int(options.get("max_clashes", 200))
+    duplicate_overlap = options.get("duplicate_overlap")  # 0~1，None 表示关闭重复检测
 
     # 自定义构件对：宽相位前先按选择集收窄范围，减少候选对。
     scope = entries
@@ -163,7 +164,7 @@ def run(
         cell_a, cell_b = key.split("|")
         stat = cell_stats.setdefault(
             key,
-            {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "total": 0},
+            {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "duplicate": 0, "total": 0},
         )
         stat[mode] += 1
         stat["total"] += 1
@@ -178,11 +179,43 @@ def run(
                 "distance": result["distance"],
                 "contact_point": [round(value, 6) for value in contact] if contact else None,
                 "triangle_pairs": result["triangle_pairs"],
+                "overlap": None,
             }
         )
         if len(items) >= max_clashes:
             truncated = True
             break
+
+    # 重复构件检测：独立于碰撞分类，不受「忽略同专业」与单元格启停影响（重复本就多为同专业）。
+    if duplicate_overlap is not None and len(items) < max_clashes:
+        for guid_a, guid_b, ratio in duplicates.run(scope, duplicate_overlap):
+            meta_a, meta_b = meta[guid_a], meta[guid_b]
+            if ignore.should_ignore(meta_a, meta_b, rules, False):
+                ignored += 1
+                continue
+            key = _cell_key(meta_a["discipline"], meta_b["discipline"])
+            cell_a, cell_b = key.split("|")
+            stat = cell_stats.setdefault(
+                key,
+                {"key": key, "a": cell_a, "b": cell_b, "hard": 0, "gap": 0, "clearance": 0, "duplicate": 0, "total": 0},
+            )
+            stat["duplicate"] += 1
+            stat["total"] += 1
+            items.append(
+                {
+                    "mode": "duplicate",
+                    "cell": key,
+                    "a": _ref(meta_a, lang),
+                    "b": _ref(meta_b, lang),
+                    "distance": None,
+                    "contact_point": None,
+                    "triangle_pairs": 0,
+                    "overlap": ratio,
+                }
+            )
+            if len(items) >= max_clashes:
+                truncated = True
+                break
 
     disciplines = [
         {
@@ -200,13 +233,14 @@ def run(
         "hard": sum(c["hard"] for c in cell_list),
         "gap": sum(c["gap"] for c in cell_list),
         "clearance": sum(c["clearance"] for c in cell_list),
+        "duplicate": sum(c["duplicate"] for c in cell_list),
         "total": len(items),
     }
     return {
         "path": path,
         "unit_to_meter": unit_to_meter,
-        "modes": {"hard": hard, "gap": gap is not None, "clearance": clearance is not None},
-        "thresholds": {"gap": gap, "clearance": clearance},
+        "modes": {"hard": hard, "gap": gap is not None, "clearance": clearance is not None, "duplicate": duplicate_overlap is not None},
+        "thresholds": {"gap": gap, "clearance": clearance, "duplicate_overlap": duplicate_overlap},
         "disciplines": disciplines,
         "cells": cell_list,
         "totals": totals,

@@ -19,7 +19,8 @@ function makeError(err: unknown): string {
 const MODE_COLORS: Record<ClashMode, string> = {
   hard: '#d93025',
   gap: '#e08a00',
-  clearance: '#1f7a4d'
+  clearance: '#1f7a4d',
+  duplicate: '#7c3aed'
 }
 
 /** 解析逗号分隔的类型输入：自动补 Ifc 前缀，空输入返回 null（表示该侧不过滤）。 */
@@ -48,6 +49,8 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
   const [gapMm, setGapMm] = useState(50)
   const [clearanceOn, setClearanceOn] = useState(false)
   const [clearanceMm, setClearanceMm] = useState(100)
+  const [dupOn, setDupOn] = useState(false)
+  const [dupPct, setDupPct] = useState(80)
   const [ignoreSame, setIgnoreSame] = useState(true)
   const [pairOn, setPairOn] = useState(false)
   const [pairATypes, setPairATypes] = useState('')
@@ -121,7 +124,7 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
       setError(t('clash.errorNoModel'))
       return
     }
-    if (!hard && !gapOn && !clearanceOn) {
+    if (!hard && !gapOn && !clearanceOn && !dupOn) {
       setError(t('clash.errorNoCategory'))
       return
     }
@@ -134,6 +137,7 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
           hard,
           gapMm: gapOn ? gapMm : null,
           clearanceMm: clearanceOn ? clearanceMm : null,
+          duplicateOverlap: dupOn ? Math.min(Math.max(dupPct, 0), 100) / 100 : null,
           ignoreSameDiscipline: ignoreSame,
           selectionA: pairOn ? { ifcTypes: parseTypes(pairATypes) ?? undefined } : null,
           selectionB: pairOn ? { ifcTypes: parseTypes(pairBTypes) ?? undefined } : null,
@@ -199,6 +203,20 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
             mm
           </label>
           <label className="clash-toggle">
+            <input type="checkbox" checked={dupOn} onChange={(e) => setDupOn(e.target.checked)} />
+            {t('clash.duplicateToggle')}
+            <input
+              type="number"
+              className="clash-num"
+              value={dupPct}
+              min={0}
+              max={100}
+              disabled={!dupOn}
+              onChange={(e) => setDupPct(Number(e.target.value))}
+            />
+            %
+          </label>
+          <label className="clash-toggle">
             <input type="checkbox" checked={ignoreSame} onChange={(e) => setIgnoreSame(e.target.checked)} />
             {t('clash.ignoreSame')}
           </label>
@@ -243,6 +261,7 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                 <span className="chip error">{t('clash.chipHard', { n: result.totals.hard })}</span>
                 <span className="chip warning">{t('clash.chipGap', { n: result.totals.gap })}</span>
                 <span className="chip info">{t('clash.chipClearance', { n: result.totals.clearance })}</span>
+                <span className="chip">{t('clash.chipDuplicate', { n: result.totals.duplicate })}</span>
                 <span className="chip">{t('clash.chipPairs', { n: result.candidate_pairs })}</span>
                 <span className="chip">{t('clash.chipIgnored', { n: result.ignored })}</span>
               </div>
@@ -273,7 +292,8 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                                   <span className="cell-detail">
                                     {cell.hard ? `${t('clash.cellHard', { n: cell.hard })} ` : ''}
                                     {cell.gap ? `${t('clash.cellGap', { n: cell.gap })} ` : ''}
-                                    {cell.clearance ? t('clash.cellClearance', { n: cell.clearance }) : ''}
+                                    {cell.clearance ? `${t('clash.cellClearance', { n: cell.clearance })} ` : ''}
+                                    {cell.duplicate ? t('clash.cellDuplicate', { n: cell.duplicate }) : ''}
                                   </span>
                                 </>
                               ) : (
@@ -296,7 +316,9 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                   const metric =
                     item.mode === 'hard'
                       ? t('clash.metricHard', { n: item.triangle_pairs })
-                      : t('clash.metricDistance', { d: item.distance ?? '' })
+                      : item.mode === 'duplicate'
+                        ? t('clash.metricOverlap', { d: `${Math.round((item.overlap ?? 0) * 100)}%` })
+                        : t('clash.metricDistance', { d: item.distance ?? '' })
                   const key = `${item.cell}-${item.a.guid}-${item.b.guid}-${index}`
                   return (
                     <li

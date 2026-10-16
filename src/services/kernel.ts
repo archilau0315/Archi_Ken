@@ -248,7 +248,7 @@ export function runClash(path: string, maxClashes = 200): Promise<ClashResponse>
 
 // ——— 冲突矩阵与碰撞分类（M4） ———
 
-export type ClashMode = 'hard' | 'gap' | 'clearance'
+export type ClashMode = 'hard' | 'gap' | 'clearance' | 'duplicate'
 
 export interface ClashMatrixRef extends ElementRef {
   discipline: string
@@ -263,6 +263,7 @@ export interface ClashMatrixItem {
   distance: number | null
   contact_point: number[] | null
   triangle_pairs: number
+  overlap: number | null
 }
 
 export interface ClashMatrixCell {
@@ -272,6 +273,7 @@ export interface ClashMatrixCell {
   hard: number
   gap: number
   clearance: number
+  duplicate: number
   total: number
 }
 
@@ -285,11 +287,11 @@ export interface ClashMatrixDiscipline {
 export interface ClashMatrixResponse {
   path: string
   unit_to_meter: number
-  modes: { hard: boolean; gap: boolean; clearance: boolean }
-  thresholds: { gap: number | null; clearance: number | null }
+  modes: { hard: boolean; gap: boolean; clearance: boolean; duplicate: boolean }
+  thresholds: { gap: number | null; clearance: number | null; duplicate_overlap: number | null }
   disciplines: ClashMatrixDiscipline[]
   cells: ClashMatrixCell[]
-  totals: { hard: number; gap: number; clearance: number; total: number }
+  totals: { hard: number; gap: number; clearance: number; duplicate: number; total: number }
   candidate_pairs: number
   triangle_tests: number
   ignored: number
@@ -307,6 +309,8 @@ export interface ClashMatrixOptions {
   hard?: boolean
   gapMm?: number | null
   clearanceMm?: number | null
+  /** 重复构件重合度阈值（0~1）；null/缺省表示关闭 */
+  duplicateOverlap?: number | null
   ignoreSameDiscipline?: boolean
   ignore?: unknown[]
   selectionA?: ClashPairSelection | null
@@ -326,6 +330,7 @@ export function clashMatrix(path: string, options: ClashMatrixOptions = {}): Pro
       hard: options.hard ?? true,
       gap_mm: options.gapMm ?? null,
       clearance_mm: options.clearanceMm ?? null,
+      duplicate_overlap: options.duplicateOverlap ?? null,
       ignore_same_discipline: options.ignoreSameDiscipline ?? true,
       ignore: options.ignore,
       selection_a: options.selectionA

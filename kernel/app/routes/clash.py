@@ -31,6 +31,7 @@ class MatrixRequest(BaseModel):
     hard: bool = Field(True, description="是否启用硬碰撞")
     gap_mm: float | None = Field(None, ge=0, description="间隙（软碰撞）容差，单位 mm；None 表示关闭")
     clearance_mm: float | None = Field(None, ge=0, description="净空要求值，单位 mm；None 表示关闭")
+    duplicate_overlap: float | None = Field(None, ge=0, le=1, description="重复构件重合度阈值（0~1，包围盒交集体积/较小体积）；None 表示关闭")
     ignore_same_discipline: bool = Field(True, description="是否忽略同专业构件对")
     ignore: list[dict[str, Any]] | None = Field(None, description="忽略规则：type_a/type_b、discipline_a/discipline_b、guids")
     cells: dict[str, dict[str, bool]] | None = Field(None, description="按单元格启停，键为 discipline_a|discipline_b")
@@ -73,6 +74,7 @@ def clash_matrix(payload: MatrixRequest) -> dict[str, Any]:
         "ignore_same_discipline": payload.ignore_same_discipline,
         "ignore": payload.ignore,
         "cells": payload.cells,
+        "duplicate_overlap": payload.duplicate_overlap,
         "selection_a": payload.selection_a.model_dump() if payload.selection_a else None,
         "selection_b": payload.selection_b.model_dump() if payload.selection_b else None,
         "max_clashes": payload.max_clashes,

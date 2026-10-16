@@ -910,6 +910,14 @@ button.tiny.danger {
   border-left-color: #2f6feb;
 }
 
+.dot.duplicate {
+  background: #7c3aed;
+}
+
+.issue.clash-duplicate {
+  border-left-color: #7c3aed;
+}
+
 /* IDS 校验与编辑器（M7） */
 .ids-tools {
   display: flex;
