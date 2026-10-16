@@ -79,4 +79,9 @@ export default {
   'takeoff.empty': '当前条件下没有匹配构件',
   'takeoff.loading': '模板加载中…',
   'takeoff.selectHint': '从左侧选择一个模板开始',
+  'takeoff.importDef': '导入模板',
+  'takeoff.exportDef': '导出模板',
+  'takeoff.imported': '已导入 {count} 个模板',
+  'takeoff.importBadFile': '导入失败：文件不是有效的模板 JSON',
+  'takeoff.locateHint': '点击在 3D 视图中定位并高亮该构件',
 } as Record<string, string>

@@ -471,7 +471,13 @@ export default function App() {
           onClose={() => setIdsOpen(false)}
         />
       )}
-      {takeoffOpen && <TakeoffPanel modelPath={primaryPath} onClose={() => setTakeoffOpen(false)} />}
+      {takeoffOpen && (
+        <TakeoffPanel
+          modelPath={primaryPath}
+          onSelect={(guid) => void selectElement(`0:${guid}`)}
+          onClose={() => setTakeoffOpen(false)}
+        />
+      )}
       {reportOpen && (
         <ReportPanel
           modelPath={primaryPath}

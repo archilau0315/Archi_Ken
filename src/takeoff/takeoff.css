@@ -346,6 +346,15 @@ button.takeoff-expander {
   color: var(--muted);
 }
 
+/* 结果行可点击定位构件：悬停高亮提示可点 */
+.takeoff-table tbody tr.takeoff-row-click {
+  cursor: pointer;
+}
+
+.takeoff-table tbody tr.takeoff-row-click:hover td {
+  background: #eef4ff;
+}
+
 .takeoff-total-row td {
   background: #e9ebef;
   font-weight: 700;

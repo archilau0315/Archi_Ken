@@ -42,7 +42,7 @@
 | 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检、自定义构件对选择集、重复构件检测、邻近碰撞合并分组）；每条碰撞可标审查状态（新发现 / 已确认 / 已忽略，服务端持久化、重跑保留）；点击碰撞项 3D 定位碰撞点（图钉标记）、碰撞对框选并隔离显示 |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
-| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、门窗宽高取 IFC 属性（宽不再误取墙厚）、墙体及构造层面积扣除门窗洞口（抹灰 / 保温等按面积计取层同步减洞口）、幕墙按框外围 / 洞口面积计量、受控表达式自定义列、Excel 导出 |
+| 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、模板 JSON 导入导出、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、门窗宽高取 IFC 属性（宽不再误取墙厚）、墙体及构造层面积扣除门窗洞口（抹灰 / 保温等按面积计取层同步减洞口）、幕墙按框外围 / 洞口面积计量、受控表达式自定义列、点击结果行 3D 定位高亮、Excel 导出 |
 | 沟通协作 | 问题清单生命周期 / 评论 / 视图快照，BCF 2.1 导出（可导入 Solibri / Navisworks） |
 | 检查报告 | 统一问题清单（含规则规范依据 reference）→ HTML 预览 / PDF / Excel 导出；碰撞接入冲突矩阵口径，每条碰撞带碰撞点坐标与构件 GUID（HTML 构件名下小字 / Excel 独立列 / PDF 名下小字），已标「已忽略」的碰撞不进报告 |
 | 批量自动化 | Autorun 无人值守批量检查，报告产物落盘与分发目录复制 |
@@ -542,7 +542,9 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/ruleset-editor/RuleEditor.tsx` | 单条规则编辑表单 | 按 `check.type` 分派字段（property / intersection / clearance / headroom / dimension / duplicate / count / containment） |
 | `src/clash/ClashMatrix.tsx` | 冲突矩阵面板 | 右侧停靠（不遮 3D）：硬碰撞 / 间隙 / 净空分类与容差、忽略同专业、运行矩阵、专业矩阵表与问题清单；点击碰撞项 3D 定位碰撞点（图钉）、碰撞对框选并隔离显示 |
 | `src/ids/IdsEditor.tsx` | IDS 编辑器 | 悬浮层：IDS XML 编辑 / 载入示例 / 解析预览 / 导出 XML / 对模型校验并查看逐规范报告 |
-| `src/takeoff/TakeoffPanel.tsx` | 信息提取面板 | Solibri ITO 风格悬浮层：左树内置 Definition 模板 + 我的模板（新建 / 重命名 / 删除），右侧类型过滤 / 分组 / 自定义列编辑，点选自动运行，分组小计 + 总合计，导出 Excel |
+| `src/takeoff/TakeoffPanel.tsx` | 信息提取面板 | Solibri ITO 风格悬浮层：左树内置 Definition 模板 + 我的模板（新建 / 重命名 / 删除 / JSON 导入导出），右侧类型过滤 / 分组 / 自定义列编辑，点选自动运行，分组小计 + 总合计，点击结果行 3D 定位高亮，导出 Excel |
+| `src/takeoff/TakeoffRows.tsx` | 提取结果表行渲染 | 结果表父子层级展开 / 分组小计行 / 数值格式化（自面板拆出的子模块） |
+| `src/takeoff/template-io.ts` | 模板导入导出 | 模板 JSON 序列化下载与导入解析（兼容包裹 / 裸对象 / 数组，导入即新建不覆盖） |
 | `src/communication/CommunicationPanel.tsx` | 沟通面板 | 悬浮层：导入检查结果生成问题清单、新建问题（可关联选中构件）、状态 / 级别过滤、BCF 2.1 导出 |
 | `src/communication/IssueDetail.tsx` | 沟通问题详情 | 状态 / 级别调整、评论列表与发送、附加 3D 视图快照、定位构件、删除 |
 | `src/report/ReportPanel.tsx` | 报告面板 | 悬浮层：摘要统计 + 问题清单预览（前 100 条，构件点击联动 3D），重新生成 / HTML 预览 / 导出 PDF / 导出 Excel |

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useT } from '../i18n'
 import { takeoffDefinitions, takeoffExport, takeoffRun } from '../services/kernel'
@@ -10,12 +10,16 @@ import {
   saveMyDefinition
 } from '../services/takeoff-definitions'
 import type { MyTakeoffDefinitionSummary, TakeoffGroupKey } from '../services/takeoff-definitions'
+import { downloadText, parseTemplateFile, serializeTemplate } from './template-io'
+import { formatCell, GroupRows, TreeRows } from './TakeoffRows'
 
 // 信息提取面板（L4，M6）：Solibri 风格 Definition 模板库 + 左树右表 + 分组小计。
 // 内置模板由内核提供，用户模板由 L3 持久化。
 
 interface Props {
   modelPath: string
+  /** 点击结果行时回调（App 用它选中并高亮 3D 构件）。 */
+  onSelect?: (guid: string) => void
   onClose: () => void
 }
 
@@ -46,7 +50,7 @@ function makeError(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-export default function TakeoffPanel({ modelPath, onClose }: Props) {
+export default function TakeoffPanel({ modelPath, onSelect, onClose }: Props) {
   const { t, lang } = useT()
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [builtin, setBuiltin] = useState<TakeoffDefinition[]>([])
@@ -60,6 +64,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [draftCol, setDraftCol] = useState({ key: '', name: '', unit: '', expr: '' })
+  const fileRef = useRef<HTMLInputElement>(null)
   // 层级展开状态：默认折叠，只显示父构件汇总行（避免父子重复计量）
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -256,6 +261,52 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
       setMessage(t('takeoff.renamed', { name: name.trim() }))
     } catch (err) {
       setError(makeError(err))
+    }
+  }
+
+  /** 导出当前模板为 JSON 文件（不含 id，导入时一律新建）。 */
+  function exportTemplate(): void {
+    downloadText(
+      serializeTemplate({
+        name: draft.name,
+        description: draft.description,
+        category: draft.category || 'mine',
+        ifc_types: draft.ifc_types,
+        columns: draft.columns,
+        group_by: draft.group_by
+      }),
+      `${draft.name.trim() || 'takeoff-template'}.json`
+    )
+  }
+
+  async function importTemplates(file: File): Promise<void> {
+    setError('')
+    setMessage('')
+    try {
+      const inputs = parseTemplateFile(await file.text())
+      if (!inputs.length) {
+        setError(t('takeoff.importBadFile'))
+        return
+      }
+      let count = 0
+      for (const input of inputs) {
+        try {
+          await saveMyDefinition(input, lang)
+          count += 1
+        } catch {
+          // 单条不合法（如列缺表达式）跳过，不影响其余导入
+        }
+      }
+      if (!count) {
+        setError(t('takeoff.importBadFile'))
+        return
+      }
+      await refreshMine()
+      setMessage(t('takeoff.imported', { count }))
+    } catch (err) {
+      setError(makeError(err))
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
@@ -460,6 +511,22 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                   <button className="ghost" onClick={() => void saveMine()} disabled={busy !== '' || !draft.name.trim() || !draft.columns.length}>
                     {busy === 'save' ? t('takeoff.saving') : t('takeoff.saveAsMine')}
                   </button>
+                  <button className="ghost" onClick={exportTemplate} disabled={!draft.name.trim() || !draft.columns.length}>
+                    {t('takeoff.exportDef')}
+                  </button>
+                  <button className="ghost" onClick={() => fileRef.current?.click()}>
+                    {t('takeoff.importDef')}
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".json,application/json"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) void importTemplates(file)
+                    }}
+                  />
                   {dirty && <span className="hint small">{t('takeoff.dirty')}</span>}
                   {selected?.source === 'builtin' && <span className="badge">{t('takeoff.builtinBadge')}</span>}
                 </div>
@@ -536,6 +603,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                                   t={t}
                                   expanded={expanded}
                                   onToggle={toggleExpand}
+                                  onSelect={onSelect}
                                 />
                               ))
                             ) : (
@@ -545,6 +613,7 @@ export default function TakeoffPanel({ modelPath, onClose }: Props) {
                                 t={t}
                                 expanded={expanded}
                                 onToggle={toggleExpand}
+                                onSelect={onSelect}
                               />
                             )}
                           </tbody>
@@ -583,142 +652,3 @@ function toDraft(def: TakeoffDefinition): Draft {
   }
 }
 
-interface GroupProps {
-  group: { key: string; rows: TakeoffRow[]; subtotals: Record<string, number> }
-  valueKeys: string[]
-  t: (key: string) => string
-  expanded: Set<string>
-  onToggle: (guid: string) => void
-}
-
-function GroupRows({ group, valueKeys, t, expanded, onToggle }: GroupProps) {
-  // 全为子构件的组不显示小计行（子构件不计入合计，避免出现空小计）
-  const hasSubtotal = Object.keys(group.subtotals).length > 0
-  return (
-    <>
-      <tr className="takeoff-group-header">
-        <td colSpan={3 + valueKeys.length}>▼ {group.key || t('takeoff.ungrouped')}</td>
-      </tr>
-      <TreeRows rows={group.rows} valueKeys={valueKeys} t={t} expanded={expanded} onToggle={onToggle} />
-      {hasSubtotal && (
-        <tr className="takeoff-subtotal-row">
-          <td>{t('takeoff.subtotal')}</td>
-          <td />
-          <td />
-          {valueKeys.map((key) => (
-            <td key={key}>{formatCell(group.subtotals[key], t)}</td>
-          ))}
-        </tr>
-      )}
-    </>
-  )
-}
-
-interface TreeProps {
-  rows: TakeoffRow[]
-  valueKeys: string[]
-  t: (key: string) => string
-  expanded: Set<string>
-  onToggle: (guid: string) => void
-}
-
-/** 按 parent_guid 把平铺行组成父子层级：父行默认折叠只显示汇总，点 ▸ 展开子构件明细。 */
-function TreeRows({ rows, valueKeys, t, expanded, onToggle }: TreeProps) {
-  const { roots, childrenOf } = useMemo(() => {
-    const guids = new Set(rows.map((row) => row.guid))
-    const map = new Map<string, TakeoffRow[]>()
-    const top: TakeoffRow[] = []
-    for (const row of rows) {
-      const parent = row.parent_guid
-      // 父不在本组行内（被过滤或截断）时按顶层处理，避免子行丢失
-      if (parent && parent !== row.guid && guids.has(parent)) {
-        const list = map.get(parent)
-        if (list) list.push(row)
-        else map.set(parent, [row])
-      } else {
-        top.push(row)
-      }
-    }
-    return { roots: top, childrenOf: map }
-  }, [rows])
-
-  return (
-    <>
-      {roots.map((row) => (
-        <RowNode
-          key={row.guid}
-          row={row}
-          depth={0}
-          childrenOf={childrenOf}
-          valueKeys={valueKeys}
-          t={t}
-          expanded={expanded}
-          onToggle={onToggle}
-        />
-      ))}
-    </>
-  )
-}
-
-interface NodeProps {
-  row: TakeoffRow
-  depth: number
-  childrenOf: Map<string, TakeoffRow[]>
-  valueKeys: string[]
-  t: (key: string) => string
-  expanded: Set<string>
-  onToggle: (guid: string) => void
-}
-
-function RowNode({ row, depth, childrenOf, valueKeys, t, expanded, onToggle }: NodeProps) {
-  const kids = childrenOf.get(row.guid) ?? []
-  const open = expanded.has(row.guid)
-  return (
-    <>
-      <tr className={depth > 0 ? 'takeoff-row-child' : undefined}>
-        <td>
-          <span className="takeoff-name-cell" style={{ paddingLeft: depth * 18 }}>
-            {kids.length > 0 ? (
-              <button
-                className="takeoff-expander"
-                onClick={() => onToggle(row.guid)}
-                title={open ? t('takeoff.collapse') : t('takeoff.expand')}
-              >
-                {open ? '▾' : '▸'}
-              </button>
-            ) : (
-              depth > 0 && <span className="takeoff-expander-holder" />
-            )}
-            {row.name || t('takeoff.unnamed')}
-            {kids.length > 0 && <span className="takeoff-child-count">{kids.length}</span>}
-          </span>
-        </td>
-        <td>{row.ifc_type}</td>
-        <td>{row.container || '—'}</td>
-        {valueKeys.map((key) => (
-          <td key={key}>{formatCell(row.values[key], t)}</td>
-        ))}
-      </tr>
-      {open &&
-        kids.map((kid) => (
-          <RowNode
-            key={kid.guid}
-            row={kid}
-            depth={depth + 1}
-            childrenOf={childrenOf}
-            valueKeys={valueKeys}
-            t={t}
-            expanded={expanded}
-            onToggle={onToggle}
-          />
-        ))}
-    </>
-  )
-}
-
-function formatCell(value: unknown, t: (key: string) => string): string {
-  if (value === null || value === undefined) return '—'
-  if (typeof value === 'number') return String(Math.round(value * 1e6) / 1e6)
-  if (typeof value === 'boolean') return value ? t('takeoff.yes') : t('takeoff.no')
-  return String(value)
-}

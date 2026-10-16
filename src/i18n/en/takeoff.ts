@@ -79,4 +79,9 @@ export default {
   'takeoff.empty': 'No elements match the current filter',
   'takeoff.loading': 'Loading templates…',
   'takeoff.selectHint': 'Pick a template on the left to start',
+  'takeoff.importDef': 'Import Template',
+  'takeoff.exportDef': 'Export Template',
+  'takeoff.imported': 'Imported {count} template(s)',
+  'takeoff.importBadFile': 'Import failed: not a valid template JSON file',
+  'takeoff.locateHint': 'Click to locate and highlight this element in 3D',
 } as Record<string, string>
