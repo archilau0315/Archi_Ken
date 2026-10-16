@@ -217,9 +217,14 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
     const core = coreRef.current
     if (!core) return
     layerRef.current?.dispose()
+    // 洞口（IfcOpeningElement）是墙上开洞的辅助虚体，不是真实构件；
+    // 渲染成实体盒会罩住门窗洞口，故 3D 视图不渲染它。
+    const visible = (items as (BboxItem | ElementMesh)[]).filter(
+      (item) => item.ifc_type !== 'IfcOpeningElement'
+    )
     const layer = useMesh
-      ? buildMeshLayer(items as ElementMesh[], colorMode)
-      : buildModelLayer(items as BboxItem[])
+      ? buildMeshLayer(visible as ElementMesh[], colorMode)
+      : buildModelLayer(visible as BboxItem[])
     core.scene.add(layer.group)
     core.setPickTargets(layer.meshes)
     core.frameObject(layer.group)
