@@ -66,6 +66,7 @@ export default {
   'takeoff.group.container': '按楼层',
   'takeoff.group.ifc_type': '按类型',
   'takeoff.group.layer_role': '按构造层角色',
+  'takeoff.group.layer_material': '按材质名',
   'takeoff.fieldTypes': 'IFC 类型过滤',
   'takeoff.fieldTypesPh': 'IfcWall, IfcDoor…（逗号分隔，留空 = 全部）',
   'takeoff.editColumns': '自定义列…',

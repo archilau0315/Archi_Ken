@@ -713,7 +713,7 @@ export interface TakeoffRunResponse {
   columns: TakeoffColumn[]
   totals: Record<string, number>
   rows: TakeoffRow[]
-  group_by?: 'container' | 'ifc_type' | 'layer_role'
+  group_by?: 'container' | 'ifc_type' | 'layer_role' | 'layer_material'
   groups?: TakeoffGroup[]
 }
 
@@ -731,7 +731,7 @@ export interface TakeoffDefinition {
   description: string
   ifc_types: string[]
   columns: TakeoffColumn[]
-  group_by: 'container' | 'ifc_type' | 'layer_role' | ''
+  group_by: 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | ''
 }
 
 export interface TakeoffDefinitionsResponse {
@@ -749,7 +749,7 @@ export interface TakeoffRunOptions {
   limit?: number
   lang?: 'zh' | 'en'
   ifcTypes?: string[]
-  groupBy?: 'container' | 'ifc_type' | 'layer_role' | ''
+  groupBy?: 'container' | 'ifc_type' | 'layer_role' | 'layer_material' | ''
 }
 
 /** 把模型文件上传到服务端（浏览器开发期），返回保存后的绝对路径。 */

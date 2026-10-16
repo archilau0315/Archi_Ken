@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-# group_by 取值：container（按楼层）/ ifc_type（按类型）/ layer_role（按构造层角色）；空串 = 不分组
+# group_by 取值：container（按楼层）/ ifc_type（按类型）/ layer_role（按构造层角色）/ layer_material（按材质名）；空串 = 不分组
 DEFINITIONS: list[dict] = [
     # ---------- 建筑 ----------
     {

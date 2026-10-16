@@ -1,6 +1,6 @@
 """信息提取主流程：逐构件求值自定义列，产出 ITO 行数据与合计。
 
-支持按 ifc_types 过滤（Solibri Definition 模式）、按 container / ifc_type / layer_role 分组小计。
+支持按 ifc_types 过滤（Solibri Definition 模式）、按 container / ifc_type / layer_role / layer_material 分组小计。
 """
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ _SKIPPED_TYPES = {
     "IfcOpeningElement",
 }
 
-# 分组字段白名单：仅允许容器（楼层）、IFC 类型或构造层角色，避免任意表达式注入
-_GROUP_KEYS = {"container", "ifc_type", "layer_role"}
+# 分组字段白名单：仅允许容器（楼层）、IFC 类型、构造层角色或材质名，避免任意表达式注入
+_GROUP_KEYS = {"container", "ifc_type", "layer_role", "layer_material"}
 
 
 def run_takeoff(
@@ -64,6 +64,10 @@ def run_takeoff(
         quantities = from_geometry(entry) if entry else {}
         row, values, failed = _build_row(element, quantities, normalized)
         errors += failed
+        # 材质名：供 group_by=layer_material 时按材质分组（多材质父构件无单一材质，留空避免与明细重复）
+        material = _material_of(entry)
+        if material:
+            row["layer_material"] = material
         parent_guid = _parent_guid_in(element, guids)
         if parent_guid:
             # 子构件（幕墙面板 / 龙骨 / 复合墙构造层）只作展开明细，不计入合计，避免父子重复
@@ -153,6 +157,16 @@ def _merge_bbox(bboxes: list[list[float]]) -> list[float] | None:
     ]
 
 
+def _material_of(entry: dict | None) -> str | None:
+    """取几何条目的真实材质名；空名或 IFC 样式名（如窗的 IfcSurfaceStyleRendering）不算材质。"""
+    if not entry:
+        return None
+    name = (entry.get("material") or "").strip()
+    if not name or name.startswith("Ifc"):
+        return None
+    return name
+
+
 def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) -> tuple[list[dict], int]:
     """把「按材质拆开的几何组」展开为子行明细。
 
@@ -174,6 +188,7 @@ def _material_rows(element, parts: list[dict], columns: list[dict[str, str]]) ->
         errors += failed
         row["name"] = f"{name} - {material}" if name else material
         row["layer_role"] = classify_layer(material)
+        row["layer_material"] = material
         rows.append(row)
     return rows, errors
 
@@ -207,20 +222,20 @@ def _accumulate(totals: dict[str, float], values: dict, keys: list[str]) -> None
 def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str], lang: str = "zh") -> list[dict]:
     """按固定字段分组：保持行原顺序，组内累加小计。空值归到「(未分组)」。
 
-    按 layer_role 分组时只收纳构造层明细行（父构件没有层角色，整墙口径由总计行体现），
-    且每个角色只累加它自洽的口径（结构层算体积、保温层算面积 + 体积、抹灰 / 防水 / 饰面算面积），
-    避免把体积与面积混加成一个没有工程意义的数。其余分组沿用「子构件只作明细、不计小计」的规则。
+    按 layer_role / layer_material 分组时只收纳带该字段的明细行（多材质父构件没有单一材质 / 层角色，
+    整构件口径由总计行体现）：layer_role 每个角色只累加它自洽的口径（结构层算体积、保温层算面积 + 体积、
+    抹灰 / 防水 / 饰面算面积），layer_material 则各列分别汇总同名材质；其余分组沿用「子构件只作明细、不计小计」。
     """
     groups: dict[str, dict] = {}
     order: list[str] = []
     for row in rows:
         allowed: tuple[str, ...] | None = None
-        if group_by == "layer_role":
-            role = row.get("layer_role") or ""
-            if not role:
+        if group_by in ("layer_role", "layer_material"):
+            value = row.get(group_by) or ""
+            if not value:
                 continue
-            key = role
-            allowed = ROLE_QUANTITIES.get(role)
+            key = value
+            allowed = ROLE_QUANTITIES.get(value) if group_by == "layer_role" else None
         else:
             key = row.get(group_by) or ""
         if key not in groups:
@@ -231,8 +246,9 @@ def _group_rows(rows: list[dict], group_by: str, numeric_keys: list[str], lang: 
             }
             order.append(key)
         groups[key]["rows"].append(row)
-        # 非角色分组时子构件只作明细、不计入小计，避免父子重复计量
-        if group_by != "layer_role" and row.get("parent_guid"):
+        # 非层 / 材质分组时子构件只作明细、不计入小计，避免父子重复计量；
+        # 层 / 材质分组下多材质明细行（带 parent_guid）本身就是要汇总的对象，故不跳过
+        if group_by not in ("layer_role", "layer_material") and row.get("parent_guid"):
             continue
         values = row.get("values") or {}
         if allowed is not None:
