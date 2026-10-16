@@ -45,4 +45,8 @@ export default {
   'clash.mode.clearance': 'Clearance',
   'clash.mode.duplicate': 'Duplicate',
   'clash.mergedCount': 'merged {n}',
+  'clash.status.title': 'Review status (kept across reruns)',
+  'clash.status.new': 'New',
+  'clash.status.acknowledged': 'Acknowledged',
+  'clash.status.ignored': 'Ignored',
 } as Record<string, string>

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 
 import { useT } from '../i18n'
+import { clashStatusList, clashStatusSet, clashStatusKey } from '../services/clash'
+import type { ClashStatus, ClashStatusEntry } from '../services/clash'
 import { clashMatrix } from '../services/kernel'
 import type { ClashIgnoreRule, ClashMatrixItem, ClashMatrixResponse, ClashMode } from '../services/kernel'
 import type { ViewerHandle } from '../viewer/Viewer'
@@ -73,6 +75,8 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
   const [error, setError] = useState('')
   const [result, setResult] = useState<ClashMatrixResponse | null>(null)
   const [activeKey, setActiveKey] = useState<string | null>(null)
+  // 碰撞审查状态（new/已确认/已忽略）：存服务端，重跑后按状态键回填。
+  const [statusMap, setStatusMap] = useState<Record<string, ClashStatusEntry>>({})
   // 本面板添加的图钉 id：只清理自己的标记，不影响视图面板载入的检查标记。
   const markerIds = useRef<string[]>([])
 
@@ -163,10 +167,23 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
           lang
         })
       )
+      // 回填已保存的审查状态（键与检测顺序无关，重跑后保留标记）。
+      setStatusMap(await clashStatusList(modelPath))
     } catch (err) {
       setError(makeError(err))
     } finally {
       setBusy(false)
+    }
+  }
+
+  /** 切换碰撞项审查状态：本地即时生效，后台写服务端。 */
+  async function changeStatus(item: ClashMatrixItem, status: ClashStatus): Promise<void> {
+    const key = clashStatusKey(item.mode, item.a.guid, item.b.guid)
+    setStatusMap((prev) => ({ ...prev, [key]: { status, updated_at: new Date().toISOString() } }))
+    try {
+      await clashStatusSet(modelPath, [{ key, status }])
+    } catch (err) {
+      setError(makeError(err))
     }
   }
 
@@ -426,10 +443,14 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                         ? t('clash.metricOverlap', { d: `${Math.round((item.overlap ?? 0) * 100)}%` })
                         : t('clash.metricDistance', { d: item.distance ?? '' })
                   const key = `${item.cell}-${item.a.guid}-${item.b.guid}-${index}`
+                  const statusKey = clashStatusKey(item.mode, item.a.guid, item.b.guid)
+                  const status: ClashStatus = statusMap[statusKey]?.status ?? 'new'
                   return (
                     <li
                       key={key}
-                      className={`issue clash-${item.mode}${activeKey === key ? ' active' : ''}`}
+                      className={`issue clash-${item.mode}${status === 'ignored' ? ' clash-ignored' : ''}${
+                        activeKey === key ? ' active' : ''
+                      }`}
                       onClick={() => locate(item, key, index)}
                     >
                       <div className="issue-head">
@@ -446,6 +467,19 @@ export default function ClashMatrix({ modelPath, viewerRef, onSelect, onPairSele
                         {item.a.name || item.a.guid} ↔ {item.b.name || item.b.guid}
                       </p>
                       <p className="issue-elem">{metric}</p>
+                      <select
+                        className="clash-status"
+                        value={status}
+                        title={t('clash.status.title')}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => void changeStatus(item, e.target.value as ClashStatus)}
+                      >
+                        {(['new', 'acknowledged', 'ignored'] as const).map((value) => (
+                          <option key={value} value={value}>
+                            {t(`clash.status.${value}`)}
+                          </option>
+                        ))}
+                      </select>
                     </li>
                   )
                 })}

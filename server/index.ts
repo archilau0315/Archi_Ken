@@ -2,6 +2,7 @@ import Koa from 'koa'
 
 import { createRouter } from './router'
 import { autorunDelete, autorunGet, autorunList, autorunRun, autorunRunGet, autorunRuns, autorunSave } from './routes/autorun'
+import { clashStatusList, clashStatusSet } from './routes/clash'
 import { issueBcfExport, issueComment, issueCreate, issueDelete, issueGet, issueImport, issueList, issueSnapshot, issueUpdate } from './routes/issue'
 import { reportExportPost, reportHtmlGet, reportRunGet, reportRunPost } from './routes/report'
 import { rulesetDelete, rulesetGet, rulesetList, rulesetRun, rulesetSave } from './routes/ruleset'
@@ -69,6 +70,8 @@ router.post('/issues/comment', issueComment)
 router.post('/issues/snapshot', issueSnapshot)
 router.post('/issues/import', issueImport)
 router.post('/issues/bcf/export', issueBcfExport)
+router.get('/clash/status/list', clashStatusList)
+router.post('/clash/status/set', clashStatusSet)
 router.get('/autorun/list', autorunList)
 router.get('/autorun/get', autorunGet)
 router.post('/autorun/save', autorunSave)

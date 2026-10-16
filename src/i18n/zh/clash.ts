@@ -45,4 +45,8 @@ export default {
   'clash.mode.clearance': '净空',
   'clash.mode.duplicate': '重复构件',
   'clash.mergedCount': '合并 {n} 处',
+  'clash.status.title': '审查状态（保存后重跑保留）',
+  'clash.status.new': '新发现',
+  'clash.status.acknowledged': '已确认',
+  'clash.status.ignored': '已忽略',
 } as Record<string, string>

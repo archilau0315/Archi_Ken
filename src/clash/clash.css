@@ -90,3 +90,19 @@
   padding: 4px 8px;
   font-size: 12px;
 }
+
+/* 碰撞审查状态：列表项右下角小下拉，已忽略项整体淡化。 */
+.clash-status {
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  border: 1px solid var(--border, #e2e5ea);
+  border-radius: 4px;
+  background: #fafbfc;
+  color: var(--muted, #5b6270);
+  cursor: pointer;
+}
+
+.issue.clash-ignored {
+  opacity: 0.55;
+}

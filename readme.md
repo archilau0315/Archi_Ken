@@ -39,7 +39,7 @@
 |---|---|
 | IFC 模型解析 | 摘要 / 空间层级 / 构件属性，多专业模型融合与专业自动映射 |
 | 规则化检查 | 规则 DSL v1 + 109 个内置模板，规则集编辑器（保存 / 复用 / 校验 / 运行 / JSON 导入导出） |
-| 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检、自定义构件对选择集、重复构件检测、邻近碰撞合并分组）；点击碰撞项 3D 定位碰撞点（图钉标记）、碰撞对框选并隔离显示 |
+| 碰撞与干涉检测 | 硬碰撞 + 冲突矩阵（硬 / 间隙 / 净空分类、忽略规则、专业两两对检、自定义构件对选择集、重复构件检测、邻近碰撞合并分组）；每条碰撞可标审查状态（新发现 / 已确认 / 已忽略，服务端持久化、重跑保留）；点击碰撞项 3D 定位碰撞点（图钉标记）、碰撞对框选并隔离显示 |
 | 合规性检查 | 无障碍 / 净高 / 消防 / 疏散 / 机电 / 结构 / 门窗 / 空间 / 防护专用规则集，净高与净尺寸检查，预设一键套用 |
 | IDS 校验 | buildingSMART IDS：编辑 / 导入 / 导出 / 逐规范校验报告 |
 | 信息提取 | ITO / QTO：14 个内置 Definition 模板（对齐 Solibri）+ 我的模板库、IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计、复合墙按构造层展开明细、幕墙按洞口面积计量、受控表达式自定义列、Excel 导出 |
@@ -54,7 +54,7 @@
 |---|---|
 | IFC parsing | Summary / spatial hierarchy / element properties; multi-model federation with automatic discipline mapping |
 | Rule-based checking | Rule DSL v1 + 109 built-in templates; ruleset editor (save / reuse / validate / run / JSON import & export) |
-| Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks, custom pair selection sets, duplicate element detection, nearby-clash merging); click a clash to locate the contact point in 3D (pin marker) with the clashing pair boxed and isolated |
+| Clash detection | Hard clash + clash matrix (hard / gap / clearance classification, ignore rules, discipline pairwise checks, custom pair selection sets, duplicate element detection, nearby-clash merging); each clash carries a review status (new / acknowledged / ignored, persisted server-side and kept across reruns); click a clash to locate the contact point in 3D (pin marker) with the clashing pair boxed and isolated |
 | Compliance checking | Accessibility / headroom / fire-safety / evacuation / MEP / structure / doors-windows rulesets (with GB code references), headroom & clear-dimension checks, one-click presets |
 | IDS validation | buildingSMART IDS: edit / import / export / per-specification validation reports |
 | Takeoff | ITO / QTO: quantity derivation, custom columns via controlled expressions, Excel export |
@@ -139,7 +139,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | 报告 | 摘要统计 + 问题清单预览（规则问题附规范依据出处，点击构件联动 3D），重新生成 / 新窗口 HTML 预览 / 一键导出 PDF / Excel 到 `.data/exports/` |
 | 视图 | 3D 视图上方紧凑工具条（占布局高度、完全不遮挡画面）+ 手风琴浮窗（默认全折叠、头部可拖拽移位）。工具条承接高频操作：透视 / 平面（正交 2D）一键切换与七个标准视角（点击即到、无跳转）；X / Y / Z 三向剖切一键启用（点击轴名即切、无确认与存盘环节），滑杆实时拖动，选中「拖动」后可直接在 3D 视图中拖拽切面（沿该轴屏幕投影换算，拖拽中同步刷新）、翻转切向、全部清除；浮窗只留低频项：检查结果按严重度配色一键放置 3D 标记、点击图钉飞行定位；演示视角命名保存（localStorage）与顺序自动播放。另有一键「透视外壳」：把建筑 / 结构 / 场地淡化为半透明并关闭深度写入，透明度由旁边滑杆实时可调（5% ~ 90%，默认 12%），直接看见内部的暖通、给排水、电气管线（融合包围盒与真实网格两种模式均可用） |
 | 规则集 | 规则集编辑器：新建 / 编辑 / 保存 / 复用，内置模板快速添加，合规预设一键添加（无障碍 / 净高 / 消防），支持「校验」「运行」与 JSON 导入 / 导出（团队分享） |
-| 碰撞矩阵 | 勾选硬碰撞 / 间隙 / 净空并设容差，可忽略同专业；「忽略规则」支持按类型对（如 IfcDuct × IfcBeam）与按构件 GUID 白名单（已知可接受碰撞不再报）；可勾选「重复构件」按包围盒重合度阈值（默认 ≥80%）查同类型重复放置；可勾选「自定义构件对」按类型限定 A/B 两侧（留空=全部，支持前缀）；「邻近碰撞合并」按半径（默认 200mm）将共享构件且碰撞点相近的硬碰撞归并为一个 issue（标题显示合并数，定位时框选全部关联构件）；运行后查看专业矩阵与问题清单；面板停靠右侧不遮 3D，点击问题项在 3D 中定位碰撞点（图钉）、碰撞对双方框选并隔离显示，「恢复显示」还原 |
+| 碰撞矩阵 | 勾选硬碰撞 / 间隙 / 净空并设容差，可忽略同专业；「忽略规则」支持按类型对（如 IfcDuct × IfcBeam）与按构件 GUID 白名单（已知可接受碰撞不再报）；可勾选「重复构件」按包围盒重合度阈值（默认 ≥80%）查同类型重复放置；可勾选「自定义构件对」按类型限定 A/B 两侧（留空=全部，支持前缀）；「邻近碰撞合并」按半径（默认 200mm）将共享构件且碰撞点相近的硬碰撞归并为一个 issue（标题显示合并数，定位时框选全部关联构件）；运行后查看专业矩阵与问题清单；每条问题右下角可切换审查状态（新发现 / 已确认 / 已忽略，存服务端、重跑保留，已忽略项淡化显示）；面板停靠右侧不遮 3D，点击问题项在 3D 中定位碰撞点（图钉）、碰撞对双方框选并隔离显示，「恢复显示」还原 |
 | IDS 校验 | IDS 编辑器：载入示例或粘贴 IDS XML、解析预览结构、导出 XML，对模型运行校验并逐规范 / 逐要求查看通过情况与失败构件（点击联动 3D） |
 | 信息提取 | ITO / QTO 面板（Solibri 风格）：左树按类挑选内置 Definition 模板（墙 / 墙体构造层 / 幕墙 / 门 / 窗 / 空间 / 结构 / 机电等 14 个），点选自动运行；复合墙按构造层 / 材质展开子行明细（父行代表整体并计入合计，子行只作明细，父行体积 / 表面积按各构造层净量累加），幕墙按「洞口 / 框外围面积」计量（只列面积与长度，不按体积 / 材质分层）；实体构件工程量按真实三角网格取净体积 / 总表面积（洞口、凹口已扣除；网格不闭合时回退包围盒口径）；支持 IFC 类型过滤、按楼层 / 类型 / 构造层角色 / 材质名分组小计与总合计、自定义计算列（`qty('volume')`、`attr('Name')`、`prop(属性集,属性)` 等函数）、「另存为我的模板」复用、重命名 / 删除，一键导出 Excel（含分组小计行） |
 | 沟通 | 沟通与 BCF 面板：「导入检查结果」一键生成问题清单（按标题+构件去重）；状态（待处理 / 已确认 / 已解决）与级别调整、评论、附加 3D 视角快照、定位构件、按状态 / 级别过滤；「导出 BCF」产出 BCF 2.1 zip 到 `.data/exports/` |
@@ -153,7 +153,7 @@ Three-pane workspace: **left** model sources & federated tree + model summary ·
 | Report | Summary statistics + issue preview (click an element to highlight in 3D), regenerate / HTML preview in a new window / one-click PDF / Excel export to `.data/exports/` |
 | Views | A compact toolbar docked above the 3D view (occupies layout height, never covers the canvas) plus an accordion floating card (collapsed by default, draggable by its header). The toolbar carries high-frequency actions: one-click perspective / plan (orthographic 2D) toggle and seven standard views (instant, no navigation); X / Y / Z sections enabled by a single axis click (no confirm or save step), live slider, pick "Drag" to move a section plane directly inside the 3D view (mapped along the axis' screen projection, updating while you drag), flip direction and clear all. The floating card keeps only low-frequency items: severity-colored 3D markers from check results, click a pin to fly to it; named presentation viewpoints (localStorage) with auto-play. A one-click "X-Ray Shell" fades architecture / structure / site to translucent with depth writes disabled; its opacity is adjustable live via the adjacent slider (5% – 90%, default 12%), so the MEP pipes, ducts and cables inside become visible (works in both federated bbox mode and true-mesh mode) |
 | Rulesets | Ruleset editor: create / edit / save / reuse, quick-add from built-in templates, one-click compliance presets (accessibility / headroom / fire safety / evacuation / MEP / structure / openings), validate & run |
-| Clash Matrix | Enable hard / gap / clearance with tolerances, optionally ignore same discipline; "Ignore rules" supports type pairs (e.g. IfcDuct × IfcBeam) and per-element GUID whitelists (accepted clashes no longer reported); "Duplicates" flags same-type elements whose bbox overlap exceeds a threshold (default ≥80%); "Custom pair" restricts sides A/B by IFC type (empty = all, prefix supported); "Merge nearby" groups hard clashes sharing an element with nearby contact points (default ≤200mm) into one issue (title shows merged count, locate selects all related elements); run to see the discipline matrix and issue list; the panel docks to the right without covering the 3D view — click an issue to fly to the contact point (pin marker) with the clashing pair boxed and isolated, "Show all" restores |
+| Clash Matrix | Enable hard / gap / clearance with tolerances, optionally ignore same discipline; "Ignore rules" supports type pairs (e.g. IfcDuct × IfcBeam) and per-element GUID whitelists (accepted clashes no longer reported); "Duplicates" flags same-type elements whose bbox overlap exceeds a threshold (default ≥80%); "Custom pair" restricts sides A/B by IFC type (empty = all, prefix supported); "Merge nearby" groups hard clashes sharing an element with nearby contact points (default ≤200mm) into one issue (title shows merged count, locate selects all related elements); run to see the discipline matrix and issue list; each issue has a review status picker at its bottom-right (new / acknowledged / ignored, stored server-side and kept across reruns, ignored items dimmed); the panel docks to the right without covering the 3D view — click an issue to fly to the contact point (pin marker) with the clashing pair boxed and isolated, "Show all" restores |
 | IDS Check | IDS editor: load example or paste IDS XML, parse & preview structure, export XML, validate against the model and review per-specification / per-requirement results with failing elements (click to select in 3D) |
 | Takeoff | ITO / QTO panel: fixed fields and suggested columns, custom computed columns (`qty('volume')`, `attr('Name')`, `prop(pset, property)` and more), quantities derived from the real triangle mesh (net volume / total surface area, with opening / recess deducted; bbox fallback for non-closed meshes; parent rows sum their layer net quantities; composite walls expand by layer, curtain walls measured by opening area), per-element results with totals, one-click Excel export |
 | Communicate | Communication & BCF panel: "Import check results" builds the issue list (deduplicated by title+element); status (open / acknowledged / resolved) & severity, comments, 3D view snapshots, locate element, filters; "Export BCF" writes a BCF 2.1 zip to `.data/exports/` |
@@ -321,6 +321,8 @@ Requires the kernel online; kernel URL can be overridden via `ARCHIKEN_KERNEL_UR
 | POST | `/ruleset/delete` | 删除规则集；请求体 `{id}` |
 | POST | `/ruleset/run` | 以规则集运行对应模型；请求体 `{id, path, include_clash?}`，返回统一问题清单 |
 | GET | `/issues/list?status=&severity=&source=` | 沟通问题列表（可按状态 / 级别 / 来源过滤），返回摘要（含评论数、是否有快照） |
+| GET | `/clash/status/list?path=` | 读取模型的碰撞审查状态表（键 `mode\|guid_a\|guid_b` → `{status, updated_at}`） |
+| POST | `/clash/status/set` | 批量写入碰撞审查状态；请求体 `{path, entries:[{key, status}]}`，status 取 `new/acknowledged/ignored`（空串删除该键） |
 | GET | `/issues/get?id=` | 读取单个问题全文（含评论；缺失 id → 400；不存在 → 404） |
 | POST | `/issues/create` | 新建沟通问题；请求体 `{title, description?, severity?, category?, source?, model_path?, element?, related?, location?}`，返回 201 |
 | POST | `/issues/update` | 更新问题（状态生命周期 / 级别 / 描述等）；请求体 `{id, title?, description?, severity?, status?, category?}` |
@@ -350,6 +352,8 @@ Requires the kernel online; kernel URL can be overridden via `ARCHIKEN_KERNEL_UR
 | POST | `/ruleset/delete` | Delete ruleset; body `{id}` |
 | POST | `/ruleset/run` | Run a ruleset against a model; body `{id, path, include_clash?}` → unified issue list |
 | GET | `/issues/list?status=&severity=&source=` | Issue list (filter by status / severity / source), summaries incl. comment count & snapshot flag |
+| GET | `/clash/status/list?path=` | Read a model's clash review status table (key `mode\|guid_a\|guid_b` → `{status, updated_at}`) |
+| POST | `/clash/status/set` | Batch-save clash review statuses; body `{path, entries:[{key, status}]}`, status is `new/acknowledged/ignored` (empty string deletes the key) |
 | GET | `/issues/get?id=` | Full issue incl. comments (missing id → 400; not found → 404) |
 | POST | `/issues/create` | Create issue; body `{title, description?, severity?, category?, source?, model_path?, element?, related?, location?}` → 201 |
 | POST | `/issues/update` | Update issue (lifecycle / severity / description etc.); body `{id, title?, description?, severity?, status?, category?}` |
