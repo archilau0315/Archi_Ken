@@ -13,10 +13,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ifc.type_match import matches_string
 
-def _type_eq(actual: str, expected: str) -> bool:
-    """IFC 类型匹配支持前缀（如 IfcDuct 命中 IfcDuctSegment）。"""
-    return actual == expected or actual.startswith(expected)
+
+def _type_eq(meta: dict, expected: str) -> bool:
+    """IFC 类型匹配支持前缀（如 IfcDuct 命中 IfcDuctSegment）与 IFC2x3 泛型流构件回退。"""
+    return matches_string(meta["ifc_type"], expected, meta.get("object_type") or "", prefix=True)
 
 
 def _guids_of(meta: dict) -> set:
@@ -43,8 +45,8 @@ def _match(rule: dict[str, Any], a: dict, b: dict) -> bool:
 
     type_a, type_b = rule.get("type_a"), rule.get("type_b")
     if type_a and type_b:
-        forward = _type_eq(a["ifc_type"], type_a) and _type_eq(b["ifc_type"], type_b)
-        backward = _type_eq(a["ifc_type"], type_b) and _type_eq(b["ifc_type"], type_a)
+        forward = _type_eq(a, type_a) and _type_eq(b, type_b)
+        backward = _type_eq(a, type_b) and _type_eq(b, type_a)
         if forward or backward:
             return True
 

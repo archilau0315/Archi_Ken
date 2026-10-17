@@ -17,13 +17,16 @@ from app import i18n
 from app.clash import broadphase, classify, duplicates, engine, ignore, merge
 from app.federation import discipline
 from app.ifc import summary as ifc_summary
+from app.ifc.type_match import matches_string
 
 _ORDER = {item["key"]: index for index, item in enumerate(discipline.DISCIPLINES)}
 
 
-def _type_eq(actual: str, expected: str) -> bool:
-    """IFC 类型匹配支持前缀（如 IfcDuct 命中 IfcDuctSegment）。"""
-    return actual == expected or actual.startswith(expected)
+def _type_eq(meta_entry: dict, expected: str) -> bool:
+    """IFC 类型匹配支持前缀（如 IfcDuct 命中 IfcDuctSegment）与 IFC2x3 泛型流构件回退。"""
+    return matches_string(
+        meta_entry["ifc_type"], expected, meta_entry.get("object_type") or "", prefix=True
+    )
 
 
 def _storey_of(element) -> str:
@@ -37,7 +40,7 @@ def _in_selection(meta_entry: dict, selection: dict | None) -> bool:
     if not selection:
         return True
     types = selection.get("ifc_types") or []
-    if types and not any(_type_eq(meta_entry["ifc_type"], item) for item in types):
+    if types and not any(_type_eq(meta_entry, item) for item in types):
         return False
     storeys = selection.get("storeys") or []
     if storeys and meta_entry.get("storey", "") not in storeys:
@@ -92,6 +95,8 @@ def run(
             "ifc_type": entry["ifc_type"],
             "discipline": key,
             "name": getattr(element, "Name", None),
+            # 供类型匹配的 IFC2x3 泛型流构件回退（如 IfcFlowSegment + "Duct Segment"）
+            "object_type": getattr(element, "ObjectType", None) or "",
         }
         if need_storey:
             meta[guid]["storey"] = _storey_of(element)

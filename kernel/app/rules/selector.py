@@ -17,6 +17,7 @@ from typing import Any
 import ifcopenshell
 import ifcopenshell.util.element
 
+from app.ifc.type_match import alias_for
 from app.rules import operators
 
 
@@ -74,9 +75,26 @@ def select(model: ifcopenshell.file, target: dict[str, Any]) -> list[dict[str, A
                 try:
                     candidates_iter = model.by_type(ifc_type)
                 except RuntimeError:
-                    continue  # 类型在当前 IFC 版本不存在（如 IFC2x3 无 IfcDuctSegment），视为无匹配
-                for element in candidates_iter:
-                    push(element)
+                    candidates_iter = None
+                if candidates_iter is not None:
+                    for element in candidates_iter:
+                        push(element)
+                    continue
+                # 类型在当前 IFC 版本不存在（如 IFC2x3 无 IfcDuctSegment）：
+                # 机电细分类型回退到 IFC2x3 泛型流构件 + ObjectType 关键词判定；
+                # 无别名（普通建筑类型）视为无匹配。
+                alias = alias_for(ifc_type)
+                if alias is None:
+                    continue
+                generic, keyword = alias
+                try:
+                    generic_iter = model.by_type(generic)
+                except RuntimeError:
+                    continue
+                for element in generic_iter:
+                    object_type = (getattr(element, "ObjectType", None) or "").lower()
+                    if object_type and keyword in object_type:
+                        push(element)
     except RuntimeError as exc:
         raise ValueError(f"未知的 IFC 类型：{types}") from exc
 
