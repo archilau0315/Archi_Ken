@@ -87,6 +87,10 @@ export default function HelpPanel({ onClose }: Props) {
                 <p>{t('app.tagline')}</p>
                 <dl className="help-about-list">
                   <div>
+                    <dt>{t('help.about.developer')}</dt>
+                    <dd>{t('help.about.developerValue')}</dd>
+                  </div>
+                  <div>
                     <dt>{t('help.about.stack')}</dt>
                     <dd>{t('help.about.stackValue')}</dd>
                   </div>

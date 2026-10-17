@@ -52,6 +52,8 @@ export default {
   'help.shortcuts.s8.desc': '打开本帮助面板',
 
   'help.about.version': '版本 v{v}',
+  'help.about.developer': '开发者',
+  'help.about.developerValue': '天津匡形无界智能科技有限公司',
   'help.about.stack': '技术架构',
   'help.about.stackValue': 'Electron + React 界面 · Python FastAPI 内核（IfcOpenShell）· Node 业务服务',
   'help.about.license': '许可',

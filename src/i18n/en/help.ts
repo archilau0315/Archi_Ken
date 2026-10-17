@@ -52,6 +52,8 @@ export default {
   'help.shortcuts.s8.desc': 'Open this help panel',
 
   'help.about.version': 'Version v{v}',
+  'help.about.developer': 'Developer',
+  'help.about.developerValue': 'Kuanform Boundless Intelligent Technology (Tianjin) Co., Ltd.',
   'help.about.stack': 'Architecture',
   'help.about.stackValue': 'Electron + React UI · Python FastAPI kernel (IfcOpenShell) · Node business server',
   'help.about.license': 'License',
