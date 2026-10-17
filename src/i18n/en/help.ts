@@ -75,4 +75,14 @@ export default {
 
   'help.legal.title': 'Legal',
   'help.legal.placeholder': 'Privacy policy and EULA will be added with the official release.',
+
+  'help.legal.s1.title': '1. End User License Agreement (EULA)',
+  'help.legal.s1.body':
+    '1. This software is developed by Kuanform Boundless Intelligent Technology (Tianjin) Co., Ltd. ("the Company"), which retains all intellectual property rights.\n2. This is an internal beta release. Use is limited to authorized internal personnel for business purposes only. Redistribution, copying, reverse engineering or commercial resale without permission is prohibited.\n3. The software is provided "as is". The Company makes no express or implied warranty regarding the accuracy of check results, clash conclusions or quantity takeoff data; final engineering decisions must be reviewed by qualified professionals.\n4. Users retain ownership of imported IFC models and project data, and must ensure they hold the legal rights to use such data.\n5. Upon official release, this agreement will be superseded by the formal license terms.',
+  'help.legal.s2.title': '2. Privacy Policy',
+  'help.legal.s2.body':
+    '1. This software is deployed locally: all data — model files, check results, issues — is stored on the user\'s machine or a designated intranet server, and is never uploaded to the Company or any third-party cloud.\n2. No personal identity information, usage analytics or telemetry is collected.\n3. Preferences such as UI language are stored only in the local browser\'s localStorage and can be removed by clearing browser data.\n4. If future versions introduce cloud collaboration or subscription services, this policy will be updated before launch with clear disclosure of data scope and destination.',
+  'help.legal.s3.title': '3. Third-Party Open Source Notices',
+  'help.legal.s3.body':
+    'This software uses the following open source components. Thanks to their communities:\n· React / Vite / TypeScript (MIT) — user interface\n· Three.js (MIT) — 3D rendering\n· IfcOpenShell (LGPL-3.0) — IFC model parsing\n· FastAPI / Uvicorn (MIT / BSD) — kernel services\n· License texts are available in each project repository. The LGPL component is used via dynamic linking only, without source modification.',
 }

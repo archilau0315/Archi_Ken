@@ -16,6 +16,8 @@ type TabKey = 'manual' | 'shortcuts' | 'about' | 'subscribe' | 'legal'
 const MANUAL_SECTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 // 快捷键条目：键对应 help.shortcuts.s<n>.keys / .desc。
 const SHORTCUT_ITEMS = [1, 2, 3, 4, 5, 6, 7, 8] as const
+// 法律章节：键对应 help.legal.s<n>.title / .body（EULA / 隐私政策 / 开源声明）。
+const LEGAL_SECTIONS = [1, 2, 3] as const
 
 export default function HelpPanel({ onClose }: Props) {
   const { t } = useT()
@@ -135,8 +137,16 @@ export default function HelpPanel({ onClose }: Props) {
             )}
             {tab === 'legal' && (
               <div className="help-legal">
-                <h3>{t('help.legal.title')}</h3>
-                <p className="hint">{t('help.legal.placeholder')}</p>
+                {LEGAL_SECTIONS.map((n) => (
+                  <section key={n} className="help-section">
+                    <h3>{t(`help.legal.s${n}.title`)}</h3>
+                    {t(`help.legal.s${n}.body`)
+                      .split('\n')
+                      .map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
+                  </section>
+                ))}
               </div>
             )}
           </div>
