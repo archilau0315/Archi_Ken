@@ -121,6 +121,9 @@ function makeShellFade(
         // 否则玻璃（基础透明度 0.1~0.3）会被抬到滑杆值变成近实心灰盒，幕墙像被灰玻璃包死。
         const base = (material.userData.baseOpacity as number | undefined) ?? BASE_OPACITY
         material.opacity = faded ? Math.min(opacity, base) : base
+        // 淡化时必须同步打开 transparent：630a058 起实心材质按 transparent:false 创建，
+        // 该状态下 Three.js 直接忽略 opacity，滑杆在任意值都渲染为全不透明（回归 bug）。
+        material.transparent = faded || base < 1
         material.depthWrite = faded ? false : !glass
       }
     }
