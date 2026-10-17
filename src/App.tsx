@@ -257,7 +257,6 @@ export default function App() {
         <div className="brand">
           <Logo />
           <strong>{t('app.brand')}</strong>
-          <span className="version">v{__APP_VERSION__}</span>
           <span className="tagline">{t('app.tagline')}</span>
         </div>
         <button onClick={loadFederation} disabled={busy !== ''}>
