@@ -32,7 +32,8 @@ NAME_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("plumbing", ("给水", "排水", "污水", "雨水", "管道", "管", "pipe", "plumb", "sanitary", "sprinkler")),
     ("electrical", ("电缆", "桥架", "灯具", "插座", "配电", "cable", "lighting", "lamp", "elec", "switch")),
     ("structural", ("梁", "柱", "基础", "桁架", "beam", "column", "footing", "truss", "steel", "concrete", "reinforced", "structural")),
-    ("architecture", ("墙", "楼板", "门", "窗", "屋面", "建筑", "wall", "slab", "door", "window",
+    ("architecture", ("墙", "楼板", "门", "窗", "屋面", "建筑", "幕墙", "竖梃", "横梃",
+                     "wall", "slab", "door", "window", "mullion", "transom", "curtain wall",
                      "plaster", "gypsum", "brick", "stone", "insulation", "membrane", "finish", "air space", "waterproof")),
     ("site", ("场地", "总图", "景观", "site", "landscape")),
 ]
@@ -97,6 +98,20 @@ def classify_model(filename: str, exporter: str = "") -> dict[str, str]:
     return {"key": "other", "reason": "文件名与导出软件未匹配规则"}
 
 
+def _in_curtain_wall(element: Any) -> bool:
+    """构件是否被 IfcCurtainWall 聚合（幕墙框料 / 竖梃 / 横梃等）。
+
+    幕墙框料在 IFC 中常以 IfcMember 表达，若只按类型会被误分为结构；
+    这里通过 IfcRelAggregates 反向关系（Decomposes）判断其归属幕墙。
+    """
+    for rel in getattr(element, "Decomposes", []) or []:
+        if rel.is_a("IfcRelAggregates"):
+            parent = getattr(rel, "RelatingObject", None)
+            if parent is not None and parent.is_a("IfcCurtainWall"):
+                return True
+    return False
+
+
 def classify_element(element: Any, model_hint: str = "other") -> dict[str, str]:
     """按 命名 → IFC 类型 → 模型默认 推断单个构件专业。"""
     name = getattr(element, "Name", None) or ""
@@ -106,6 +121,11 @@ def classify_element(element: Any, model_hint: str = "other") -> dict[str, str]:
     # 直接归入建筑，避免随洞口名被误分到机电专业。
     if ifc_type == "IfcOpeningElement":
         return {"key": "architecture", "reason": "开洞虚体归建筑"}
+
+    # 幕墙框料 / 竖梃等常以 IfcMember 表达，按类型会被误分为结构；
+    # 只要归属 IfcCurtainWall 就归建筑，对齐幕墙属建筑专业的工程口径。
+    if _in_curtain_wall(element):
+        return {"key": "architecture", "reason": "归属幕墙构件归建筑"}
 
     for key, keywords in NAME_RULES:
         for word in keywords:
