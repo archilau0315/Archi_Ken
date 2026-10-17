@@ -11,14 +11,19 @@ from __future__ import annotations
 
 from typing import Any
 
-# IFC4 细分类型 → (IFC2x3 泛型, ObjectType 小写关键词)
+# IFC4 细分类型 → (IFC2x3 泛型, ObjectType 小写关键词)。
+# 关键词按「长词优先、互不包含」选取，避免跨类别误中：
+# "cable carrier" 与 "cable segment" 互不为子串（"Cable Carrier Segment" 里隔着 carrier），
+# 桥架与线缆可各自精确命中；该构建的 IFC2X3 schema 无 IfcCable* 实体（实测），必须走回退。
 FLOW_TYPE_ALIASES: dict[str, tuple[str, str]] = {
     "IfcDuctSegment": ("IfcFlowSegment", "duct"),
     "IfcDuctFitting": ("IfcFlowFitting", "duct"),
     "IfcPipeSegment": ("IfcFlowSegment", "pipe"),
     "IfcPipeFitting": ("IfcFlowFitting", "pipe"),
-    "IfcCableCarrierSegment": ("IfcFlowSegment", "cable"),
-    "IfcCableCarrierFitting": ("IfcFlowFitting", "cable"),
+    "IfcCableCarrierSegment": ("IfcFlowSegment", "cable carrier"),
+    "IfcCableCarrierFitting": ("IfcFlowFitting", "cable carrier"),
+    "IfcCableSegment": ("IfcFlowSegment", "cable segment"),
+    "IfcCableFitting": ("IfcFlowFitting", "cable fitting"),
 }
 
 

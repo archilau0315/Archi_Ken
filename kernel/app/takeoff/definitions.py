@@ -195,6 +195,52 @@ DEFINITIONS: list[dict] = [
             {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
         ],
     },
+    # ---------- 电气 ----------
+    {
+        "id": "cable-trays",
+        "category": "elec",
+        "name": "桥架 / 线槽",
+        "name_en": "Cable Trays",
+        "description": "按楼层统计桥架 / 线槽总长度",
+        "description_en": "Cable tray / trunking length grouped by storey",
+        "ifc_types": ["IfcCableCarrierSegment", "IfcCableCarrierFitting"],
+        "group_by": "container",
+        "columns": [
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
+        ],
+    },
+    {
+        "id": "cables",
+        "category": "elec",
+        "name": "线缆",
+        "name_en": "Cables",
+        "description": "按楼层统计电缆 / 电线总长度",
+        "description_en": "Cable / wire length grouped by storey",
+        "ifc_types": ["IfcCableSegment", "IfcCableFitting"],
+        "group_by": "container",
+        "columns": [
+            {"key": "length", "name": "长度", "name_en": "Length", "unit": "m", "expr": "qty('length')"},
+        ],
+    },
+    {
+        "id": "elec-devices",
+        "category": "elec",
+        "name": "电气设备",
+        "name_en": "Electrical Devices",
+        "description": "按类型统计配电箱 / 开关 / 插座 / 灯具数量",
+        "description_en": "Electrical device count by type (boards / switches / outlets / lamps)",
+        "ifc_types": [
+            "IfcElectricDistributionBoard",
+            "IfcSwitchingDevice",
+            "IfcOutlet",
+            "IfcLamp",
+            "IfcLightFixture",
+        ],
+        "group_by": "ifc_type",
+        "columns": [
+            {"key": "count", "name": "数量", "name_en": "Count", "unit": "个", "expr": "1"},
+        ],
+    },
     # ---------- 通用 ----------
     {
         "id": "all",
@@ -218,6 +264,7 @@ CATEGORIES: list[dict] = [
     {"id": "arch", "name": "建筑", "name_en": "Architecture"},
     {"id": "struct", "name": "结构", "name_en": "Structure"},
     {"id": "mep", "name": "机电", "name_en": "MEP"},
+    {"id": "elec", "name": "电气", "name_en": "Electrical"},
     {"id": "general", "name": "通用", "name_en": "General"},
 ]
 
