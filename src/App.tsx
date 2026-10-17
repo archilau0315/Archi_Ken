@@ -127,7 +127,35 @@ export default function App() {
   const [idsOpen, setIdsOpen] = useState(false)
   const [takeoffOpen, setTakeoffOpen] = useState(false)
   const [commOpen, setCommOpen] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(false)
+  // 首次启动自动弹出帮助面板（localStorage 标记已读，之后不再自动弹）。
+  const [helpOpen, setHelpOpen] = useState(() => {
+    try {
+      return !localStorage.getItem('archiken.help.seen')
+    } catch {
+      return false
+    }
+  })
+
+  // F1 快捷键打开帮助（桌面软件惯例）。
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'F1') {
+        e.preventDefault()
+        setHelpOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  function closeHelp() {
+    setHelpOpen(false)
+    try {
+      localStorage.setItem('archiken.help.seen', '1')
+    } catch {
+      /* 隐私模式下忽略 */
+    }
+  }
   const [reportOpen, setReportOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const [markerPick, setMarkerPick] = useState<{ id: string; nonce: number } | null>(null)
@@ -508,7 +536,7 @@ export default function App() {
           onClose={() => setCommOpen(false)}
         />
       )}
-      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+      {helpOpen && <HelpPanel onClose={closeHelp} />}
     </div>
   )
 }

@@ -127,3 +127,14 @@
 .help-subscribe li {
   margin: 4px 0;
 }
+
+.help-update {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.help-update-latest {
+  color: #1a7f37;
+  font-size: 12px;
+}

@@ -10,16 +10,24 @@ interface Props {
   onClose: () => void
 }
 
-type TabKey = 'manual' | 'shortcuts' | 'about' | 'subscribe'
+type TabKey = 'manual' | 'shortcuts' | 'about' | 'subscribe' | 'legal'
 
 // 手册章节：键对应 i18n 的 help.manual.s<n>.title / .body（body 内 \n 分行渲染）。
 const MANUAL_SECTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 // 快捷键条目：键对应 help.shortcuts.s<n>.keys / .desc。
-const SHORTCUT_ITEMS = [1, 2, 3, 4, 5, 6, 7] as const
+const SHORTCUT_ITEMS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
 export default function HelpPanel({ onClose }: Props) {
   const { t } = useT()
   const [tab, setTab] = useState<TabKey>('manual')
+  // 检查更新：正式发版前无更新源，点击后提示当前即最新（预留接更新服务的入口）。
+  const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'latest'>('idle')
+
+  function checkUpdate() {
+    setUpdateState('checking')
+    // 模拟一次检查往返；接入真实更新服务时替换为请求逻辑。
+    setTimeout(() => setUpdateState('latest'), 600)
+  }
 
   return (
     <div className="editor-overlay help-overlay" onClick={onClose}>
@@ -33,7 +41,7 @@ export default function HelpPanel({ onClose }: Props) {
         </header>
         <div className="help-body">
           <nav className="help-nav">
-            {(['manual', 'shortcuts', 'about', 'subscribe'] as TabKey[]).map((key) => (
+            {(['manual', 'shortcuts', 'about', 'subscribe', 'legal'] as TabKey[]).map((key) => (
               <button
                 key={key}
                 className={tab === key ? 'help-nav-item on' : 'help-nav-item'}
@@ -90,6 +98,21 @@ export default function HelpPanel({ onClose }: Props) {
                     <dt>{t('help.about.feedback')}</dt>
                     <dd>{t('help.about.feedbackValue')}</dd>
                   </div>
+                  <div>
+                    <dt>{t('help.about.update')}</dt>
+                    <dd className="help-update">
+                      <button
+                        className="ghost"
+                        onClick={checkUpdate}
+                        disabled={updateState === 'checking'}
+                      >
+                        {updateState === 'checking' ? t('help.about.checking') : t('help.about.checkBtn')}
+                      </button>
+                      {updateState === 'latest' && (
+                        <span className="help-update-latest">{t('help.about.latest')}</span>
+                      )}
+                    </dd>
+                  </div>
                 </dl>
               </div>
             )}
@@ -104,6 +127,12 @@ export default function HelpPanel({ onClose }: Props) {
                   <li>{t('help.subscribe.f3')}</li>
                 </ul>
                 <p className="hint">{t('help.subscribe.note')}</p>
+              </div>
+            )}
+            {tab === 'legal' && (
+              <div className="help-legal">
+                <h3>{t('help.legal.title')}</h3>
+                <p className="hint">{t('help.legal.placeholder')}</p>
               </div>
             )}
           </div>

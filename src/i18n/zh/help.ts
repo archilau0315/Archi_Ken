@@ -7,6 +7,7 @@ export default {
   'help.tab.shortcuts': '视图操作',
   'help.tab.about': '关于',
   'help.tab.subscribe': '订阅',
+  'help.tab.legal': '法律信息',
 
   'help.manual.s1.title': '1. 快速开始',
   'help.manual.s1.body':
@@ -47,6 +48,8 @@ export default {
   'help.shortcuts.s6.desc': '开关该方向剖切（视图面板）',
   'help.shortcuts.s7.keys': '点击碰撞项',
   'help.shortcuts.s7.desc': '飞到碰撞点并隔离双方构件',
+  'help.shortcuts.s8.keys': 'F1',
+  'help.shortcuts.s8.desc': '打开本帮助面板',
 
   'help.about.version': '版本 v{v}',
   'help.about.stack': '技术架构',
@@ -55,6 +58,10 @@ export default {
   'help.about.licenseValue': '内部使用（未发布）',
   'help.about.feedback': '问题反馈',
   'help.about.feedbackValue': '请在「沟通」面板创建问题单，或联系项目组',
+  'help.about.update': '检查更新',
+  'help.about.checkBtn': '立即检查',
+  'help.about.checking': '检查中…',
+  'help.about.latest': '当前已是最新版本',
 
   'help.subscribe.title': '订阅（即将推出）',
   'help.subscribe.body1': '当前版本为内部测试版，全部功能免费开放。',
@@ -63,4 +70,7 @@ export default {
   'help.subscribe.f2': '专业版：+ IDS 校验 + 信息提取 + BCF 协同',
   'help.subscribe.f3': '团队版：+ 多人协作 + 规则集共享 + 优先支持',
   'help.subscribe.note': '订阅功能尚未开放，敬请期待。',
+
+  'help.legal.title': '法律信息',
+  'help.legal.placeholder': '隐私政策与最终用户许可协议（EULA）将随正式版发布补充于此。',
 }

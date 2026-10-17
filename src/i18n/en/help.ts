@@ -7,6 +7,7 @@ export default {
   'help.tab.shortcuts': 'View Controls',
   'help.tab.about': 'About',
   'help.tab.subscribe': 'Subscription',
+  'help.tab.legal': 'Legal',
 
   'help.manual.s1.title': '1. Quick Start',
   'help.manual.s1.body':
@@ -47,6 +48,8 @@ export default {
   'help.shortcuts.s6.desc': 'Toggle section cut (View panel)',
   'help.shortcuts.s7.keys': 'Click clash item',
   'help.shortcuts.s7.desc': 'Fly to contact point and isolate both elements',
+  'help.shortcuts.s8.keys': 'F1',
+  'help.shortcuts.s8.desc': 'Open this help panel',
 
   'help.about.version': 'Version v{v}',
   'help.about.stack': 'Architecture',
@@ -55,6 +58,10 @@ export default {
   'help.about.licenseValue': 'Internal use (unreleased)',
   'help.about.feedback': 'Feedback',
   'help.about.feedbackValue': 'Create an issue in the Communication panel or contact the team',
+  'help.about.update': 'Updates',
+  'help.about.checkBtn': 'Check now',
+  'help.about.checking': 'Checking…',
+  'help.about.latest': 'You are on the latest version',
 
   'help.subscribe.title': 'Subscription (Coming Soon)',
   'help.subscribe.body1': 'This is an internal beta. All features are free.',
@@ -63,4 +70,7 @@ export default {
   'help.subscribe.f2': 'Pro: + IDS validation + takeoff + BCF collaboration',
   'help.subscribe.f3': 'Team: + multi-user collaboration + shared rulesets + priority support',
   'help.subscribe.note': 'Subscription is not available yet. Stay tuned.',
+
+  'help.legal.title': 'Legal',
+  'help.legal.placeholder': 'Privacy policy and EULA will be added with the official release.',
 }
