@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import ClashMatrix from './clash/ClashMatrix'
 import CommunicationPanel from './communication/CommunicationPanel'
+import HelpPanel from './help/HelpPanel'
 import { useT } from './i18n'
 import IdsEditor from './ids/IdsEditor'
 import FederationTree from './model-tree/FederationTree'
@@ -126,6 +127,7 @@ export default function App() {
   const [idsOpen, setIdsOpen] = useState(false)
   const [takeoffOpen, setTakeoffOpen] = useState(false)
   const [commOpen, setCommOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const [markerPick, setMarkerPick] = useState<{ id: string; nonce: number } | null>(null)
@@ -263,6 +265,9 @@ export default function App() {
         </button>
         <button className="ghost" onClick={() => setCommOpen(true)}>
           {t('app.comm')}
+        </button>
+        <button className="ghost" onClick={() => setHelpOpen(true)}>
+          {t('help.title')}
         </button>
         <button
           className="ghost lang-switch"
@@ -503,6 +508,7 @@ export default function App() {
           onClose={() => setCommOpen(false)}
         />
       )}
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
     </div>
   )
 }

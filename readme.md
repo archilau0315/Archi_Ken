@@ -550,6 +550,7 @@ Browser mode requires the kernel and business service running first (see "Run se
 | `src/report/ReportPanel.tsx` | 报告面板 | 悬浮层：摘要统计 + 问题清单预览（前 100 条，构件点击联动 3D），重新生成 / HTML 预览 / 导出 PDF / 导出 Excel |
 | `src/views/ViewToolbar.tsx` | 视图工具条 | 固定占位在 3D 视图上方（非浮层、零遮挡）：「透视外壳」淡化 + 透明度滑杆（居最前）、透视切换、六个标准视角（顶 / 前 / 后 / 左 / 右自动切正投影、等轴回透视）、X / Y / Z 剖切一键启用 + 实时滑杆 + 翻转 |
 | `src/views/ViewPanel.tsx` | 视图系统面板 | 手风琴浮动卡片（默认全折叠、头部可拖拽移位，只放低频项）：检查结果标记与手动标记、演示视角保存与顺序播放 |
+| `src/help/HelpPanel.tsx` + `help.css` | 帮助面板 | 居中弹窗 + 左侧页签：用户手册（8 章操作流程）、视图操作速查表、关于（版本 / 架构 / 反馈）、订阅（预留三档位占位） |
 
 | Directory | Module | Description |
 |---|---|---|

@@ -2,6 +2,7 @@
 import app from './app'
 import clash from './clash'
 import comm from './comm'
+import help from './help'
 import ids from './ids'
 import report from './report'
 import ruleset from './ruleset'
@@ -17,6 +18,7 @@ const dict: Record<string, string> = {
   ...ids,
   ...takeoff,
   ...comm,
+  ...help,
   ...report,
   ...views,
 }
