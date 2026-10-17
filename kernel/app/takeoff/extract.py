@@ -207,7 +207,10 @@ def _resolve_geometry(geometry: dict, element) -> dict | None:
             axis_a, axis_b = _main_face_axes(merged)
             gross = _face_area_on(merged, axis_a, axis_b)
             holes = sum(_face_area_on(b, axis_a, axis_b) for b in _openings_boxes(element, geometry))
-            result["area"] = _round6(gross - holes) if holes > 0 and gross - holes > 0 else max(areas)
+            # 叠合层无论有无洞口都按外轮廓毛面积 − 洞口：无洞口时 gross 即整面面积
+            # （门窗类构件外框即洞口尺寸，子面积取大会只留玻璃净面积，如窗面积 0.62 ≠ 1.0）；
+            # 仅当 gross − holes ≤ 0（异常重叠）才退化子面积取大兜底。
+            result["area"] = _round6(gross - holes) if gross - holes > 0 else max(areas)
         else:
             result["area"] = sum(areas)
     return result
