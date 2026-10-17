@@ -26,6 +26,8 @@ export default {
   'app.colorMode.count': '{n} elements',
   'app.discipline.count': '{n} elements · 3D {geo}',
   'app.discipline.hint': 'Click "Load & Federate" to auto-map disciplines by naming / exporter / type',
+  'app.discipline.toggleHint': 'Click to show / hide this discipline',
+  'app.discipline.showAll': 'Show all',
   'app.fedTree': 'Federated Model Tree',
   'app.stats.models': 'Sources',
   'app.stats.elements': 'Elements',

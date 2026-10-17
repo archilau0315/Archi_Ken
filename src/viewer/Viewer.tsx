@@ -22,6 +22,8 @@ export interface ViewerProps {
   useMesh?: boolean
   /** 显色模式：真实网格模式下可选专业配色或 IFC 原生颜色；包围盒模式恒按专业配色。 */
   colorMode?: ColorMode
+  /** 被隐藏的专业 key 集合（左栏专业图例点击切换）；缺省 / 空集 = 全部显示。 */
+  hiddenDisciplines?: Set<string>
 }
 
 export interface ClipRangeDTO {
@@ -68,7 +70,7 @@ export interface ViewerHandle {
 }
 
 const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
-  { items, selectedGuid, selectedGuids = null, onSelect, onMarkerPick, useMesh = false, colorMode = 'discipline' },
+  { items, selectedGuid, selectedGuids = null, onSelect, onMarkerPick, useMesh = false, colorMode = 'discipline', hiddenDisciplines },
   ref
 ) {
   const hostRef = useRef<HTMLDivElement>(null)
@@ -77,6 +79,7 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
   const clipRef = useRef<ClippingController | null>(null)
   const markerRef = useRef<MarkerLayer | null>(null)
   const shellFadeRef = useRef({ on: false, opacity: DEFAULT_SHELL_OPACITY })
+  const hiddenDiscRef = useRef<Set<string>>(new Set())
   const clipListeners = useRef<Set<(states: ClipStateDTO[]) => void>>(new Set())
   const onSelectRef = useRef(onSelect)
   const onMarkerPickRef = useRef(onMarkerPick)
@@ -243,6 +246,8 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
     markerRef.current?.setWorldScale(Math.max(core.fitRadiusValue / 22, 0.3))
     // 换模型 / 切换显示模式后，按当前开关与透明度回填淡化效果。
     layer.setShellFade(shellFadeRef.current.on, shellFadeRef.current.opacity)
+    // 图层重建后回填专业显隐状态（切换本身走下方 effect，不触发重建）。
+    layer.setHiddenDisciplines(hiddenDiscRef.current)
     layerRef.current = layer
     // 旧模型的剖切坐标对新模型已失效：清空剖切并通知订阅方重取范围与轴状态。
     clipRef.current?.clear()
@@ -254,6 +259,13 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
       if (layerRef.current === layer) layerRef.current = null
     }
   }, [items, useMesh, colorMode])
+
+  // 专业显隐：只切换图层内 mesh.visible（瞬时），不重建图层；ref 供图层重建时回填。
+  useEffect(() => {
+    const keys = hiddenDisciplines ?? new Set<string>()
+    hiddenDiscRef.current = keys
+    layerRef.current?.setHiddenDisciplines(keys)
+  }, [hiddenDisciplines])
 
   // 选中构件高亮：外部指定成对高亮（碰撞对）时优先，否则按单选构件框选。
   useEffect(() => {

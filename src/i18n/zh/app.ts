@@ -26,6 +26,8 @@ export default {
   'app.colorMode.count': '{n} 构件',
   'app.discipline.count': '{n} 构件 · 3D {geo}',
   'app.discipline.hint': '点击「加载融合」后按命名 / 导出软件 / 类型自动映射专业',
+  'app.discipline.toggleHint': '点击显示 / 隐藏该专业',
+  'app.discipline.showAll': '全部显示',
   'app.fedTree': '融合模型树',
   'app.stats.models': '模型源',
   'app.stats.elements': '构件总数',

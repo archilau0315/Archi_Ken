@@ -118,6 +118,30 @@ export default function App() {
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
   // 碰撞对高亮（视图 uid，带源序号前缀）：非空时 3D 视图同时框选碰撞双方。
   const [pairGuids, setPairGuids] = useState<string[] | null>(null)
+  // 被隐藏的专业 key 集合（左栏专业图例点击切换）；默认空 = 全开，会话内有效，刷新复位。
+  const [hiddenDisc, setHiddenDisc] = useState<ReadonlySet<string>>(new Set())
+
+  function toggleDiscipline(key: string): void {
+    setHiddenDisc((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // 碰撞定位联动：定位构件所属专业被隐藏时自动点亮，否则高亮框看不见。
+  function handlePairSelect(guids: string[] | null): void {
+    setPairGuids(guids)
+    if (!guids?.length || !hiddenDisc.size) return
+    const need = new Set<string>()
+    for (const item of items as ElementMesh[]) {
+      if (guids.includes(item.guid) && item.discipline && hiddenDisc.has(item.discipline)) {
+        need.add(item.discipline)
+      }
+    }
+    if (need.size) setHiddenDisc((prev) => new Set([...prev].filter((key) => !need.has(key))))
+  }
   const [detail, setDetail] = useState<ElementDetail | null>(null)
   const [report, setReport] = useState<Report | null>(null)
   const [busy, setBusy] = useState<'' | 'fed' | 'mesh' | 'check' | 'report'>('')
@@ -338,17 +362,29 @@ export default function App() {
           </div>
           {colorMode === 'discipline' ? (
             fed ? (
-              <ul className="legend">
-                {fed.disciplines.map((item) => (
-                  <li key={item.key} className="legend-item">
-                    <span className="legend-dot" style={{ background: item.color }} />
-                    <span className="legend-name">{item.name}</span>
-                    <span className="legend-count">
-                      {t('app.discipline.count', { n: item.element_count, geo: item.geo_count })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="legend">
+                  {fed.disciplines.map((item) => (
+                    <li
+                      key={item.key}
+                      className={hiddenDisc.has(item.key) ? 'legend-item legend-item-off' : 'legend-item'}
+                      onClick={() => toggleDiscipline(item.key)}
+                      title={t('app.discipline.toggleHint')}
+                    >
+                      <span className="legend-dot" style={{ background: item.color }} />
+                      <span className="legend-name">{item.name}</span>
+                      <span className="legend-count">
+                        {t('app.discipline.count', { n: item.element_count, geo: item.geo_count })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {hiddenDisc.size > 0 && (
+                  <button className="ghost legend-reset" onClick={() => setHiddenDisc(new Set())}>
+                    {t('app.discipline.showAll')}
+                  </button>
+                )}
+              </>
             ) : (
               <p className="hint">{t('app.discipline.hint')}</p>
             )
@@ -408,6 +444,7 @@ export default function App() {
         onMarkerPick={(id) => id && setMarkerPick({ id, nonce: Date.now() })}
         useMesh={useMesh}
         colorMode={colorMode}
+        hiddenDisciplines={hiddenDisc as Set<string>}
       />
           <div className="viewer-hint">
             {items.length
@@ -489,7 +526,7 @@ export default function App() {
           modelPath={primaryPath}
           viewerRef={viewerRef}
           onSelect={(guid) => void selectElement(`0:${guid}`)}
-          onPairSelect={setPairGuids}
+          onPairSelect={handlePairSelect}
           onClose={() => {
             setPairGuids(null)
             setClashOpen(false)

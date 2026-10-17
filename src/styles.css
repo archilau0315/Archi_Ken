@@ -549,6 +549,25 @@ button.tiny {
   font-size: 12px;
 }
 
+/* 专业图例可点击切换显隐；隐藏态整行压暗 + 色点加暗环示意「已关闭」。 */
+.legend-item[title] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.legend-item-off {
+  opacity: 0.4;
+}
+
+.legend-item-off .legend-dot {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.55);
+}
+
+.legend-reset {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
 .legend-dot {
   width: 10px;
   height: 10px;

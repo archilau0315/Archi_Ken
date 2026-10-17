@@ -167,16 +167,26 @@ function makeSelection(group: THREE.Group, byGuid: Map<string, THREE.Mesh>, mesh
   }
 }
 
-/** 隔离显示：只保留指定构件（含其拆分子网格），其余隐藏；传 null 恢复全部。 */
-function makeIsolate(meshes: THREE.Mesh[]) {
-  return (guids: string[] | null): void => {
-    if (!guids) {
-      for (const mesh of meshes) mesh.visible = true
-      return
-    }
+/** 可见性合成：隔离显示（按构件）与专业显隐（按专业）共同作用，任一条件不满足即隐藏。 */
+function makeVisibility(meshes: THREE.Mesh[]) {
+  let isolated: string[] | null = null
+  let hiddenDisciplines = new Set<string>()
+  const apply = (): void => {
     for (const mesh of meshes) {
       const meshGuid = mesh.userData.guid as string
-      mesh.visible = guids.some((guid) => guidMatches(meshGuid, guid))
+      const discipline = (mesh.userData.discipline as string) ?? ''
+      const passIsolate = !isolated || isolated.some((guid) => guidMatches(meshGuid, guid))
+      mesh.visible = passIsolate && !hiddenDisciplines.has(discipline)
+    }
+  }
+  return {
+    isolate(guids: string[] | null): void {
+      isolated = guids
+      apply()
+    },
+    setHiddenDisciplines(keys: Set<string>): void {
+      hiddenDisciplines = new Set(keys)
+      apply()
     }
   }
 }
@@ -192,6 +202,8 @@ export interface ModelLayer {
   isolate(guids: string[] | null): void
   /** 开关「淡化外壳」：建筑 / 结构 / 场地转半透明（透明度可调），露出内部机电管线。 */
   setShellFade(on: boolean, opacity: number): void
+  /** 按专业控制显隐（左栏专业图例点击切换）；传入被隐藏的专业 key 集合，空集 = 全部显示。 */
+  setHiddenDisciplines(keys: Set<string>): void
   /** 构件包围盒中心（无该构件时返回 null，M10 标记定位用）。 */
   centerOf(guid: string): [number, number, number] | null
   dispose(): void
@@ -239,6 +251,7 @@ export function buildModelLayer(items: BboxItem[]): ModelLayer {
     const mesh = new THREE.Mesh(geometry, material)
     mesh.position.set(item.center[0], item.center[1], item.center[2])
     mesh.userData.guid = item.guid
+    mesh.userData.discipline = item.discipline ?? ''
     mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edgeMaterial))
 
     group.add(mesh)
@@ -248,7 +261,7 @@ export function buildModelLayer(items: BboxItem[]): ModelLayer {
   }
 
   const applySelection = makeSelection(group, byGuid, meshes)
-  const applyIsolate = makeIsolate(meshes)
+  const visibility = makeVisibility(meshes)
 
   return {
     group,
@@ -257,8 +270,9 @@ export function buildModelLayer(items: BboxItem[]): ModelLayer {
       applySelection(guid ? [guid] : [])
     },
     setSelectedMany: applySelection,
-    isolate: applyIsolate,
+    isolate: visibility.isolate,
     setShellFade: makeShellFade(byDiscipline),
+    setHiddenDisciplines: visibility.setHiddenDisciplines,
     centerOf(guid) {
       const mesh = byGuid.get(guid)
       if (!mesh) return null
@@ -320,6 +334,7 @@ export function buildMeshLayer(items: ElementMesh[], mode: ColorMode = 'discipli
 
     const mesh = new THREE.Mesh(geometry, material)
     mesh.userData.guid = item.guid
+    mesh.userData.discipline = item.discipline ?? ''
     // 多模型真实网格叠加：按模型地理参考偏移整体平移，使不同模型对齐到同一空间。
     if (item.position_offset) mesh.position.set(...item.position_offset)
 
@@ -330,7 +345,7 @@ export function buildMeshLayer(items: ElementMesh[], mode: ColorMode = 'discipli
   }
 
   const applySelection = makeSelection(group, byGuid, meshes)
-  const applyIsolate = makeIsolate(meshes)
+  const visibility = makeVisibility(meshes)
 
   return {
     group,
@@ -339,8 +354,9 @@ export function buildMeshLayer(items: ElementMesh[], mode: ColorMode = 'discipli
       applySelection(guid ? [guid] : [])
     },
     setSelectedMany: applySelection,
-    isolate: applyIsolate,
+    isolate: visibility.isolate,
     setShellFade: makeShellFade(byDiscipline),
+    setHiddenDisciplines: visibility.setHiddenDisciplines,
     centerOf(guid) {
       const mesh = byGuid.get(guid)
       if (!mesh) return null
