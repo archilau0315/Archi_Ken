@@ -183,6 +183,16 @@
   text-align: right;
 }
 
+/* 楼层剖切下拉：与工具条按钮等高、紧凑。 */
+.view-toolbar .vt-select {
+  max-width: 200px;
+  padding: 3px 6px;
+  font-size: 12px;
+  background: var(--panel, #fff);
+  border: 1px solid var(--line, #d1d5db);
+  border-radius: 6px;
+}
+
 .view-muted {
   color: #6b7280;
   font-size: 12px;

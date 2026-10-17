@@ -48,6 +48,8 @@ export interface ViewerHandle {
   flyToState: (state: ViewState, duration?: number) => void
   getClipRange: () => ClipRangeDTO | null
   setClip: (axis: ClipAxis, enabled: boolean, side?: ClipSide, position?: number) => void
+  /** 楼层区间剖切：仅保留 [min, max] 标高带内的几何（max 为 null 上不封顶）；传 null 清除。 */
+  setClipRange: (axis: ClipAxis, range: { min: number; max: number | null } | null) => void
   clearClip: () => void
   /** 读取全部启用中的剖切轴状态。 */
   getClipStates: () => ClipStateDTO[]
@@ -132,6 +134,10 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
       },
       setClip: (axis, enabled, side, position) => {
         clipRef.current?.setClip(axis, enabled, side, position)
+        emitClipChange()
+      },
+      setClipRange: (axis, range) => {
+        clipRef.current?.setClipRange(axis, range)
         emitClipChange()
       },
       clearClip: () => {

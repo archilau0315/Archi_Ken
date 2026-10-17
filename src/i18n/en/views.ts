@@ -25,6 +25,10 @@ export default {
   'views.clipOff': 'Off',
   'views.clipHint': 'Click an axis to cut · drag the slider to move the plane — applied live',
   'views.clipPosition': 'Plane position: {pos} (model range {min} ~ {max})',
+  'views.storey': 'Storey',
+  'views.storeyAll': 'All storeys',
+  'views.storeyHint':
+    'Clip by storey elevation band: only geometry within this storey is shown (topmost storey is open-ended); a manual Z section takes over and resets this',
   'views.loadModelFirst': 'Load a model first',
   'views.sectionMarkers': '3D Markers',
   'views.loadIssueMarkers': 'Load Issue Markers',

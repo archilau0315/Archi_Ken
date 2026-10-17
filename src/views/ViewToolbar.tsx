@@ -39,11 +39,19 @@ export function makeClipStates(range: ClipRangeValue | null): Record<ClipAxis, C
 
 const PRESETS: PresetName[] = ['iso', 'top', 'front', 'back', 'left', 'right']
 
-interface Props {
-  viewerRef: RefObject<ViewerHandle>
+/** 楼层选项（App 从融合树提取）：名称 + 标高。 */
+export interface StoreyOption {
+  name: string
+  elevation: number
 }
 
-export default function ViewToolbar({ viewerRef }: Props) {
+interface Props {
+  viewerRef: RefObject<ViewerHandle>
+  /** 可选楼层列表（有融合树时提供）；为空则不渲染楼层剖切组。 */
+  storeys?: StoreyOption[]
+}
+
+export default function ViewToolbar({ viewerRef, storeys = [] }: Props) {
   const { t } = useT()
   const [mode, setMode] = useState<ViewMode>(() => viewerRef.current?.getViewMode() ?? 'perspective')
   const [activePreset, setActivePreset] = useState<PresetName | null>('iso')
@@ -52,6 +60,10 @@ export default function ViewToolbar({ viewerRef }: Props) {
   const [selectedAxis, setSelectedAxis] = useState<ClipAxis | null>(null)
   const [faded, setFaded] = useState(false)
   const [fadeOpacity, setFadeOpacity] = useState(DEFAULT_SHELL_OPACITY)
+  // 楼层剖切：'all' = 不剖切；否则为 sortedStoreys 下标（字符串）。
+  const [storeySel, setStoreySel] = useState('all')
+  // 按标高升序：区间上限取下一层标高。
+  const sortedStoreys = [...storeys].sort((a, b) => a.elevation - b.elevation)
 
   // 订阅剖切状态变化（含 3D 内拖拽与图层重建后的通知），范围与轴按钮 / 滑杆实时回显。
   useEffect(() => {
@@ -65,6 +77,8 @@ export default function ViewToolbar({ viewerRef }: Props) {
         for (const state of states) next[state.axis] = { on: true, side: state.side, position: state.position }
         return next
       })
+      // 手动接管 z 轴剖切时，楼层选择复位为「全部」（区间面已被替换）。
+      if (states.some((state) => state.axis === 'z')) setStoreySel('all')
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewerRef])
@@ -115,6 +129,20 @@ export default function ViewToolbar({ viewerRef }: Props) {
     const next = !faded
     viewerRef.current?.setShellFade(next, fadeOpacity)
     setFaded(next)
+  }
+
+  /** 楼层剖切：选层 = z 轴裁剪到 [本层标高, 下一层标高]（顶层上不封顶）；全部 = 清除。 */
+  function applyStorey(value: string): void {
+    setStoreySel(value)
+    const viewer = viewerRef.current
+    if (value === 'all') {
+      viewer?.setClipRange('z', null)
+      return
+    }
+    const index = Number(value)
+    const current = sortedStoreys[index]
+    const next = sortedStoreys[index + 1]
+    viewer?.setClipRange('z', { min: current.elevation, max: next ? next.elevation : null })
   }
 
   function changeShellOpacity(value: number): void {
@@ -210,6 +238,23 @@ export default function ViewToolbar({ viewerRef }: Props) {
           {sliderAxis && clips[sliderAxis].side === 'minus' ? '−→+' : '+→−'}
         </button>
       </div>
+
+      {sortedStoreys.length > 0 && (
+        <>
+          <span className="vt-sep" />
+          <div className="vt-group" title={t('views.storeyHint')}>
+            <strong className="vt-label">{t('views.storey')}</strong>
+            <select className="vt-select" value={storeySel} onChange={(event) => applyStorey(event.target.value)}>
+              <option value="all">{t('views.storeyAll')}</option>
+              {sortedStoreys.map((storey, index) => (
+                <option key={`${storey.name}-${index}`} value={String(index)}>
+                  {storey.name} · {storey.elevation}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
     </div>
   )
 }

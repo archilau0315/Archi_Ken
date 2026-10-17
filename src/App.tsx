@@ -115,6 +115,28 @@ export default function App() {
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
   }, [items, useMesh])
+
+  // 楼层选项：从融合树提取全部楼层节点（名称 + 标高），同名同标高去重（多模型各挂一棵 Project 树）。
+  const storeyOptions = useMemo(() => {
+    if (!fed) return [] as Array<{ name: string; elevation: number }>
+    const found: Array<{ name: string; elevation: number }> = []
+    const walk = (nodes: Array<{ ifc_type?: string | null; name?: string | null; elevation?: number | null; children?: unknown[] }>): void => {
+      for (const node of nodes) {
+        if (node.ifc_type === 'IfcBuildingStorey' && typeof node.elevation === 'number') {
+          found.push({ name: node.name ?? String(node.elevation), elevation: node.elevation })
+        }
+        if (Array.isArray(node.children)) walk(node.children as typeof nodes)
+      }
+    }
+    walk(fed.tree.roots)
+    const seen = new Set<string>()
+    return found.filter((item) => {
+      const key = `${item.name}|${item.elevation}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [fed])
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
   // 碰撞对高亮（视图 uid，带源序号前缀）：非空时 3D 视图同时框选碰撞双方。
   const [pairGuids, setPairGuids] = useState<string[] | null>(null)
@@ -434,7 +456,7 @@ export default function App() {
 
         <section className="panel center">
           {/* 高频视角 / 剖切操作固定占位在画布上方，不再以浮层压住 3D 画面。 */}
-          {items.length > 0 && <ViewToolbar viewerRef={viewerRef} />}
+          {items.length > 0 && <ViewToolbar viewerRef={viewerRef} storeys={storeyOptions} />}
           <Viewer
         ref={viewerRef}
         items={visibleItems}

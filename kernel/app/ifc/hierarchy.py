@@ -66,6 +66,10 @@ def _build_node(element: Any, depth: int, max_depth: int, classify: Callable[[An
         "elements_by_type": elements_by_type,
         "children": children,
     }
+    if element.is_a("IfcBuildingStorey"):
+        # 楼层标高：前端「楼层剖切」按标高区间裁剪 z 轴。
+        elevation = getattr(element, "Elevation", None)
+        node["elevation"] = float(elevation) if elevation is not None else None
     if elements_by_discipline is not None:
         node["elements_by_discipline"] = elements_by_discipline
     return node

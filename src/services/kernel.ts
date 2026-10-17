@@ -35,6 +35,8 @@ export interface HierarchyNode {
   element_total: number
   elements_by_type: Record<string, number>
   children: HierarchyNode[]
+  /** 楼层节点（IfcBuildingStorey）的标高；非楼层节点无此字段。 */
+  elevation?: number | null
 }
 
 export interface HierarchyResponse {
