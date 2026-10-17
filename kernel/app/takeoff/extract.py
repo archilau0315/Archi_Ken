@@ -204,8 +204,9 @@ def _resolve_geometry(geometry: dict, element) -> dict | None:
     areas = [q["area"] for q in quantities if q.get("area") is not None]
     if areas:
         if _layers_overlap(merged, parts):
-            gross = from_bbox(merged)["area"]
-            holes = sum(from_bbox(b)["area"] for b in _openings_boxes(element, geometry))
+            axis_a, axis_b = _main_face_axes(merged)
+            gross = _face_area_on(merged, axis_a, axis_b)
+            holes = sum(_face_area_on(b, axis_a, axis_b) for b in _openings_boxes(element, geometry))
             result["area"] = _round6(gross - holes) if holes > 0 and gross - holes > 0 else max(areas)
         else:
             result["area"] = sum(areas)
@@ -225,10 +226,26 @@ def _openings_boxes(element, geometry: dict) -> list[list[float]]:
     return boxes
 
 
+def _face_area_on(bbox: list[float], axis_a: int, axis_b: int) -> float:
+    """包围盒在指定两轴（0=x,1=y,2=z）张成平面上的投影面积。"""
+    return max(bbox[axis_a + 3] - bbox[axis_a], 0.0) * max(bbox[axis_b + 3] - bbox[axis_b], 0.0)
+
+
+def _main_face_axes(bbox: list[float]) -> tuple[int, int]:
+    """包围盒主投影面的两轴索引（与 from_bbox 取最大投影面的口径一致）。"""
+    dx = bbox[3] - bbox[0]
+    dy = bbox[4] - bbox[1]
+    dz = bbox[5] - bbox[2]
+    return max(((0, 1, dx * dy), (1, 2, dy * dz), (0, 2, dx * dz)), key=lambda item: item[2])[:2]
+
+
 def _net_face_area(element, geometry: dict) -> float | None:
     """带门窗洞口构件的净投影面积（毛面积 − Σ洞口投影面积）；无洞口返回 None（不干预）。
 
-    毛面积取构件外包包围盒的最大投影面（与 from_bbox 同口径），洞口投影面同理；
+    毛面积取构件外包包围盒的最大投影面（与 from_bbox 同口径）；
+    洞口投影面积必须在与墙主投影面同一平面上取（洞口在墙面上挖的洞，扣的是该面内的二维尺寸），
+    不能取洞口自身包围盒的最大投影面——否则厚度方向比洞口宽/高大的洞口会被过度扣减
+    （例：1.0宽×1.0高×1.35厚 的窗洞，错取 dy·dz=1.35 而非 dx·dz=1.0，净面积被多扣 0.35）。
     负值（异常重叠）钳为 0。构件自身无几何条目时按材质拆分 / 分解子条目合并包围盒兜底。
     """
     boxes = _openings_boxes(element, geometry)
@@ -244,7 +261,10 @@ def _net_face_area(element, geometry: dict) -> float | None:
         bbox = _merge_bbox([p["bbox"] for p in parts])
     if not bbox:
         return None
-    return max(from_bbox(bbox)["area"] - sum(from_bbox(b)["area"] for b in boxes), 0.0)
+    axis_a, axis_b = _main_face_axes(bbox)
+    gross = _face_area_on(bbox, axis_a, axis_b)
+    holes = sum(_face_area_on(b, axis_a, axis_b) for b in boxes)
+    return max(gross - holes, 0.0)
 
 
 def _round6(value: float) -> float:
