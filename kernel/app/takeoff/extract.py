@@ -32,6 +32,39 @@ _CURTAIN_KEEP = {"area", "length", "width", "height"}
 # 门 / 窗：宽度 / 高度优先读 IFC 实体属性（几何包围盒的最小维是墙厚方向，不是宽度）。
 _OPENING_TYPES = {"IfcDoor", "IfcWindow"}
 
+# IFC2x3 没有 IFC4 的机电细分类型（IfcDuctSegment 等），风管 / 水管 / 桥架统一建模为
+# IfcFlowSegment / IfcFlowFitting，靠 ObjectType 文本区分（如 "Duct Segment"、"Pipe Segment"）。
+# 类型过滤命中 IFC4 细分类型时，回退匹配对应 IFC2x3 泛型 + ObjectType 关键词。
+_FLOW_TYPE_ALIASES = {
+    "IfcDuctSegment": ("IfcFlowSegment", "duct"),
+    "IfcDuctFitting": ("IfcFlowFitting", "duct"),
+    "IfcPipeSegment": ("IfcFlowSegment", "pipe"),
+    "IfcPipeFitting": ("IfcFlowFitting", "pipe"),
+    "IfcCableCarrierSegment": ("IfcFlowSegment", "cable"),
+    "IfcCableCarrierFitting": ("IfcFlowFitting", "cable"),
+}
+
+
+def _matches_type_filter(element, type_filter: set[str]) -> bool:
+    """IFC 类型精确匹配，附带 IFC2x3 泛型流构件（IfcFlowSegment/Fitting）的关键词回退。"""
+    if not type_filter:
+        return True
+    isa = element.is_a()
+    if isa in type_filter:
+        return True
+    # IFC4 模型里风管是 IfcDuctSegment（叶子类型），精确匹配已命中；
+    # 走到这里说明叶子类型不在过滤集，仅当它是 IFC2x3 泛型流构件时按 ObjectType 判定。
+    if isa not in ("IfcFlowSegment", "IfcFlowFitting"):
+        return False
+    object_type = (getattr(element, "ObjectType", None) or "").lower()
+    if not object_type:
+        return False
+    return any(
+        alias[0] == isa and alias[1] in object_type
+        for wanted in type_filter
+        if (alias := _FLOW_TYPE_ALIASES.get(wanted)) is not None
+    )
+
 # 净面积缓存的「未计算」哨兵（None 表示已计算且无洞口，与未计算区分开）。
 _UNCACHED = object()
 
@@ -93,7 +126,7 @@ def run_takeoff(
         element
         for element in model.by_type("IfcProduct")
         if element.is_a() not in skipped
-        and (not type_filter or element.is_a() in type_filter)
+        and _matches_type_filter(element, type_filter)
     ]
     guids = {element.GlobalId for element in candidates}
     # 幕墙本体 guid：其面板 / 龙骨子构件随之走幕墙口径（只作明细、不计体积 / 表面积、不拆层）
